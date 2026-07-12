@@ -1,0 +1,24 @@
+{
+  "name": "gravity-ball",
+  "version": "0.1.0",
+  "description": "A 2.5D physics puzzle game where you shift the direction of gravity to guide a rolling ball to the goal. Built for CrazyGames.",
+  "type": "module",
+  "scripts": {
+    "dev": "node serve.mjs",
+    "start": "node serve.mjs"
+  },
+  "keywords": [
+    "html5-game",
+    "phaser",
+    "matter-js",
+    "physics-puzzle",
+    "gravity",
+    "crazygames",
+    "webgl"
+  ],
+  "author": "David Hambi",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  }
+}

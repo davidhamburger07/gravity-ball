@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>Gravity Ball</title>
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        background: #10131f;
+        overflow: hidden;
+        font-family: system-ui, sans-serif;
+        /* Prevent mobile browsers from hijacking swipe gestures. */
+        touch-action: none;
+        overscroll-behavior: none;
+      }
+      #game-root {
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      canvas { display: block; }
+    </style>
+
+    <!-- Physics/render engine (CDN for zero-build local dev; bundle for production, see README). -->
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+
+    <!-- CrazyGames SDK v3. Fails gracefully off-platform; our wrapper falls back to a local mock. -->
+    <script src="https://sdk.crazygames.com/crazygames-sdk-v3.js"></script>
+  </head>
+  <body>
+    <div id="game-root"></div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
