@@ -1,5 +1,7 @@
 // Button.js — reusable UI button with spring pop-in, hover scale, and click feedback.
 // A Container so it can be dropped straight into any scene or nested inside a panel.
+import { AudioManager } from '../systems/AudioManager.js';
+
 export default class Button extends Phaser.GameObjects.Container {
   /**
    * @param {Phaser.Scene} scene
@@ -37,9 +39,10 @@ export default class Button extends Phaser.GameObjects.Container {
     bg.on('pointerout', () =>
       scene.tweens.add({ targets: this, scale: 1, duration: 120, ease: 'Back.easeOut' })
     );
-    bg.on('pointerdown', () =>
-      scene.tweens.add({ targets: this, scale: 0.94, duration: 80, yoyo: true, onComplete: onClick })
-    );
+    bg.on('pointerdown', () => {
+      AudioManager.ui();
+      scene.tweens.add({ targets: this, scale: 0.94, duration: 80, yoyo: true, onComplete: onClick });
+    });
 
     // Spring pop-in.
     this.setScale(0);

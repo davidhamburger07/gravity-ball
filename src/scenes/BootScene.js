@@ -42,6 +42,11 @@ export default class BootScene extends Phaser.Scene {
     g.generateTexture('spike', 32, 32);
     g.clear();
 
+    // Spark — small white dot for particle bursts (tinted per effect).
+    g.fillStyle(0xffffff, 1).fillCircle(6, 6, 6);
+    g.generateTexture('spark', 12, 12);
+    g.clear();
+
     g.destroy();
   }
 }
