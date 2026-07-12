@@ -2,6 +2,8 @@
 // BootScene → PreloadScene → GameScene.
 import BootScene from './scenes/BootScene.js';
 import PreloadScene from './scenes/PreloadScene.js';
+import MenuScene from './scenes/MenuScene.js';
+import LevelSelectScene from './scenes/LevelSelectScene.js';
 import GameScene from './scenes/GameScene.js';
 import { VIEW, PHYSICS } from './config/GameConfig.js';
 
@@ -22,7 +24,7 @@ const config = {
       debug: false, // flip to true to inspect colliders vs sprites
     },
   },
-  scene: [BootScene, PreloadScene, GameScene],
+  scene: [BootScene, PreloadScene, MenuScene, LevelSelectScene, GameScene],
 };
 
 // eslint-disable-next-line no-new
