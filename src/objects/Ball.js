@@ -10,7 +10,7 @@ export default class Ball extends Phaser.Physics.Matter.Sprite {
     this.setCircle(PHYSICS.BALL_RADIUS);
     this.setFriction(PHYSICS.BALL_FRICTION, PHYSICS.BALL_FRICTION_AIR);
     this.setBounce(PHYSICS.BALL_BOUNCE);
-    this.setLabel('ball');
+    this.body.label = 'ball'; // Matter body label (used for collision routing); no setLabel() on sprites
     this.setDepth(10);
 
     this.spawn = { x, y };
