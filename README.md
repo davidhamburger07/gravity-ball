@@ -74,14 +74,19 @@ gravity-ball/
 │   ├── config/
 │   │   └── GameConfig.js   # Tuning constants (feel, physics, view)
 │   ├── scenes/
-│   │   ├── BootScene.js     # SDK init + placeholder texture generation
-│   │   ├── PreloadScene.js  # Loads external level data
-│   │   └── GameScene.js     # Assembles a level, wires systems, win/lose
+│   │   ├── BootScene.js         # SDK init + placeholder texture generation
+│   │   ├── PreloadScene.js      # Loads level data + boots the save system
+│   │   ├── MenuScene.js         # Title screen (springy UI, parallax backdrop)
+│   │   ├── LevelSelectScene.js  # Chapter tabs + level grid with stars/locks
+│   │   └── GameScene.js         # Assembles a level, wires systems, win/lose + stars
 │   ├── systems/
 │   │   ├── GravityController.js   # ★ THE CORE MECHANIC
-│   │   └── InputManager.js        # Keyboard + swipe → gravity requests
+│   │   ├── InputManager.js        # Keyboard + swipe → gravity requests
+│   │   └── SaveManager.js         # Progress, star ratings, unlock logic
 │   ├── objects/
 │   │   └── Ball.js          # Matter circle body; no self-locomotion by design
+│   ├── ui/
+│   │   └── Button.js        # Reusable spring-pop button (Container)
 │   ├── sdk/
 │   │   └── CrazyGamesSDK.js # Ads, gameplay lifecycle, cloud/local save
 │   └── data/
@@ -138,11 +143,11 @@ Full details, the mechanics library, and game-feel spec live in [`docs/GDD.md`](
 
 - [x] Core 4-way gravity system + input (keyboard & swipe)
 - [x] Data-driven levels + runnable Chapter 1 slice
-- [ ] Menu / Level-select scenes with star ratings
+- [x] Menu + Level-select scenes with star ratings & unlock progression
+- [x] Save system (CrazyGames data module, localStorage fallback)
 - [ ] Chapters 2–10 mechanics + full level set
 - [ ] Audio + particle juice pass
 - [ ] Production bundle (local Phaser/SDK) for CrazyGames upload
-- [ ] Cloud saves via CrazyGames data module
 
 ---
 
