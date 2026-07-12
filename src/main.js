@@ -27,5 +27,6 @@ const config = {
   scene: [BootScene, PreloadScene, MenuScene, LevelSelectScene, GameScene],
 };
 
-// eslint-disable-next-line no-new
-new Phaser.Game(config);
+// Expose the game instance for scripted testing (screenshot.mjs jumps to scenes/levels
+// via `window.game`). Harmless in production.
+window.game = new Phaser.Game(config);
