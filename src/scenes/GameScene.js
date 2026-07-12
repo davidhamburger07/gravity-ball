@@ -6,6 +6,8 @@ import Ball from '../objects/Ball.js';
 import GravityController, { GravityDirection } from '../systems/GravityController.js';
 import InputManager from '../systems/InputManager.js';
 import Button from '../ui/Button.js';
+import { AudioManager } from '../systems/AudioManager.js';
+import { Effects } from '../systems/Effects.js';
 import { CrazyGamesSDK } from '../sdk/CrazyGamesSDK.js';
 import { VIEW, PHYSICS, FEEL } from '../config/GameConfig.js';
 
@@ -20,6 +22,8 @@ export default class GameScene extends Phaser.Scene {
     this.levelId = data.levelId ?? this.levelId ?? '1-1';
     this.chapterId = data.chapterId ?? this.chapterId ?? 1;
     this._solved = false;
+    this._dying = false;
+    this._lastBounce = 0;
     this.shiftCount = 0;
   }
 
@@ -34,6 +38,7 @@ export default class GameScene extends Phaser.Scene {
     this.cameras.main.setBounds(0, 0, bounds.w, bounds.h);
     this.cameras.main.setBackgroundColor(VIEW.BACKGROUND);
 
+    this._buildParallax(bounds);
     this._buildStatic(level, bounds);
     this.ball = new Ball(this, level.spawn.x, level.spawn.y);
     this.cameras.main.startFollow(this.ball, true, FEEL.CAMERA_LERP, FEEL.CAMERA_LERP);
@@ -106,6 +111,42 @@ export default class GameScene extends Phaser.Scene {
     this.add.rectangle(x, y, w, h, 0x3a3f5c).setStrokeStyle(2, 0x4c5378);
   }
 
+  // Layered dot field behind the playfield; low scroll factors give parallax depth.
+  _buildParallax(bounds) {
+    const layers = [
+      { n: 26, sf: 0.25, alpha: 0.22, r: [1, 2] },
+      { n: 16, sf: 0.5, alpha: 0.32, r: [2, 3] },
+    ];
+    layers.forEach((L) => {
+      for (let i = 0; i < L.n; i++) {
+        this.add
+          .circle(
+            Phaser.Math.Between(-80, bounds.w + 80),
+            Phaser.Math.Between(-80, bounds.h + 80),
+            Phaser.Math.Between(L.r[0], L.r[1]),
+            0x2a2f45,
+            L.alpha
+          )
+          .setScrollFactor(L.sf)
+          .setDepth(-10);
+      }
+    });
+  }
+
+  // Squash-and-stretch: snap the ball's visual proxy to a scale, then spring back to 1.
+  // Targets ball.visual (never the physics body), so collisions stay exact.
+  _squash(sx, sy, dur = 220) {
+    if (!this.ball) return;
+    const v = this.ball.visual;
+    this.tweens.killTweensOf(v);
+    v.setScale(sx, sy);
+    this.tweens.add({ targets: v, scaleX: 1, scaleY: 1, duration: dur, ease: 'Back.easeOut' });
+  }
+
+  update() {
+    if (this.ball) this.ball.sync();
+  }
+
   _buildHud(level) {
     this.hud = this.add
       .text(12, 10, '', { fontFamily: 'monospace', fontSize: '16px', color: '#9aa0c3' })
@@ -116,6 +157,13 @@ export default class GameScene extends Phaser.Scene {
     new Button(this, VIEW.WIDTH - 40, 26, '‹', () => this._toLevelSelect(), {
       width: 44, height: 36, fontSize: '22px', color: 0x2a2f45, textColor: '#ffffff',
     }).setScrollFactor(0).setDepth(100);
+
+    // Mute toggle (persists via AudioManager/localStorage).
+    const mute = this.add
+      .text(VIEW.WIDTH - 92, 26, AudioManager.muted ? '\u{1F507}' : '\u{1F50A}', { fontSize: '20px' })
+      .setOrigin(0.5).setScrollFactor(0).setDepth(100)
+      .setInteractive({ useHandCursor: true });
+    mute.on('pointerdown', () => mute.setText(AudioManager.toggleMute() ? '\u{1F507}' : '\u{1F50A}'));
 
     if (level.hint) {
       this.add
@@ -136,7 +184,12 @@ export default class GameScene extends Phaser.Scene {
     this._updateHud();
     this.cameras.main.shake(120, FEEL.SHIFT_SHAKE);
     this.cameras.main.setFollowOffset(-vector.x * FEEL.CAMERA_LEAD_PX, -vector.y * FEEL.CAMERA_LEAD_PX);
-    // TODO: gravity-shift SFX + directional particle burst once audio/particles land.
+
+    AudioManager.shift();
+    Effects.directional(this, this.ball.x, this.ball.y, vector);
+    // Anticipation stretch: elongate the ball along the new "down" axis.
+    if (vector.x !== 0) this._squash(1.25, 0.82, 260);
+    else this._squash(0.82, 1.25, 260);
   }
 
   // --- Win / lose ----------------------------------------------------------
@@ -146,7 +199,25 @@ export default class GameScene extends Phaser.Scene {
       if (!labels.includes('ball')) continue;
       if (labels.includes('goal')) return this._win();
       if (labels.includes('hazard')) return this._die();
+      if (labels.includes('wall')) this._onWallImpact();
     }
+  }
+
+  // Hard landing against a wall → boing + squash + puff, gated by impact speed & a short cooldown.
+  _onWallImpact() {
+    if (this._solved || this._dying) return;
+    const speed = this.ball.body.speed;
+    if (speed < 4) return;
+    const now = this.time.now;
+    if (now - this._lastBounce < 90) return;
+    this._lastBounce = now;
+
+    const s = Phaser.Math.Clamp(speed / 12, 0.15, 0.5);
+    const v = this.gravity.vector;
+    if (v.x !== 0) this._squash(1 - s, 1 + s * 0.6, 200); // horizontal gravity → squash X
+    else this._squash(1 + s * 0.6, 1 - s, 200);           // vertical gravity → squash Y
+    AudioManager.bounce(speed / 14);
+    Effects.burst(this, this.ball.x, this.ball.y, { color: 0x38e1ff, count: 6, speed: 120, lifespan: 300, scale: 0.4 });
   }
 
   _computeStars() {
@@ -163,15 +234,35 @@ export default class GameScene extends Phaser.Scene {
     this.save.recordResult(this.level.id, { stars, shifts: this.shiftCount });
     CrazyGamesSDK.happytime();
     CrazyGamesSDK.gameplayStop();
+
+    AudioManager.win();
     this.cameras.main.flash(200, 43, 214, 123);
-    this._showCompletePanel(stars);
+    Effects.burst(this, this.ball.x, this.ball.y, { color: 0xffd23f, count: 24, speed: 260, lifespan: 700, scale: 0.8 });
+    Effects.burst(this, this.ball.x, this.ball.y, { color: 0x2bd67b, count: 16, speed: 170, lifespan: 700, scale: 0.6 });
+    // Zoom punch, then settle back.
+    this.cameras.main.zoomTo(1.08, 130, 'Sine.easeInOut', true);
+    this.time.delayedCall(170, () => this.cameras.main.zoomTo(1, 220));
+    this._squash(1.4, 1.4, 200);
+
+    this.time.delayedCall(260, () => this._showCompletePanel(stars));
   }
 
   _die() {
-    if (this._solved) return;
-    this.cameras.main.shake(200, 0.012);
+    if (this._solved || this._dying) return;
+    this._dying = true;
+    AudioManager.death();
+    Effects.burst(this, this.ball.x, this.ball.y, { color: 0xff4d5e, count: 18, speed: 220, lifespan: 500, scale: 0.7 });
+    this.cameras.main.shake(220, 0.014);
     this.cameras.main.flash(150, 255, 77, 94);
+
+    // Snap out of the hazard immediately, hide briefly, then pop back in at spawn.
     this.ball.respawn();
+    this.ball.visual.setVisible(false);
+    this.time.delayedCall(170, () => {
+      this.ball.visual.setVisible(true);
+      this._squash(0.2, 0.2, 320);
+      this._dying = false;
+    });
   }
 
   _showCompletePanel(stars) {
