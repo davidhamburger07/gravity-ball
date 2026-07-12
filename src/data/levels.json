@@ -140,12 +140,12 @@
           "solution": ["up", "right", "down"]
         },
         {
-          "id": "2-12", "hint": "Drop into the gap between the spikes.", "par": 4, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 420, "y": 560 },
-          "walls": [{ "x": 420, "y": 150, "w": 24, "h": 252 }],
+          "id": "2-12", "hint": "Drop past the pillar, then roll into the gap.", "par": 4, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 440, "y": 560 },
+          "walls": [{ "x": 380, "y": 150, "w": 24, "h": 252 }],
           "hazards": [
-            { "x": 300, "y": 558, "w": 40, "h": 36, "dir": "up" },
-            { "x": 540, "y": 558, "w": 40, "h": 36, "dir": "up" }
+            { "x": 280, "y": 558, "w": 40, "h": 36, "dir": "up" },
+            { "x": 520, "y": 558, "w": 40, "h": 36, "dir": "up" }
           ],
           "solution": ["up", "right", "down", "right"]
         },

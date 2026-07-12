@@ -146,8 +146,8 @@ Full details, the mechanics library, and game-feel spec live in [`docs/GDD.md`](
 - [x] Menu + Level-select scenes with star ratings & unlock progression
 - [x] Save system (CrazyGames data module, localStorage fallback)
 - [x] Chapter 1 — Ground Zero (4 levels) & Chapter 2 — Spike Fields (20 levels)
+- [x] Juice pass — procedural audio, particle bursts, squash-and-stretch, parallax, mute
 - [ ] Chapters 3–10 mechanics + full level set
-- [ ] Audio + particle juice pass
 - [ ] Production bundle (local Phaser/SDK) for CrazyGames upload
 
 ## 🧪 Tooling & QA
