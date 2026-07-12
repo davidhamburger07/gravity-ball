@@ -48,7 +48,189 @@
         }
       ]
     },
-    { "id": 2, "name": "Spike Fields", "mechanic": "Static hazards (spikes)", "levels": [] },
+    {
+      "id": 2,
+      "name": "Spike Fields",
+      "mechanic": "Static hazards (spikes)",
+      "levels": [
+        {
+          "id": "2-1", "hint": "Spikes are deadly. Go up and over them.", "par": 2, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 }, "walls": [],
+          "hazards": [{ "x": 440, "y": 558, "w": 40, "h": 36, "dir": "up" }],
+          "solution": ["up", "right"]
+        },
+        {
+          "id": "2-2", "hint": "Over the spike, then back down to the goal.", "par": 3, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 }, "walls": [],
+          "hazards": [{ "x": 440, "y": 558, "w": 40, "h": 36, "dir": "up" }],
+          "solution": ["up", "right", "down"]
+        },
+        {
+          "id": "2-3", "hint": "Two spikes, same idea — the ceiling is safe.", "par": 3, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 }, "walls": [],
+          "hazards": [
+            { "x": 320, "y": 558, "w": 40, "h": 36, "dir": "up" },
+            { "x": 520, "y": 558, "w": 40, "h": 36, "dir": "up" }
+          ],
+          "solution": ["up", "right", "down"]
+        },
+        {
+          "id": "2-4", "hint": "Spikes hang from the ceiling now. Stay low.", "par": 2, "gravity": "down",
+          "spawn": { "x": 120, "y": 480 }, "goal": { "x": 760, "y": 40 }, "walls": [],
+          "hazards": [
+            { "x": 400, "y": 42, "w": 40, "h": 36, "dir": "down" },
+            { "x": 600, "y": 42, "w": 40, "h": 36, "dir": "down" }
+          ],
+          "solution": ["right", "up"]
+        },
+        {
+          "id": "2-5", "hint": "Head the other way this time.", "par": 2, "gravity": "down",
+          "spawn": { "x": 680, "y": 480 }, "goal": { "x": 40, "y": 40 }, "walls": [],
+          "hazards": [
+            { "x": 300, "y": 42, "w": 40, "h": 36, "dir": "down" },
+            { "x": 500, "y": 42, "w": 40, "h": 36, "dir": "down" }
+          ],
+          "solution": ["left", "up"]
+        },
+        {
+          "id": "2-6", "hint": "A row of teeth — glide over the top.", "par": 3, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 }, "walls": [],
+          "hazards": [
+            { "x": 240, "y": 558, "w": 40, "h": 36, "dir": "up" },
+            { "x": 440, "y": 558, "w": 40, "h": 36, "dir": "up" },
+            { "x": 640, "y": 558, "w": 40, "h": 36, "dir": "up" }
+          ],
+          "solution": ["up", "right", "down"]
+        },
+        {
+          "id": "2-7", "par": 3, "gravity": "down",
+          "spawn": { "x": 680, "y": 120 }, "goal": { "x": 40, "y": 560 }, "walls": [],
+          "hazards": [{ "x": 440, "y": 558, "w": 40, "h": 36, "dir": "up" }],
+          "solution": ["up", "left", "down"]
+        },
+        {
+          "id": "2-8", "par": 2, "gravity": "down",
+          "spawn": { "x": 120, "y": 480 }, "goal": { "x": 760, "y": 40 }, "walls": [],
+          "hazards": [
+            { "x": 260, "y": 42, "w": 40, "h": 36, "dir": "down" },
+            { "x": 460, "y": 42, "w": 40, "h": 36, "dir": "down" },
+            { "x": 660, "y": 42, "w": 40, "h": 36, "dir": "down" }
+          ],
+          "solution": ["right", "up"]
+        },
+        {
+          "id": "2-9", "hint": "Spikes on the wall block that lane.", "par": 2, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 }, "walls": [],
+          "hazards": [{ "x": 758, "y": 300, "w": 36, "h": 40, "dir": "left" }],
+          "solution": ["up", "right"]
+        },
+        {
+          "id": "2-10", "par": 2, "gravity": "down",
+          "spawn": { "x": 680, "y": 120 }, "goal": { "x": 40, "y": 40 }, "walls": [],
+          "hazards": [{ "x": 42, "y": 300, "w": 36, "h": 40, "dir": "right" }],
+          "solution": ["up", "left"]
+        },
+        {
+          "id": "2-11", "par": 3, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 }, "walls": [],
+          "hazards": [
+            { "x": 300, "y": 558, "w": 40, "h": 36, "dir": "up" },
+            { "x": 620, "y": 558, "w": 40, "h": 36, "dir": "up" }
+          ],
+          "solution": ["up", "right", "down"]
+        },
+        {
+          "id": "2-12", "hint": "Drop into the gap between the spikes.", "par": 4, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 420, "y": 560 },
+          "walls": [{ "x": 420, "y": 150, "w": 24, "h": 252 }],
+          "hazards": [
+            { "x": 300, "y": 558, "w": 40, "h": 36, "dir": "up" },
+            { "x": 540, "y": 558, "w": 40, "h": 36, "dir": "up" }
+          ],
+          "solution": ["up", "right", "down", "right"]
+        },
+        {
+          "id": "2-13", "par": 4, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
+          "walls": [
+            { "x": 400, "y": 450, "w": 24, "h": 252 },
+            { "x": 600, "y": 150, "w": 24, "h": 252 }
+          ],
+          "hazards": [],
+          "solution": ["up", "right", "down", "right"]
+        },
+        {
+          "id": "2-14", "par": 2, "gravity": "down",
+          "spawn": { "x": 680, "y": 120 }, "goal": { "x": 40, "y": 40 }, "walls": [],
+          "hazards": [{ "x": 440, "y": 558, "w": 40, "h": 36, "dir": "up" }],
+          "solution": ["up", "left"]
+        },
+        {
+          "id": "2-15", "hint": "The ceiling is guarded — take the low road first.", "par": 5, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
+          "walls": [
+            { "x": 300, "y": 450, "w": 24, "h": 252 },
+            { "x": 520, "y": 150, "w": 24, "h": 252 }
+          ],
+          "hazards": [{ "x": 200, "y": 42, "w": 40, "h": 36, "dir": "down" }],
+          "solution": ["right", "up", "right", "down", "right"]
+        },
+        {
+          "id": "2-16", "par": 4, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 500, "y": 560 },
+          "walls": [{ "x": 500, "y": 150, "w": 24, "h": 252 }],
+          "hazards": [
+            { "x": 300, "y": 558, "w": 40, "h": 36, "dir": "up" },
+            { "x": 700, "y": 558, "w": 40, "h": 36, "dir": "up" }
+          ],
+          "solution": ["up", "right", "down", "right"]
+        },
+        {
+          "id": "2-17", "par": 6, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
+          "walls": [
+            { "x": 260, "y": 450, "w": 24, "h": 252 },
+            { "x": 440, "y": 150, "w": 24, "h": 252 },
+            { "x": 620, "y": 450, "w": 24, "h": 252 }
+          ],
+          "hazards": [],
+          "solution": ["up", "right", "down", "right", "up", "right"]
+        },
+        {
+          "id": "2-18", "par": 8, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
+          "walls": [
+            { "x": 360, "y": 150, "w": 24, "h": 252 },
+            { "x": 540, "y": 450, "w": 24, "h": 252 },
+            { "x": 680, "y": 150, "w": 24, "h": 252 }
+          ],
+          "hazards": [],
+          "solution": ["up", "right", "down", "right", "up", "right", "down", "right"]
+        },
+        {
+          "id": "2-19", "hint": "Guarded ceiling again — start low.", "par": 7, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
+          "walls": [
+            { "x": 300, "y": 450, "w": 24, "h": 252 },
+            { "x": 500, "y": 150, "w": 24, "h": 252 },
+            { "x": 680, "y": 450, "w": 24, "h": 252 }
+          ],
+          "hazards": [{ "x": 200, "y": 42, "w": 40, "h": 36, "dir": "down" }],
+          "solution": ["right", "up", "right", "down", "right", "up", "right"]
+        },
+        {
+          "id": "2-20", "hint": "The gauntlet. Everything you've learned.", "par": 7, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
+          "walls": [
+            { "x": 260, "y": 450, "w": 24, "h": 252 },
+            { "x": 440, "y": 150, "w": 24, "h": 252 },
+            { "x": 620, "y": 450, "w": 24, "h": 252 }
+          ],
+          "hazards": [{ "x": 180, "y": 42, "w": 40, "h": 36, "dir": "down" }],
+          "solution": ["right", "up", "right", "down", "right", "up", "right"]
+        }
+      ]
+    },
     { "id": 3, "name": "Bounce House", "mechanic": "Trampolines + sticky walls", "levels": [] },
     { "id": 4, "name": "Locksmith", "mechanic": "Keys & doors", "levels": [] },
     { "id": 5, "name": "Fragile Ground", "mechanic": "Breakable blocks + weight zones", "levels": [] },
