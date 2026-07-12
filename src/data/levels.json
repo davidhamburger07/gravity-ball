@@ -1,0 +1,45 @@
+{
+  "$schema-note": "Level data is arrayed by chapter -> level and is NEVER hardcoded in scripts. Coordinates are in pixels; walls/hazards use center-x/center-y + width/height.",
+  "chapters": [
+    {
+      "id": 1,
+      "name": "Ground Zero",
+      "mechanic": "4-way gravity shift + goal portal",
+      "levels": [
+        {
+          "id": "1-1",
+          "hint": "Press an Arrow key / WASD (or swipe) to change which way is down. Fall into the ring.",
+          "bounds": { "w": 800, "h": 600 },
+          "gravity": "down",
+          "spawn": { "x": 120, "y": 120 },
+          "goal": { "x": 680, "y": 500 },
+          "walls": [
+            { "x": 400, "y": 588, "w": 800, "h": 24 },
+            { "x": 12, "y": 300, "w": 24, "h": 600 },
+            { "x": 788, "y": 300, "w": 24, "h": 600 },
+            { "x": 400, "y": 12, "w": 800, "h": 24 },
+            { "x": 400, "y": 420, "w": 360, "h": 24 }
+          ],
+          "hazards": []
+        },
+        {
+          "id": "1-2",
+          "hint": "Sometimes you must fall UP. Use every direction.",
+          "bounds": { "w": 800, "h": 600 },
+          "gravity": "down",
+          "spawn": { "x": 120, "y": 480 },
+          "goal": { "x": 680, "y": 110 },
+          "walls": [
+            { "x": 400, "y": 588, "w": 800, "h": 24 },
+            { "x": 12, "y": 300, "w": 24, "h": 600 },
+            { "x": 788, "y": 300, "w": 24, "h": 600 },
+            { "x": 400, "y": 12, "w": 800, "h": 24 },
+            { "x": 250, "y": 300, "w": 24, "h": 340 },
+            { "x": 550, "y": 300, "w": 24, "h": 340 }
+          ],
+          "hazards": []
+        }
+      ]
+    }
+  ]
+}
