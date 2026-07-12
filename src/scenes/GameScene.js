@@ -86,10 +86,12 @@ export default class GameScene extends Phaser.Scene {
     (level.walls ?? []).forEach((wl) => this._wall(wl.x, wl.y, wl.w, wl.h));
 
     (level.hazards ?? []).forEach((hz) => {
-      this.matter.add.rectangle(hz.x, hz.y, hz.w ?? 32, hz.h ?? 32, {
-        isStatic: true, isSensor: true, label: 'hazard',
-      });
-      this.add.image(hz.x, hz.y, 'spike').setDisplaySize(hz.w ?? 32, hz.h ?? 32);
+      const w = hz.w ?? 32;
+      const h = hz.h ?? 32;
+      this.matter.add.rectangle(hz.x, hz.y, w, h, { isStatic: true, isSensor: true, label: 'hazard' });
+      // Orient the spike sprite toward the surface it sits on (texture points up by default).
+      const angle = { up: 0, right: 90, down: 180, left: 270 }[hz.dir ?? 'up'];
+      this.add.image(hz.x, hz.y, 'spike').setDisplaySize(w, h).setAngle(angle).setDepth(4);
     });
 
     // Goal sensor + a gently pulsing icon.
