@@ -233,13 +233,18 @@ export default class GameScene extends Phaser.Scene {
       return { body, visual };
     });
 
-    // Keys (Ch.4): collectible sensors, colored.
-    (level.keys ?? []).forEach((k) => {
+    // Keys (Ch.4): collectible sensors, colored. Volatile keys are returned on death
+    // (and any doors they opened re-lock), so visuals are hidden, never destroyed.
+    this._keyItems = (level.keys ?? []).map((k) => {
       const colorKey = k.color ?? 'gold';
+      const volatile = !!k.volatile;
       const body = this.matter.add.rectangle(k.x, k.y, 24, 26, { isStatic: true, isSensor: true, label: 'key' });
-      body.gbColor = colorKey;
-      body.gbVisual = this.add.image(k.x, k.y, 'key').setTint(KEY_COLORS[colorKey]).setDepth(6);
-      this.tweens.add({ targets: body.gbVisual, y: k.y - 6, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+      const visual = this.add.image(k.x, k.y, 'key').setTint(KEY_COLORS[colorKey]).setDepth(6);
+      if (volatile) visual.setAlpha(0.7); // reads as fragile
+      this.tweens.add({ targets: visual, y: k.y - 6, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+      const item = { body, visual, color: colorKey, volatile, collected: false };
+      body.gbItem = item;
+      return item;
     });
 
     // Goal sensor + a gently pulsing icon. A locked goal (`requires`) stays gray until its key is taken.
@@ -366,6 +371,16 @@ export default class GameScene extends Phaser.Scene {
       .setOrigin(0.5).setScrollFactor(0).setDepth(100)
       .setInteractive({ useHandCursor: true });
     mute.on('pointerdown', () => mute.setText(AudioManager.toggleMute() ? '\u{1F507}' : '\u{1F50A}'));
+
+    // Held-keys inventory (populated by _updateKeyHud as keys are collected/lost).
+    this._keyHud = this.add.container(VIEW.WIDTH / 2, 26).setScrollFactor(0).setDepth(100);
+
+    // Death-rule indicator: only shown when the level resets gravity on death.
+    if (level.resetGravityOnDeath) {
+      this.add
+        .text(12, 32, '⟲ gravity resets on death', { fontFamily: 'monospace', fontSize: '12px', color: '#7a80a8' })
+        .setScrollFactor(0).setDepth(100);
+    }
 
     // Ch.7: show which color is currently solid.
     if ((level.cblocks ?? []).length) {
@@ -504,26 +519,66 @@ export default class GameScene extends Phaser.Scene {
 
   // Collect a key: remember its color, open matching doors, unlock the goal if it required it.
   _collectKey(body) {
-    if (this._solved || this._dying || body.gbCollected) return;
-    body.gbCollected = true;
-    const colorKey = body.gbColor;
-    this._keys.add(colorKey);
-    const tint = KEY_COLORS[colorKey];
+    const item = body.gbItem;
+    if (this._solved || this._dying || !item || item.collected) return;
+    item.collected = true;
+    this._keys.add(item.color);
 
     AudioManager.key();
-    Effects.burst(this, body.position.x, body.position.y, { color: tint, count: 12, speed: 170, lifespan: 450, scale: 0.5 });
-    if (body.gbVisual) body.gbVisual.destroy();
+    Effects.burst(this, body.position.x, body.position.y, { color: KEY_COLORS[item.color], count: 12, speed: 170, lifespan: 450, scale: 0.5 });
+    item.visual.setVisible(false);
 
-    // Open matching doors: make them non-blocking (isSensor) rather than mutating the world mid-step.
+    this._syncDoors(true);
+    this._syncGoalLock();
+    this._updateKeyHud();
+  }
+
+  // Doors follow the held-key set: open (non-blocking, hidden) iff their color is held.
+  // isSensor is toggled rather than mutating the world mid-step; visuals hide, never destroy,
+  // so a door can re-lock when a volatile key is lost.
+  _syncDoors(withEffects = false) {
     this._doors.forEach((d) => {
-      if (d.color !== colorKey || d.body.gbOpen) return;
-      d.body.isSensor = true;
-      d.body.gbOpen = true;
-      Effects.burst(this, d.visual.x, d.visual.y, { color: tint, count: 10, speed: 150, lifespan: 400, scale: 0.5 });
-      d.visual.destroy();
+      const open = this._keys.has(d.color);
+      if (open === !!d.body.gbOpen) return;
+      d.body.gbOpen = open;
+      d.body.isSensor = open;
+      d.visual.setVisible(!open);
+      if (open && withEffects) {
+        Effects.burst(this, d.visual.x, d.visual.y, { color: KEY_COLORS[d.color], count: 10, speed: 150, lifespan: 400, scale: 0.5 });
+      }
     });
+  }
 
-    if (this.goalRequires === colorKey) this.goalIcon.clearTint();
+  _syncGoalLock() {
+    if (!this.goalRequires) return;
+    if (this._keys.has(this.goalRequires)) this.goalIcon.clearTint();
+    else this.goalIcon.setTint(0x555b7a);
+  }
+
+  // Held-keys inventory (top center). Volatile keys pulse to signal they're lost on death.
+  _updateKeyHud() {
+    if (!this._keyHud) return;
+    this._keyHud.removeAll(true);
+    const held = (this._keyItems ?? []).filter((k) => k.collected);
+    held.forEach((k, i) => {
+      const icon = this.add
+        .image((i - (held.length - 1) / 2) * 26, 0, 'key')
+        .setTint(KEY_COLORS[k.color])
+        .setScale(1.1);
+      this._keyHud.add(icon);
+      if (k.volatile) this.tweens.add({ targets: icon, alpha: 0.35, duration: 450, yoyo: true, repeat: -1 });
+    });
+  }
+
+  // Return volatile keys on death: uncollect them, recompute the held set, re-lock doors/goal.
+  _dropVolatileKeys() {
+    const dropped = (this._keyItems ?? []).filter((k) => k.collected && k.volatile);
+    if (!dropped.length) return;
+    dropped.forEach((k) => { k.collected = false; k.visual.setVisible(true); });
+    this._keys = new Set(this._keyItems.filter((k) => k.collected).map((k) => k.color));
+    this._syncDoors();
+    this._syncGoalLock();
+    this._updateKeyHud();
   }
 
   // Reach the goal — honored only if any required key has been collected.
@@ -618,6 +673,16 @@ export default class GameScene extends Phaser.Scene {
 
     // Snap out of the hazard immediately, hide briefly, then pop back in at spawn.
     this.ball.respawn();
+
+    // Designer-authored death rules (set in the level editor):
+    // optionally reset gravity to the level's start direction (prevents death loops where the
+    // respawned ball falls straight back into a hazard), and return any volatile keys.
+    if (this.level.resetGravityOnDeath) {
+      this.gravity.apply(this.level.gravity ?? GravityDirection.DOWN, { silent: true });
+      this.cameras.main.setFollowOffset(0, 0);
+    }
+    this._dropVolatileKeys();
+
     this.ball.visual.setTexture('ball');
     this.ball.visual.setVisible(false);
     this.time.delayedCall(170, () => {
