@@ -129,12 +129,13 @@ gravity-ball/
 |-------|--------|
 | `↑` / `W` · `↓` / `S` · `←` / `A` · `→` / `D` | Shift gravity Up / Down / Left / Right |
 | Swipe (touch) | Shift gravity in the swiped direction |
-| On-screen D-pad (touch) | Tap a direction to shift gravity |
 | `R` | Restart level |
 
-**Mobile:** touch devices get an on-screen directional pad (in addition to swipe), enlarged tap
-targets, and a "rotate to landscape" prompt in portrait — all touch-gated via a coarse-pointer
-query, so desktop is unaffected. It ships in the production bundle too.
+**Mobile:** plays in **portrait or landscape** — **swipe anywhere** on the screen to shift gravity.
+Swipes are captured on `window` (not just the canvas), so they register even in the space around a
+portrait-fit playfield. The canvas is centered with a dynamic-viewport (`100dvh`) layout over a
+full-screen background, and a loading spinner covers the initial engine download. All in the
+production bundle.
 
 ---
 
