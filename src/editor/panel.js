@@ -6,8 +6,12 @@ import { model } from './model.js';
 const PLAYTEST_KEY = 'gravityball:playtest';
 
 const TOOLS = [
-  ['spawn', 'Spawn'], ['goal', 'Goal'], ['wall', 'Wall'], ['spike', 'Spike'],
-  ['sticky', 'Sticky'], ['bouncer', 'Trampoline'], ['key', 'Key'], ['door', 'Door'], ['erase', 'Erase'],
+  ['spawn', 'Spawn'], ['goal', 'Goal'], ['wall', 'Wall'],
+  ['spike', 'Spike'], ['sticky', 'Sticky'], ['bouncer', 'Bounce'],
+  ['key', 'Key'], ['door', 'Door'], ['portal', 'Portal'],
+  ['weight', 'Weight'], ['breakable', 'Break'], ['cblock', 'ColorBlk'],
+  ['switch', 'Switch'], ['slowzone', 'SlowZone'], ['laser', 'Laser'],
+  ['gravzone', 'GravZone'], ['blackhole', 'BlackHole'], ['erase', 'Erase'],
 ];
 
 function el(tag, props = {}, kids = []) {
@@ -34,6 +38,12 @@ function select(id, options, value) {
   return s;
 }
 
+function checkbox(id, checked) {
+  const c = el('input', { id, type: 'checkbox' });
+  c.checked = checked;
+  return c;
+}
+
 export function initPanel(root) {
   const inputs = {};
 
@@ -41,26 +51,51 @@ export function initPanel(root) {
   const toolButtons = TOOLS.map(([tool, label]) =>
     el('button', {
       class: 'tool', 'data-tool': tool,
-      onclick: () => { model.tool = tool; setActiveTool(tool); },
+      onclick: () => {
+        model.tool = tool;
+        model._pendingPortal = null; // switching tools cancels a half-placed portal pair
+        model.dirty = true;
+        setActiveTool(tool);
+      },
     }, document.createTextNode(label))
   );
   function setActiveTool(tool) {
     toolButtons.forEach((b) => b.classList.toggle('active', b.dataset.tool === tool));
   }
 
+  // --- Piece options --------------------------------------------------------
   inputs.dir = select('prop-dir', ['up', 'down', 'left', 'right'], model.dir);
   inputs.dir.onchange = () => { model.dir = inputs.dir.value; };
   inputs.color = select('prop-color', ['gold', 'blue', 'pink'], model.color);
   inputs.color.onchange = () => { model.color = inputs.color.value; };
+  inputs.volatileKey = checkbox('prop-volatile', model.volatileKey);
+  inputs.volatileKey.onchange = () => { model.volatileKey = inputs.volatileKey.checked; };
+  inputs.cblockColor = select('prop-cblock', ['red', 'blue'], model.cblockColor);
+  inputs.cblockColor.onchange = () => { model.cblockColor = inputs.cblockColor.value; };
   inputs.power = el('input', { id: 'prop-power', type: 'number', min: '8', max: '30', value: model.power });
   inputs.power.onchange = () => { model.power = Number(inputs.power.value) || 20; };
+  inputs.laserOn = el('input', { id: 'prop-laser-on', type: 'number', min: '100', step: '100', value: model.laserOn });
+  inputs.laserOn.onchange = () => { model.laserOn = Number(inputs.laserOn.value) || 700; };
+  inputs.laserOff = el('input', { id: 'prop-laser-off', type: 'number', min: '300', step: '100', value: model.laserOff });
+  inputs.laserOff.onchange = () => { model.laserOff = Number(inputs.laserOff.value) || 1800; };
+  inputs.bhRadius = el('input', { id: 'prop-bh-radius', type: 'number', min: '60', max: '260', step: '10', value: model.bhRadius });
+  inputs.bhRadius.onchange = () => { model.bhRadius = Number(inputs.bhRadius.value) || 150; };
+  inputs.weightKind = select('prop-weight-kind', [['heavy', 'heavy (smash)'], ['normal', 'normal (reset)']], model.weightKind);
+  inputs.weightKind.onchange = () => { model.weightKind = inputs.weightKind.value; };
+  inputs.lineMode = checkbox('prop-line', model.lineMode);
+  inputs.lineMode.onchange = () => { model.lineMode = inputs.lineMode.checked; };
 
+  // --- Level settings -------------------------------------------------------
   inputs.id = el('input', { id: 'lvl-id', value: model.id });
   inputs.id.oninput = () => { model.id = inputs.id.value; };
   inputs.gravity = select('lvl-gravity', ['down', 'up', 'left', 'right'], model.gravity);
   inputs.gravity.onchange = () => { model.gravity = inputs.gravity.value; };
   inputs.par = el('input', { id: 'lvl-par', type: 'number', min: '1', value: model.par });
   inputs.par.oninput = () => { model.par = Number(inputs.par.value) || 1; };
+  inputs.activeColor = select('lvl-active-color', ['red', 'blue'], model.activeColor);
+  inputs.activeColor.onchange = () => { model.activeColor = inputs.activeColor.value; model.dirty = true; };
+  inputs.resetGravity = checkbox('lvl-reset-gravity', model.resetGravityOnDeath);
+  inputs.resetGravity.onchange = () => { model.resetGravityOnDeath = inputs.resetGravity.checked; };
   inputs.requires = select('goal-requires', [['', 'none'], 'gold', 'blue', 'pink'], model.goal.requires ?? '');
   inputs.requires.onchange = () => { model.goal.requires = inputs.requires.value || null; model.dirty = true; };
   inputs.hint = el('input', { id: 'lvl-hint', value: model.hint });
@@ -73,10 +108,19 @@ export function initPanel(root) {
   function syncInputs() {
     inputs.dir.value = model.dir;
     inputs.color.value = model.color;
+    inputs.volatileKey.checked = model.volatileKey;
+    inputs.cblockColor.value = model.cblockColor;
     inputs.power.value = model.power;
+    inputs.laserOn.value = model.laserOn;
+    inputs.laserOff.value = model.laserOff;
+    inputs.bhRadius.value = model.bhRadius;
+    inputs.weightKind.value = model.weightKind;
+    inputs.lineMode.checked = model.lineMode;
     inputs.id.value = model.id;
     inputs.gravity.value = model.gravity;
     inputs.par.value = model.par;
+    inputs.activeColor.value = model.activeColor;
+    inputs.resetGravity.checked = model.resetGravityOnDeath;
     inputs.requires.value = model.goal.requires ?? '';
     inputs.hint.value = model.hint;
   }
@@ -84,15 +128,26 @@ export function initPanel(root) {
   root.append(
     el('h1', {}, document.createTextNode('Level Editor')),
     section('Tool', el('div', { class: 'grid' }, toolButtons)),
+    section('Placement', [
+      row(inputs.lineMode, 'Line tool — drag to stamp a row'),
+    ]),
     section('Piece options', [
-      labeled('Direction (spike / trampoline)', inputs.dir),
-      labeled('Color (key / door)', inputs.color),
-      labeled('Trampoline power', inputs.power),
+      labeled('Direction (spike / bounce / grav zone)', inputs.dir),
+      labeled('Key / door color', inputs.color),
+      row(inputs.volatileKey, 'Volatile key — lost on death'),
+      labeled('Color block', inputs.cblockColor),
+      labeled('Bounce power', inputs.power),
+      labeled('Laser on (ms)', inputs.laserOn),
+      labeled('Laser off (ms)', inputs.laserOff),
+      labeled('Black hole radius', inputs.bhRadius),
+      labeled('Weight zone', inputs.weightKind),
     ]),
     section('Level', [
       labeled('ID', inputs.id),
       labeled('Start gravity', inputs.gravity),
       labeled('Par (shifts)', inputs.par),
+      labeled('Solid color at start (color blocks)', inputs.activeColor),
+      row(inputs.resetGravity, 'Reset gravity when the player dies'),
       labeled('Goal needs key', inputs.requires),
       labeled('Hint', inputs.hint),
     ]),
@@ -110,7 +165,10 @@ export function initPanel(root) {
       jsonArea,
       status,
     ]),
-    el('p', { class: 'help' }, document.createTextNode('Click to place (default size) or drag to draw a box. Erase removes the piece under the cursor. Grid snaps to 20px.')),
+    el('p', { class: 'help' }, document.createTextNode(
+      'Click to place (default size) or drag to draw a box. Portal takes two clicks (a linked pair). ' +
+      'Line tool stamps a row of the selected piece along a drag. Erase removes the piece under the cursor. Grid snaps to 20px.'
+    )),
     el('a', { href: './', class: 'back' }, document.createTextNode('← Back to game')),
   );
 
@@ -125,6 +183,9 @@ export function initPanel(root) {
   }
   function labeled(text, control) {
     return el('div', { class: 'field' }, [el('label', {}, document.createTextNode(text)), control]);
+  }
+  function row(control, text) {
+    return el('label', { class: 'field-row' }, [control, document.createTextNode(text)]);
   }
 
   function playtest() {
