@@ -29,12 +29,19 @@ export default class GravityController {
    */
   constructor(scene, opts = {}) {
     this.scene = scene;
-    this.strength = opts.strength ?? 1;
+    this.baseStrength = opts.strength ?? 1;
+    this.strength = this.baseStrength;
     this.cooldown = opts.cooldown ?? 120;
     this.direction = opts.initial ?? GravityDirection.DOWN;
     this._lockedUntil = 0;
 
     // Apply the initial direction silently (no juice/events on level start).
+    this.apply(this.direction, { silent: true });
+  }
+
+  /** Scale gravity strength (Ch.5 weight zones: a heavy ball falls faster). Re-applies silently. */
+  setStrengthMultiplier(m) {
+    this.strength = this.baseStrength * m;
     this.apply(this.direction, { silent: true });
   }
 

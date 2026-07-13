@@ -12,6 +12,13 @@ export function generatePlaceholderTextures(scene) {
   g.generateTexture('ball', r * 2, r * 2);
   g.clear();
 
+  // Heavy ball (Ch.5) — amber. Swapped in (not tinted) since tint multiplies with the cyan.
+  g.fillStyle(0xffa53a, 1).fillCircle(r, r, r);
+  g.fillStyle(0x6b3410, 1).fillCircle(r, r, r * 0.42); // dense core
+  g.fillStyle(0xffffff, 0.5).fillCircle(r * 0.65, r * 0.65, r * 0.24);
+  g.generateTexture('ball-heavy', r * 2, r * 2);
+  g.clear();
+
   // Wall tile — cool slate.
   g.fillStyle(0x3a3f5c, 1).fillRect(0, 0, 32, 32);
   g.lineStyle(2, 0x4c5378, 1).strokeRect(1, 1, 30, 30);

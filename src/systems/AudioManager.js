@@ -52,6 +52,7 @@ class AudioManagerImpl {
   death() { this._tone({ type: 'sawtooth', freq: 320, freqTo: 60, dur: 0.34, gain: 0.16 }); }
   stick() { this._tone({ type: 'sine', freq: 200, dur: 0.08, gain: 0.12 }); }
   key() { [660, 990].forEach((f, i) => this._tone({ type: 'triangle', freq: f, dur: 0.1, gain: 0.13, delay: i * 0.06 })); }
+  smash() { this._tone({ type: 'square', freq: 140, freqTo: 50, dur: 0.16, gain: 0.18 }); }
   win() {
     [523, 659, 784, 1047].forEach((f, i) =>
       this._tone({ type: 'triangle', freq: f, dur: 0.16, gain: 0.14, delay: i * 0.09 })

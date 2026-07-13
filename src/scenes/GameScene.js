@@ -32,6 +32,7 @@ export default class GameScene extends Phaser.Scene {
     this._lastTrampoline = 0;
     this._stickCooldownUntil = 0;
     this._keys = new Set(); // colors of keys collected
+    this._heavy = false; // Ch.5 weight state
     this.shiftCount = 0;
   }
 
@@ -137,6 +138,21 @@ export default class GameScene extends Phaser.Scene {
       body.gbColor = colorKey;
       const visual = this.add.rectangle(d.x, d.y, d.w, d.h, tint, 0.45).setStrokeStyle(2, tint).setDepth(3);
       return { body, visual, color: colorKey };
+    });
+
+    // Weight zones (Ch.5): sensors that make the ball heavy (or reset it to normal).
+    (level.weights ?? []).forEach((z) => {
+      const body = this.matter.add.rectangle(z.x, z.y, z.w, z.h, { isStatic: true, isSensor: true, label: 'weight' });
+      body.gbKind = z.kind ?? 'heavy';
+      const tint = body.gbKind === 'heavy' ? 0xd4663a : 0x6db3ff;
+      this.add.rectangle(z.x, z.y, z.w, z.h, tint, 0.16).setStrokeStyle(1, tint, 0.5).setDepth(1);
+    });
+
+    // Breakable blocks (Ch.5): solid walls (orange) that a HEAVY ball smashes through.
+    this._breakables = (level.breakables ?? []).map((br) => {
+      const body = this.matter.add.rectangle(br.x, br.y, br.w, br.h, { isStatic: true, label: 'breakable' });
+      const visual = this.add.rectangle(br.x, br.y, br.w, br.h, 0xc8763a, 0.9).setStrokeStyle(3, 0xf0a86a).setDepth(3);
+      return { body, visual };
     });
 
     // Keys (Ch.4): collectible sensors, colored.
@@ -262,8 +278,43 @@ export default class GameScene extends Phaser.Scene {
       if (other.label === 'sticky') { this._onSticky(other); continue; }
       if (other.label === 'key') { this._collectKey(other); continue; }
       if (other.label === 'door') { if (!other.gbOpen) this._onWallImpact(); continue; }
+      if (other.label === 'weight') { this._setHeavy(other.gbKind === 'heavy'); continue; }
+      if (other.label === 'breakable') {
+        if (other.gbOpen) continue;
+        if (this._heavy) this._smash(other);
+        else this._onWallImpact(); // solid to a normal ball
+        continue;
+      }
       if (other.label === 'wall') this._onWallImpact();
     }
+  }
+
+  // Weight zones (Ch.5): a heavy ball falls faster and can smash breakables.
+  _setHeavy(heavy) {
+    if (this._solved || this._dying || this._heavy === heavy) return;
+    this._heavy = heavy;
+    this.gravity.setStrengthMultiplier(heavy ? 1.4 : 1);
+    const v = this.ball.visual;
+    if (heavy) { v.setTexture('ball-heavy'); v.setScale(1.18); AudioManager.stick(); }
+    else { v.setTexture('ball'); v.setScale(1); }
+  }
+
+  // Smash a breakable: make it non-blocking (like an opened door) + feedback. Momentum is
+  // preserved (with a floor) so a heavy ball can punch through blocks back-to-back.
+  _smash(body) {
+    body.isSensor = true;
+    body.gbOpen = true;
+    const v = this.ball.body.velocity;
+    const speed = Math.hypot(v.x, v.y) || 1;
+    const boost = Math.max(speed, 7);
+    this.ball.setVelocity((v.x / speed) * boost, (v.y / speed) * boost);
+    const b = this._breakables.find((x) => x.body === body);
+    if (b) {
+      Effects.burst(this, b.visual.x, b.visual.y, { color: 0xf0a86a, count: 16, speed: 220, lifespan: 500, scale: 0.7 });
+      b.visual.destroy();
+    }
+    AudioManager.smash();
+    this.cameras.main.shake(120, 0.006);
   }
 
   // Collect a key: remember its color, open matching doors, unlock the goal if it required it.
@@ -372,6 +423,8 @@ export default class GameScene extends Phaser.Scene {
     if (this._solved || this._dying) return;
     this._dying = true;
     this._stuck = false;
+    this._heavy = false;
+    this.gravity.setStrengthMultiplier(1);
     if (this.ball.body.isStatic) this.ball.setStatic(false);
     AudioManager.death();
     Effects.burst(this, this.ball.x, this.ball.y, { color: 0xff4d5e, count: 18, speed: 220, lifespan: 500, scale: 0.7 });
@@ -380,6 +433,7 @@ export default class GameScene extends Phaser.Scene {
 
     // Snap out of the hazard immediately, hide briefly, then pop back in at spawn.
     this.ball.respawn();
+    this.ball.visual.setTexture('ball');
     this.ball.visual.setVisible(false);
     this.time.delayedCall(170, () => {
       this.ball.visual.setVisible(true);
