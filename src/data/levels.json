@@ -421,7 +421,207 @@
         }
       ]
     },
-    { "id": 4, "name": "Locksmith", "mechanic": "Keys & doors", "levels": [] },
+    {
+      "id": 4,
+      "name": "Locksmith",
+      "mechanic": "Keys & doors",
+      "levels": [
+        {
+          "id": "4-1", "hint": "Grab the key, then reach the goal.", "par": 2, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40, "requires": "gold" },
+          "keys": [{ "x": 400, "y": 560, "color": "gold" }],
+          "solution": ["right", "up"]
+        },
+        {
+          "id": "4-2", "par": 3, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560, "requires": "gold" },
+          "keys": [{ "x": 120, "y": 40, "color": "gold" }],
+          "solution": ["up", "right", "down"]
+        },
+        {
+          "id": "4-3", "par": 4, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 40, "y": 560, "requires": "gold" },
+          "keys": [{ "x": 760, "y": 40, "color": "gold" }],
+          "solution": ["right", "up", "left", "down"]
+        },
+        {
+          "id": "4-4", "par": 3, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560, "requires": "gold" },
+          "keys": [{ "x": 400, "y": 40, "color": "gold" }],
+          "hazards": [{ "x": 600, "y": 558, "w": 40, "h": 36, "dir": "up" }],
+          "solution": ["up", "right", "down"]
+        },
+        {
+          "id": "4-5", "hint": "Keys open doors of the same color.", "par": 3, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
+          "doors": [{ "x": 440, "y": 300, "w": 24, "h": 552, "color": "gold" }],
+          "keys": [{ "x": 200, "y": 40, "color": "gold" }],
+          "solution": ["up", "right", "down"]
+        },
+        {
+          "id": "4-6", "par": 4, "gravity": "down",
+          "spawn": { "x": 680, "y": 120 }, "goal": { "x": 40, "y": 560 },
+          "doors": [{ "x": 440, "y": 300, "w": 24, "h": 552, "color": "gold" }],
+          "keys": [{ "x": 760, "y": 40, "color": "gold" }],
+          "solution": ["right", "up", "left", "down"]
+        },
+        {
+          "id": "4-7", "par": 2, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
+          "doors": [{ "x": 500, "y": 300, "w": 24, "h": 552, "color": "gold" }],
+          "keys": [{ "x": 300, "y": 560, "color": "gold" }],
+          "solution": ["right", "up"]
+        },
+        {
+          "id": "4-8", "par": 3, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
+          "doors": [{ "x": 400, "y": 300, "w": 24, "h": 552, "color": "gold" }],
+          "keys": [{ "x": 120, "y": 40, "color": "gold" }],
+          "solution": ["up", "right", "down"]
+        },
+        {
+          "id": "4-9", "par": 3, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
+          "doors": [{ "x": 440, "y": 300, "w": 24, "h": 552, "color": "gold" }],
+          "keys": [{ "x": 200, "y": 40, "color": "gold" }],
+          "hazards": [
+            { "x": 600, "y": 558, "w": 40, "h": 36, "dir": "up" },
+            { "x": 720, "y": 558, "w": 40, "h": 36, "dir": "up" }
+          ],
+          "solution": ["up", "right", "down"]
+        },
+        {
+          "id": "4-10", "par": 3, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 600, "y": 560 },
+          "doors": [{ "x": 400, "y": 300, "w": 24, "h": 552, "color": "gold" }],
+          "keys": [{ "x": 200, "y": 40, "color": "gold" }],
+          "sticky": [{ "x": 600, "y": 36, "w": 44, "h": 24 }],
+          "solution": ["up", "right", "down"]
+        },
+        {
+          "id": "4-11", "par": 2, "gravity": "down",
+          "spawn": { "x": 400, "y": 100 }, "goal": { "x": 760, "y": 560 },
+          "doors": [{ "x": 600, "y": 300, "w": 24, "h": 552, "color": "gold" }],
+          "keys": [{ "x": 400, "y": 40, "color": "gold" }],
+          "sticky": [{ "x": 400, "y": 36, "w": 44, "h": 24 }],
+          "bouncers": [{ "x": 400, "y": 566, "w": 48, "h": 20, "dir": "up", "power": 20 }],
+          "solution": ["right", "down"]
+        },
+        {
+          "id": "4-12", "hint": "One key can open several doors.", "par": 3, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
+          "doors": [
+            { "x": 300, "y": 300, "w": 24, "h": 552, "color": "gold" },
+            { "x": 600, "y": 300, "w": 24, "h": 552, "color": "gold" }
+          ],
+          "keys": [{ "x": 120, "y": 40, "color": "gold" }],
+          "solution": ["up", "right", "down"]
+        },
+        {
+          "id": "4-13", "par": 4, "gravity": "down",
+          "spawn": { "x": 680, "y": 120 }, "goal": { "x": 40, "y": 560 },
+          "doors": [{ "x": 400, "y": 300, "w": 24, "h": 552, "color": "gold" }],
+          "keys": [{ "x": 760, "y": 40, "color": "gold" }],
+          "hazards": [
+            { "x": 200, "y": 558, "w": 40, "h": 36, "dir": "up" },
+            { "x": 300, "y": 558, "w": 40, "h": 36, "dir": "up" }
+          ],
+          "solution": ["right", "up", "left", "down"]
+        },
+        {
+          "id": "4-14", "par": 2, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 450, "y": 40 },
+          "doors": [{ "x": 300, "y": 300, "w": 24, "h": 552, "color": "gold" }],
+          "keys": [{ "x": 200, "y": 560, "color": "gold" }],
+          "sticky": [{ "x": 450, "y": 564, "w": 44, "h": 24 }],
+          "solution": ["right", "up"]
+        },
+        {
+          "id": "4-15", "hint": "Two colors. Take each key before its door.", "par": 3, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
+          "doors": [
+            { "x": 300, "y": 300, "w": 24, "h": 552, "color": "gold" },
+            { "x": 600, "y": 300, "w": 24, "h": 552, "color": "blue" }
+          ],
+          "keys": [
+            { "x": 120, "y": 40, "color": "gold" },
+            { "x": 450, "y": 40, "color": "blue" }
+          ],
+          "solution": ["up", "right", "down"]
+        },
+        {
+          "id": "4-16", "par": 3, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
+          "doors": [
+            { "x": 400, "y": 300, "w": 24, "h": 552, "color": "gold" },
+            { "x": 700, "y": 300, "w": 24, "h": 552, "color": "blue" }
+          ],
+          "keys": [
+            { "x": 120, "y": 40, "color": "gold" },
+            { "x": 600, "y": 40, "color": "blue" }
+          ],
+          "solution": ["up", "right", "down"]
+        },
+        {
+          "id": "4-17", "par": 4, "gravity": "down",
+          "spawn": { "x": 680, "y": 120 }, "goal": { "x": 40, "y": 560 },
+          "doors": [
+            { "x": 500, "y": 300, "w": 24, "h": 552, "color": "gold" },
+            { "x": 250, "y": 300, "w": 24, "h": 552, "color": "blue" }
+          ],
+          "keys": [
+            { "x": 760, "y": 40, "color": "gold" },
+            { "x": 400, "y": 40, "color": "blue" }
+          ],
+          "solution": ["right", "up", "left", "down"]
+        },
+        {
+          "id": "4-18", "par": 3, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
+          "doors": [{ "x": 500, "y": 300, "w": 24, "h": 552, "color": "gold" }],
+          "keys": [{ "x": 300, "y": 40, "color": "gold" }],
+          "hazards": [
+            { "x": 200, "y": 558, "w": 40, "h": 36, "dir": "up" },
+            { "x": 600, "y": 558, "w": 40, "h": 36, "dir": "up" },
+            { "x": 700, "y": 558, "w": 40, "h": 36, "dir": "up" }
+          ],
+          "solution": ["up", "right", "down"]
+        },
+        {
+          "id": "4-19", "par": 3, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 680, "y": 560 },
+          "doors": [
+            { "x": 350, "y": 300, "w": 24, "h": 552, "color": "gold" },
+            { "x": 650, "y": 300, "w": 24, "h": 552, "color": "blue" }
+          ],
+          "keys": [
+            { "x": 120, "y": 40, "color": "gold" },
+            { "x": 500, "y": 40, "color": "blue" }
+          ],
+          "sticky": [{ "x": 680, "y": 36, "w": 44, "h": 24 }],
+          "hazards": [{ "x": 760, "y": 558, "w": 40, "h": 36, "dir": "up" }],
+          "solution": ["up", "right", "down"]
+        },
+        {
+          "id": "4-20", "hint": "The vault. Two keys, two doors, mind the spikes.", "par": 3, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 740, "y": 560 },
+          "doors": [
+            { "x": 300, "y": 300, "w": 24, "h": 552, "color": "gold" },
+            { "x": 620, "y": 300, "w": 24, "h": 552, "color": "blue" }
+          ],
+          "keys": [
+            { "x": 120, "y": 40, "color": "gold" },
+            { "x": 480, "y": 40, "color": "blue" }
+          ],
+          "sticky": [{ "x": 740, "y": 36, "w": 44, "h": 24 }],
+          "hazards": [
+            { "x": 400, "y": 558, "w": 40, "h": 36, "dir": "up" },
+            { "x": 560, "y": 558, "w": 40, "h": 36, "dir": "up" }
+          ],
+          "solution": ["up", "right", "down"]
+        }
+      ]
+    },
     { "id": 5, "name": "Fragile Ground", "mechanic": "Breakable blocks + weight zones", "levels": [] },
     { "id": 6, "name": "Wormholes", "mechanic": "Momentum-preserving portals", "levels": [] },
     { "id": 7, "name": "Chromatic", "mechanic": "Color switches", "levels": [] },
