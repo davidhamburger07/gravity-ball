@@ -1475,6 +1475,184 @@
         }
       ]
     },
-    { "id": 10, "name": "Event Horizon", "mechanic": "Capstone: limited gravity shifts", "levels": [] }
+    {
+      "id": 10,
+      "name": "Event Horizon",
+      "mechanic": "Capstone: limited gravity shifts",
+      "levels": [
+        {
+          "id": "10-1", "hint": "You have a SHIFT BUDGET now. Spend it wisely.", "par": 1, "maxShifts": 1, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
+          "solution": ["right"]
+        },
+        {
+          "id": "10-2", "hint": "Three shifts, three moves. No waste.", "par": 3, "maxShifts": 3, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
+          "hazards": [
+            { "x": 240, "y": 558, "w": 40, "h": 36, "dir": "up" },
+            { "x": 440, "y": 558, "w": 40, "h": 36, "dir": "up" },
+            { "x": 640, "y": 558, "w": 40, "h": 36, "dir": "up" }
+          ],
+          "solution": ["up", "right", "down"]
+        },
+        {
+          "id": "10-3", "par": 2, "maxShifts": 2, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 400, "y": 40 },
+          "sticky": [{ "x": 400, "y": 564, "w": 44, "h": 24 }],
+          "solution": ["right", "up"]
+        },
+        {
+          "id": "10-4", "par": 2, "maxShifts": 2, "gravity": "down",
+          "spawn": { "x": 400, "y": 100 }, "goal": { "x": 760, "y": 560 },
+          "sticky": [{ "x": 400, "y": 36, "w": 44, "h": 24 }],
+          "bouncers": [{ "x": 400, "y": 566, "w": 48, "h": 20, "dir": "up", "power": 20 }],
+          "solution": ["right", "down"]
+        },
+        {
+          "id": "10-5", "par": 3, "maxShifts": 3, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
+          "doors": [{ "x": 440, "y": 300, "w": 24, "h": 552, "color": "gold" }],
+          "keys": [{ "x": 200, "y": 40, "color": "gold" }],
+          "solution": ["up", "right", "down"]
+        },
+        {
+          "id": "10-6", "par": 1, "maxShifts": 1, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
+          "weights": [{ "x": 170, "y": 300, "w": 300, "h": 552, "kind": "heavy" }],
+          "breakables": [{ "x": 400, "y": 300, "w": 24, "h": 552 }],
+          "solution": ["right"]
+        },
+        {
+          "id": "10-7", "par": 1, "maxShifts": 1, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
+          "walls": [{ "x": 400, "y": 300, "w": 24, "h": 552 }],
+          "portals": [{ "a": { "x": 340, "y": 560 }, "b": { "x": 480, "y": 560 } }],
+          "solution": ["right"]
+        },
+        {
+          "id": "10-8", "par": 1, "maxShifts": 1, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 }, "activeColor": "red",
+          "cblocks": [
+            { "x": 300, "y": 300, "w": 24, "h": 552, "color": "red" },
+            { "x": 600, "y": 300, "w": 24, "h": 552, "color": "blue" }
+          ],
+          "switches": [{ "x": 200, "y": 560 }, { "x": 450, "y": 560 }],
+          "solution": ["right"]
+        },
+        {
+          "id": "10-9", "par": 1, "maxShifts": 1, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
+          "lasers": [{ "x": 400, "y": 300, "w": 12, "h": 552, "on": 700, "off": 1800 }],
+          "solution": ["right"]
+        },
+        {
+          "id": "10-10", "par": 2, "maxShifts": 2, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
+          "gravzones": [{ "x": 600, "y": 300, "w": 352, "h": 552, "dir": "up" }],
+          "solution": ["up", "right"]
+        },
+        {
+          "id": "10-11", "hint": "Catch on the ceiling pad, then drop between the teeth.", "par": 3, "maxShifts": 3, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 480, "y": 560 },
+          "sticky": [{ "x": 480, "y": 36, "w": 44, "h": 24 }],
+          "hazards": [
+            { "x": 240, "y": 558, "w": 40, "h": 36, "dir": "up" },
+            { "x": 360, "y": 558, "w": 40, "h": 36, "dir": "up" },
+            { "x": 600, "y": 558, "w": 40, "h": 36, "dir": "up" },
+            { "x": 760, "y": 558, "w": 40, "h": 36, "dir": "up" }
+          ],
+          "solution": ["up", "right", "down"]
+        },
+        {
+          "id": "10-12", "par": 3, "maxShifts": 3, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
+          "doors": [{ "x": 440, "y": 300, "w": 24, "h": 552, "color": "gold" }],
+          "keys": [{ "x": 200, "y": 40, "color": "gold" }],
+          "hazards": [
+            { "x": 600, "y": 558, "w": 40, "h": 36, "dir": "up" },
+            { "x": 720, "y": 558, "w": 40, "h": 36, "dir": "up" }
+          ],
+          "solution": ["up", "right", "down"]
+        },
+        {
+          "id": "10-13", "par": 1, "maxShifts": 1, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
+          "hazards": [
+            { "x": 300, "y": 558, "w": 40, "h": 36, "dir": "up" },
+            { "x": 400, "y": 558, "w": 40, "h": 36, "dir": "up" },
+            { "x": 500, "y": 558, "w": 40, "h": 36, "dir": "up" }
+          ],
+          "portals": [{ "a": { "x": 200, "y": 560 }, "b": { "x": 650, "y": 560 } }],
+          "solution": ["right"]
+        },
+        {
+          "id": "10-14", "par": 2, "maxShifts": 2, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 650, "y": 40 },
+          "weights": [{ "x": 170, "y": 300, "w": 300, "h": 552, "kind": "heavy" }],
+          "breakables": [{ "x": 400, "y": 300, "w": 24, "h": 552 }],
+          "sticky": [{ "x": 650, "y": 564, "w": 44, "h": 24 }],
+          "solution": ["right", "up"]
+        },
+        {
+          "id": "10-15", "par": 2, "maxShifts": 2, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 700, "y": 40 }, "activeColor": "red",
+          "cblocks": [
+            { "x": 300, "y": 300, "w": 24, "h": 552, "color": "red" },
+            { "x": 550, "y": 300, "w": 24, "h": 552, "color": "blue" }
+          ],
+          "switches": [{ "x": 200, "y": 560 }, { "x": 420, "y": 560 }],
+          "sticky": [{ "x": 700, "y": 564, "w": 44, "h": 24 }],
+          "solution": ["right", "up"]
+        },
+        {
+          "id": "10-16", "par": 2, "maxShifts": 2, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 600, "y": 40 },
+          "lasers": [{ "x": 350, "y": 300, "w": 12, "h": 552, "on": 700, "off": 1800 }],
+          "sticky": [{ "x": 600, "y": 564, "w": 44, "h": 24 }],
+          "solution": ["right", "up"]
+        },
+        {
+          "id": "10-17", "par": 2, "maxShifts": 2, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
+          "blackholes": [{ "x": 400, "y": 410, "radius": 160 }],
+          "solution": ["up", "right"]
+        },
+        {
+          "id": "10-18", "par": 2, "maxShifts": 2, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
+          "walls": [
+            { "x": 300, "y": 300, "w": 24, "h": 552 },
+            { "x": 600, "y": 300, "w": 24, "h": 552 }
+          ],
+          "hazards": [{ "x": 380, "y": 558, "w": 40, "h": 36, "dir": "up" }],
+          "portals": [
+            { "a": { "x": 200, "y": 560 }, "b": { "x": 450, "y": 560 } },
+            { "a": { "x": 520, "y": 560 }, "b": { "x": 720, "y": 560 } }
+          ],
+          "solution": ["right", "up"]
+        },
+        {
+          "id": "10-19", "hint": "The floor is a trap — take the high road. The key won't survive a death.", "par": 3, "maxShifts": 3, "gravity": "down", "resetGravityOnDeath": true,
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
+          "doors": [{ "x": 500, "y": 300, "w": 24, "h": 552, "color": "gold" }],
+          "keys": [{ "x": 200, "y": 40, "color": "gold", "volatile": true }],
+          "hazards": [
+            { "x": 400, "y": 558, "w": 40, "h": 36, "dir": "up" },
+            { "x": 650, "y": 558, "w": 40, "h": 36, "dir": "up" }
+          ],
+          "solution": ["up", "right", "down"]
+        },
+        {
+          "id": "10-20", "hint": "The event horizon. Weight up, smash through, take the key, rise.", "par": 3, "maxShifts": 3, "gravity": "down", "resetGravityOnDeath": true,
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40, "requires": "gold" },
+          "weights": [{ "x": 170, "y": 300, "w": 300, "h": 552, "kind": "heavy" }],
+          "breakables": [{ "x": 350, "y": 300, "w": 24, "h": 552 }],
+          "keys": [{ "x": 500, "y": 560, "color": "gold" }],
+          "sticky": [{ "x": 650, "y": 564, "w": 44, "h": 24 }],
+          "hazards": [{ "x": 300, "y": 42, "w": 40, "h": 36, "dir": "down" }],
+          "solution": ["right", "up", "right"]
+        }
+      ]
+    }
   ]
 }
