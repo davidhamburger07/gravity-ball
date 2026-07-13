@@ -40,6 +40,16 @@ export default class MenuScene extends Phaser.Scene {
     });
 
     this.add
+      .text(width / 2, height * 0.72, 'Level Editor', {
+        fontFamily: 'system-ui, sans-serif', fontSize: '16px', color: '#7a80a8',
+      })
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true })
+      .on('pointerover', function () { this.setColor('#38e1ff'); })
+      .on('pointerout', function () { this.setColor('#7a80a8'); })
+      .on('pointerdown', () => { window.location.href = 'editor.html'; });
+
+    this.add
       .text(width / 2, height * 0.82, 'Arrow Keys / WASD or Swipe to shift gravity', {
         fontFamily: 'monospace', fontSize: '14px', color: '#5a6089',
       })

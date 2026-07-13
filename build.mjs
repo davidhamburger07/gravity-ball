@@ -6,7 +6,7 @@
 // - Keeps the CrazyGames SDK loading from sdk.crazygames.com (required by the platform).
 // - Copies level data so the runtime fetch resolves at the same relative path as in dev.
 import esbuild from 'esbuild';
-import { rm, mkdir, cp, writeFile, copyFile } from 'node:fs/promises';
+import { rm, mkdir, cp, writeFile, copyFile, readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('.', import.meta.url));
@@ -58,6 +58,13 @@ async function main() {
     metafile: true,
   });
 
+  // 1b. Bundle the level editor (separate entry point / page).
+  await esbuild.build({
+    entryPoints: ['src/editor/main.js'],
+    bundle: true, minify: true, format: 'iife', target: 'es2019',
+    outfile: 'dist/editor.js', legalComments: 'none',
+  });
+
   // 2. Vendor Phaser.
   await copyFile('node_modules/phaser/dist/phaser.min.js', 'dist/phaser.min.js');
 
@@ -70,6 +77,12 @@ async function main() {
 
   // 5. Production entry point.
   await writeFile('dist/index.html', PROD_HTML);
+
+  // 5b. Editor page — reuse dev editor.html, swapping the CDN/module refs for local ones.
+  const editorHtml = (await readFile('editor.html', 'utf8'))
+    .replace('https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js', 'phaser.min.js')
+    .replace('<script type="module" src="/src/editor/main.js"></script>', '<script src="editor.js"></script>');
+  await writeFile('dist/editor.html', editorHtml);
 
   const bundleBytes = Object.values(result.metafile.outputs).reduce((n, o) => n + o.bytes, 0);
   console.log(`\n  dist/ ready`);
