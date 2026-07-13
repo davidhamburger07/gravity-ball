@@ -41,6 +41,17 @@ async function settle(page, timeout = 4500) {
   return 'timeout';
 }
 
+// For laser levels, wait for a fresh OFF window before moving (as a player watching the beam would):
+// wait until a laser is on, then until all are off, so a full off-window lies ahead of the crossing.
+async function waitLaserWindow(page, timeout = 7000) {
+  const has = await page.evaluate(() => (window.game.scene.getScene('GameScene')._lasers || []).length > 0);
+  if (!has) return;
+  const on = () => page.evaluate(() => !!window.game.scene.getScene('GameScene')._lasersActive);
+  const start = Date.now();
+  while (Date.now() - start < timeout) { if (await on()) break; await new Promise((r) => setTimeout(r, 40)); }
+  while (Date.now() - start < timeout) { if (!(await on())) return; await new Promise((r) => setTimeout(r, 40)); }
+}
+
 const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
 const page = await browser.newPage();
 await page.setViewport({ width: 900, height: 740 });
@@ -70,6 +81,7 @@ for (const lvl of chapter.levels) {
   await settle(page); // initial fall from spawn
 
   for (const mv of lvl.solution) {
+    await waitLaserWindow(page);
     await page.keyboard.press(KEY_MAP[mv] ?? mv);
     if ((await settle(page)) === 'solved') break;
   }
