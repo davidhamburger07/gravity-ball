@@ -13,6 +13,9 @@ import { VIEW, PHYSICS, FEEL } from '../config/GameConfig.js';
 
 const BORDER = 24; // auto border-wall thickness
 
+// Key/door colors (Ch.4). A key opens every door of the same color.
+const KEY_COLORS = { gold: 0xffd23f, blue: 0x38a1ff, pink: 0xff5c8a };
+
 export default class GameScene extends Phaser.Scene {
   constructor() {
     super('GameScene');
@@ -27,6 +30,7 @@ export default class GameScene extends Phaser.Scene {
     this._lastBounce = 0;
     this._lastTrampoline = 0;
     this._stickCooldownUntil = 0;
+    this._keys = new Set(); // colors of keys collected
     this.shiftCount = 0;
   }
 
@@ -118,11 +122,32 @@ export default class GameScene extends Phaser.Scene {
       this.add.rectangle(b.x, b.y, b.w, b.h, 0x2bd67b, 0.95).setStrokeStyle(2, 0x8affc0).setDepth(3);
     });
 
-    // Goal sensor + a gently pulsing icon.
+    // Doors (Ch.4): solid barriers that open (become passable) when the matching key is taken.
+    this._doors = (level.doors ?? []).map((d) => {
+      const colorKey = d.color ?? 'gold';
+      const tint = KEY_COLORS[colorKey];
+      const body = this.matter.add.rectangle(d.x, d.y, d.w, d.h, { isStatic: true, label: 'door' });
+      body.gbColor = colorKey;
+      const visual = this.add.rectangle(d.x, d.y, d.w, d.h, tint, 0.45).setStrokeStyle(2, tint).setDepth(3);
+      return { body, visual, color: colorKey };
+    });
+
+    // Keys (Ch.4): collectible sensors, colored.
+    (level.keys ?? []).forEach((k) => {
+      const colorKey = k.color ?? 'gold';
+      const body = this.matter.add.rectangle(k.x, k.y, 24, 26, { isStatic: true, isSensor: true, label: 'key' });
+      body.gbColor = colorKey;
+      body.gbVisual = this.add.image(k.x, k.y, 'key').setTint(KEY_COLORS[colorKey]).setDepth(6);
+      this.tweens.add({ targets: body.gbVisual, y: k.y - 6, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    });
+
+    // Goal sensor + a gently pulsing icon. A locked goal (`requires`) stays gray until its key is taken.
     const g = level.goal;
+    this.goalRequires = g.requires ?? null;
     this.matter.add.rectangle(g.x, g.y, 40, 40, { isStatic: true, isSensor: true, label: 'goal' });
-    const icon = this.add.image(g.x, g.y, 'goal').setDepth(5);
-    this.tweens.add({ targets: icon, scale: 1.15, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    this.goalIcon = this.add.image(g.x, g.y, 'goal').setDepth(5);
+    if (this.goalRequires) this.goalIcon.setTint(0x555b7a);
+    this.tweens.add({ targets: this.goalIcon, scale: 1.15, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
   }
 
   _wall(x, y, w, h) {
@@ -223,12 +248,44 @@ export default class GameScene extends Phaser.Scene {
     for (const { bodyA, bodyB } of event.pairs) {
       if (bodyA.label !== 'ball' && bodyB.label !== 'ball') continue;
       const other = bodyA.label === 'ball' ? bodyB : bodyA;
-      if (other.label === 'goal') return this._win();
+      if (other.label === 'goal') { this._reachGoal(); continue; }
       if (other.label === 'hazard') return this._die();
       if (other.label === 'bouncer') { this._onBounce(other); continue; }
       if (other.label === 'sticky') { this._onSticky(other); continue; }
+      if (other.label === 'key') { this._collectKey(other); continue; }
+      if (other.label === 'door') { if (!other.gbOpen) this._onWallImpact(); continue; }
       if (other.label === 'wall') this._onWallImpact();
     }
+  }
+
+  // Collect a key: remember its color, open matching doors, unlock the goal if it required it.
+  _collectKey(body) {
+    if (this._solved || this._dying || body.gbCollected) return;
+    body.gbCollected = true;
+    const colorKey = body.gbColor;
+    this._keys.add(colorKey);
+    const tint = KEY_COLORS[colorKey];
+
+    AudioManager.key();
+    Effects.burst(this, body.position.x, body.position.y, { color: tint, count: 12, speed: 170, lifespan: 450, scale: 0.5 });
+    if (body.gbVisual) body.gbVisual.destroy();
+
+    // Open matching doors: make them non-blocking (isSensor) rather than mutating the world mid-step.
+    this._doors.forEach((d) => {
+      if (d.color !== colorKey || d.body.gbOpen) return;
+      d.body.isSensor = true;
+      d.body.gbOpen = true;
+      Effects.burst(this, d.visual.x, d.visual.y, { color: tint, count: 10, speed: 150, lifespan: 400, scale: 0.5 });
+      d.visual.destroy();
+    });
+
+    if (this.goalRequires === colorKey) this.goalIcon.clearTint();
+  }
+
+  // Reach the goal — honored only if any required key has been collected.
+  _reachGoal() {
+    if (this.goalRequires && !this._keys.has(this.goalRequires)) return; // still locked
+    this._win();
   }
 
   // Trampoline: overwrite velocity with a fixed launch perpendicular to the pad.

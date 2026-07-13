@@ -47,6 +47,15 @@ export default class BootScene extends Phaser.Scene {
     g.generateTexture('spark', 12, 12);
     g.clear();
 
+    // Key — white silhouette (tinted per color at runtime): ring head, shaft, two teeth.
+    g.lineStyle(3, 0xffffff, 1);
+    g.strokeCircle(8, 6, 5);
+    g.lineBetween(8, 11, 8, 23);
+    g.lineBetween(8, 23, 13, 23);
+    g.lineBetween(8, 18, 12, 18);
+    g.generateTexture('key', 16, 26);
+    g.clear();
+
     g.destroy();
   }
 }
