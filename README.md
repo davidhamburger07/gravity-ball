@@ -204,11 +204,13 @@ Full details, the mechanics library, and game-feel spec live in [`docs/GDD.md`](
 - [x] Data-driven levels + runnable Chapter 1 slice
 - [x] Menu + Level-select scenes with star ratings & unlock progression
 - [x] Save system (CrazyGames data module, localStorage fallback)
-- [x] Ch.1–9: Ground Zero (4) · Spike Fields · Bounce House · Locksmith · Fragile Ground · Wormholes · Chromatic · Time Warp · Singularity (20 each)
+- [x] **All 10 chapters** — Ground Zero (4) · Spike Fields · Bounce House · Locksmith · Fragile Ground ·
+  Wormholes · Chromatic · Time Warp · Singularity · **Event Horizon** (20 each, 184 levels total)
 - [x] Juice pass — procedural audio, particle bursts, squash-and-stretch, parallax, mute
 - [x] Production build (esbuild bundle + vendored Phaser) — upload-ready `dist/` for CrazyGames
 - [x] Visual level editor with playtest round-trip + JSON export/import
-- [ ] Chapter 10 — Event Horizon (capstone)
+- [ ] Flesh out Chapter 1 to a full 20-level set
+- [ ] Real art & audio pass, then CrazyGames submission
 
 ## 🧪 Tooling & QA
 
@@ -222,7 +224,7 @@ node verify-levels.mjs URL 2              # play every Chapter-2 solution, asser
 
 `verify-levels.mjs` loads the real game, plays each level's embedded `solution` key-sequence with
 physics-settle waits, and fails if the ball doesn't reach the goal — so an unsolvable level can't
-slip in. All 164 shipped levels pass — including timing-based laser levels, where the checker
+slip in. All 184 shipped levels pass — including timing-based laser levels, where the checker
 waits for a fresh laser off-window before each crossing (as a player watching the beam would).
 
 ---
