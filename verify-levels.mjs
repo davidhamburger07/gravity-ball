@@ -16,9 +16,12 @@ const chapter = levels.chapters.find((c) => c.id === CHAPTER);
 if (!chapter) { console.error(`Chapter ${CHAPTER} not found`); process.exit(1); }
 
 // Poll the live GameScene until the ball settles (speed ~0), the level is solved, or we time out.
-async function settle(page, timeout = 4000) {
+// "Rest" requires several consecutive slow samples so a transient dip mid-coast (e.g. the brief
+// slowdown as a heavy ball punches through a breakable) isn't mistaken for the ball stopping.
+async function settle(page, timeout = 4500) {
   const start = Date.now();
   await new Promise((r) => setTimeout(r, 320)); // let the shift take effect before sampling
+  let restStreak = 0;
   while (Date.now() - start < timeout) {
     const st = await page.evaluate(() => {
       const s = window.game.scene.getScene('GameScene');
@@ -28,7 +31,11 @@ async function settle(page, timeout = 4000) {
       return { solved: false, speed: Math.hypot(v.x, v.y) };
     });
     if (st.solved) return 'solved';
-    if (st.speed < 0.5) return 'rest';
+    if (st.speed < 0.5) {
+      if (++restStreak >= 3) return 'rest';
+    } else {
+      restStreak = 0;
+    }
     await new Promise((r) => setTimeout(r, 100));
   }
   return 'timeout';
