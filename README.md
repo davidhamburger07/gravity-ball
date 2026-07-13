@@ -38,8 +38,26 @@ npm run dev          # → http://localhost:3000
 
 Open **http://localhost:3000** and use **Arrow keys / WASD** (or swipe on a touch device) to shift gravity.
 
-> Requires Node 18+. Phaser and the CrazyGames SDK load from a CDN in `index.html`, so an internet
-> connection is needed on first load. For a production/CrazyGames upload, bundle these locally (see *Roadmap*).
+> Requires Node 18+. In dev, Phaser loads from a CDN and source runs as unbundled ES modules for an
+> instant edit-refresh loop. The production build (below) vendors everything locally.
+
+---
+
+## 📦 Build & deploy (CrazyGames)
+
+```bash
+npm run build     # → dist/  (minified bundle + local Phaser, no external CDNs except the CG SDK)
+npm run preview   # serve dist/ at http://localhost:3000 to test the exact upload
+```
+
+`build.mjs` bundles every ES module into one minified `dist/bundle.js` via **esbuild** (Phaser stays a
+global from the vendored `phaser.min.js`), copies the level data, and writes a production `index.html`.
+The CrazyGames SDK keeps loading from `sdk.crazygames.com` — the one external the platform requires.
+
+**To publish:** zip the *contents* of `dist/` (so `index.html` sits at the zip root) and upload to the
+[CrazyGames developer portal](https://developer.crazygames.com/). The whole build is ~1.2 MB (Phaser is
+the bulk) and loads in a second. The production bundle is verified to solve all shipped levels identically
+to dev (`node verify-levels.mjs http://localhost:3000 2`).
 
 ---
 
@@ -63,8 +81,11 @@ InputManager  ──(gravity:request)──►  GravityController  ──(gravit
 
 ```
 gravity-ball/
-├── index.html              # Entry point: loads Phaser + CrazyGames SDK, boots src/main.js
-├── serve.mjs               # Zero-dependency static dev server (localhost:3000)
+├── index.html              # Dev entry point: loads Phaser + CrazyGames SDK, boots src/main.js
+├── serve.mjs               # Zero-dependency static dev server (root, or dist/ via SERVE_DIR)
+├── build.mjs               # esbuild production bundle → dist/ (upload-ready for CrazyGames)
+├── screenshot.mjs          # Headless Canvas capture for visual QA
+├── verify-levels.mjs       # Headless solvability check (plays each level's solution)
 ├── package.json
 ├── README.md
 ├── docs/
@@ -147,8 +168,8 @@ Full details, the mechanics library, and game-feel spec live in [`docs/GDD.md`](
 - [x] Save system (CrazyGames data module, localStorage fallback)
 - [x] Chapter 1 — Ground Zero (4) · Chapter 2 — Spike Fields (20) · Chapter 3 — Bounce House (20)
 - [x] Juice pass — procedural audio, particle bursts, squash-and-stretch, parallax, mute
+- [x] Production build (esbuild bundle + vendored Phaser) — upload-ready `dist/` for CrazyGames
 - [ ] Chapters 4–10 mechanics + full level set
-- [ ] Production bundle (local Phaser/SDK) for CrazyGames upload
 
 ## 🧪 Tooling & QA
 
