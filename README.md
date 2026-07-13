@@ -144,11 +144,17 @@ production bundle.
 A standalone visual editor at **`/editor.html`** (also linked from the main menu). Build levels the
 same way they're authored in `levels.json`, then play them instantly.
 
-- **Place any piece** — spawn, goal, walls, spikes, sticky pads, trampolines, keys, doors. Click for
-  a default size or click-drag to draw a box; the grid snaps to 20px. Erase removes the piece under
-  the cursor.
-- **Configure** — spike/trampoline direction, key/door color, trampoline power, start gravity, par,
-  hint, and whether the goal is locked behind a key.
+- **Every mechanic is placeable** — spawn, goal, walls, spikes, sticky pads, trampolines, keys,
+  doors, **portals** (two clicks place a linked pair), **weight zones**, **breakable blocks**,
+  **color blocks + switches**, **slow-motion zones**, **lasers** (with on/off timing),
+  **gravity zones**, and **black holes** (with radius). Click for a default size or click-drag to
+  draw a box; the grid snaps to 20px. A translucent **ghost** of the current piece follows the cursor.
+- **Line tool** — toggle it on and drag to stamp a whole row of the selected piece (e.g. a spike floor).
+- **Erase** removes the piece under the cursor — any type; erasing either end of a portal removes the pair.
+- **Configure** — piece options (direction, colors, power, laser timing, black-hole radius,
+  **volatile keys** that are lost on death), plus level settings: start gravity, par, hint, locked goal,
+  which color-block color starts solid, and **reset gravity on death** (prevents respawn death-loops;
+  the game shows a `⟲` indicator when it's on). Held keys appear in an in-game inventory HUD.
 - **▶ Playtest** — hands the level to the *real game* (via `localStorage` + `?playtest=1`) so it plays
   with full physics and juice; a work-in-progress autosaves so the round-trip is lossless.
 - **Export / Import** — copy or download the level as `levels.json`-shaped JSON, or paste JSON back
