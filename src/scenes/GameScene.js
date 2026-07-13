@@ -79,7 +79,13 @@ export default class GameScene extends Phaser.Scene {
     // Guard against duplicate handlers across scene.restart() (scene.events persists).
     this.events.off('gravity:request');
     this.events.off('gravity:changed');
-    this.events.on('gravity:request', (dir) => { if (!this._solved) this.gravity.request(dir); });
+    this.events.on('gravity:request', (dir) => {
+      if (this._solved) return;
+      // Shift budget (Ch.10): once spent, real shift requests are denied with feedback.
+      const max = this.level.maxShifts;
+      if (max && this.shiftCount >= max && dir !== this.gravity.direction) { this._denyShift(); return; }
+      this.gravity.request(dir);
+    });
     this.events.on('gravity:changed', ({ vector }) => this._onGravityShift(vector));
 
     this.matter.world.on('collisionstart', (event) => this._onCollision(event));
@@ -338,6 +344,15 @@ export default class GameScene extends Phaser.Scene {
       }
     }
 
+    // Shift budget (Ch.10): if the budget is spent and the ball has settled without reaching the
+    // goal, the attempt failed — auto-fail so the player is never soft-locked waiting on a dead run.
+    const max = this.level.maxShifts;
+    if (max && !this._solved && !this._dying && this.shiftCount >= max) {
+      const v = this.ball.body.velocity;
+      this._restFrames = Math.hypot(v.x, v.y) < 0.2 ? (this._restFrames ?? 0) + 1 : 0;
+      if (this._restFrames > 75) { this._restFrames = 0; this._die(); } // ~1.25s at rest
+    }
+
     // Slow-motion zones: cap speed while inside.
     if (!this._solved && !this._dying && this._slowzones?.length) {
       const b = this.ball;
@@ -400,7 +415,22 @@ export default class GameScene extends Phaser.Scene {
   }
 
   _updateHud() {
-    this.hud.setText(`Level ${this.level.id}    Shifts: ${this.shiftCount}    Par: ${this.level.par ?? '-'}`);
+    const max = this.level.maxShifts;
+    if (max) {
+      const left = max - this.shiftCount;
+      this.hud.setText(`Level ${this.level.id}    Shifts: ${this.shiftCount}/${max}    Par: ${this.level.par ?? '-'}`);
+      this.hud.setColor(left <= 0 ? '#ff4d5e' : left === 1 ? '#ffd23f' : '#9aa0c3');
+    } else {
+      this.hud.setText(`Level ${this.level.id}    Shifts: ${this.shiftCount}    Par: ${this.level.par ?? '-'}`);
+    }
+  }
+
+  // Out of shifts: buzz + red HUD pulse so the denial reads clearly.
+  _denyShift() {
+    AudioManager.deny();
+    this.cameras.main.shake(80, 0.002);
+    this.hud.setColor('#ff4d5e');
+    this.tweens.add({ targets: this.hud, alpha: 0.3, duration: 90, yoyo: true, repeat: 1 });
   }
 
   // --- Feedback / juice ----------------------------------------------------
@@ -682,6 +712,13 @@ export default class GameScene extends Phaser.Scene {
       this.cameras.main.setFollowOffset(0, 0);
     }
     this._dropVolatileKeys();
+
+    // Budget levels: death is a fresh attempt — restore the full shift budget.
+    if (this.level.maxShifts) {
+      this.shiftCount = 0;
+      this._restFrames = 0;
+      this._updateHud();
+    }
 
     this.ball.visual.setTexture('ball');
     this.ball.visual.setVisible(false);
