@@ -23,7 +23,10 @@ export default class GameScene extends Phaser.Scene {
     this.chapterId = data.chapterId ?? this.chapterId ?? 1;
     this._solved = false;
     this._dying = false;
+    this._stuck = false;
     this._lastBounce = 0;
+    this._lastTrampoline = 0;
+    this._stickCooldownUntil = 0;
     this.shiftCount = 0;
   }
 
@@ -97,6 +100,22 @@ export default class GameScene extends Phaser.Scene {
       // Orient the spike sprite toward the surface it sits on (texture points up by default).
       const angle = { up: 0, right: 90, down: 180, left: 270 }[hz.dir ?? 'up'];
       this.add.image(hz.x, hz.y, 'spike').setDisplaySize(w, h).setAngle(angle).setDepth(4);
+    });
+
+    // Sticky pads (Ch.3): sensors that pin the ball until the next gravity flip.
+    (level.sticky ?? []).forEach((s) => {
+      const body = this.matter.add.rectangle(s.x, s.y, s.w, s.h, { isStatic: true, isSensor: true, label: 'sticky' });
+      body.gbAxis = s.w >= s.h ? 'x' : 'y'; // snap along the surface it lies on
+      body.gbAnchor = { x: s.x, y: s.y };
+      this.add.rectangle(s.x, s.y, s.w, s.h, 0x9b6dff, 0.85).setStrokeStyle(2, 0xc9a9ff).setDepth(3);
+    });
+
+    // Trampolines (Ch.3): sensors that fling the ball in a fixed direction on contact.
+    (level.bouncers ?? []).forEach((b) => {
+      const body = this.matter.add.rectangle(b.x, b.y, b.w, b.h, { isStatic: true, isSensor: true, label: 'bouncer' });
+      body.gbDir = b.dir ?? 'up';
+      body.gbPower = b.power ?? 17;
+      this.add.rectangle(b.x, b.y, b.w, b.h, 0x2bd67b, 0.95).setStrokeStyle(2, 0x8affc0).setDepth(3);
     });
 
     // Goal sensor + a gently pulsing icon.
@@ -185,6 +204,13 @@ export default class GameScene extends Phaser.Scene {
     this.cameras.main.shake(120, FEEL.SHIFT_SHAKE);
     this.cameras.main.setFollowOffset(-vector.x * FEEL.CAMERA_LEAD_PX, -vector.y * FEEL.CAMERA_LEAD_PX);
 
+    // Release from a sticky pad when the player flips gravity.
+    if (this._stuck) {
+      this._stuck = false;
+      this._stickCooldownUntil = this.time.now + 300;
+      this.ball.setStatic(false);
+    }
+
     AudioManager.shift();
     Effects.directional(this, this.ball.x, this.ball.y, vector);
     // Anticipation stretch: elongate the ball along the new "down" axis.
@@ -195,12 +221,42 @@ export default class GameScene extends Phaser.Scene {
   // --- Win / lose ----------------------------------------------------------
   _onCollision(event) {
     for (const { bodyA, bodyB } of event.pairs) {
-      const labels = [bodyA.label, bodyB.label];
-      if (!labels.includes('ball')) continue;
-      if (labels.includes('goal')) return this._win();
-      if (labels.includes('hazard')) return this._die();
-      if (labels.includes('wall')) this._onWallImpact();
+      if (bodyA.label !== 'ball' && bodyB.label !== 'ball') continue;
+      const other = bodyA.label === 'ball' ? bodyB : bodyA;
+      if (other.label === 'goal') return this._win();
+      if (other.label === 'hazard') return this._die();
+      if (other.label === 'bouncer') { this._onBounce(other); continue; }
+      if (other.label === 'sticky') { this._onSticky(other); continue; }
+      if (other.label === 'wall') this._onWallImpact();
     }
+  }
+
+  // Trampoline: overwrite velocity with a fixed launch perpendicular to the pad.
+  _onBounce(body) {
+    if (this._solved || this._dying) return;
+    const now = this.time.now;
+    if (now - this._lastTrampoline < 150) return;
+    this._lastTrampoline = now;
+    const dir = { up: { x: 0, y: -1 }, down: { x: 0, y: 1 }, left: { x: -1, y: 0 }, right: { x: 1, y: 0 } }[body.gbDir];
+    this.ball.setVelocity(dir.x * body.gbPower, dir.y * body.gbPower);
+    AudioManager.bounce(1);
+    Effects.directional(this, this.ball.x, this.ball.y, dir, { color: 0x2bd67b, count: 14, speed: 260 });
+    if (dir.y !== 0) this._squash(0.78, 1.28, 240);
+    else this._squash(1.28, 0.78, 240);
+  }
+
+  // Sticky pad: pin the ball, snapped to the pad's anchor along its surface axis.
+  _onSticky(body) {
+    if (this._solved || this._dying || this._stuck) return;
+    if (this.time.now < this._stickCooldownUntil) return;
+    this._stuck = true;
+    this.ball.setVelocity(0, 0);
+    this.ball.setAngularVelocity(0);
+    if (body.gbAxis === 'x') this.ball.setPosition(body.gbAnchor.x, this.ball.y);
+    else this.ball.setPosition(this.ball.x, body.gbAnchor.y);
+    this.ball.setStatic(true);
+    AudioManager.stick();
+    this._squash(1.15, 0.85, 200);
   }
 
   // Hard landing against a wall → boing + squash + puff, gated by impact speed & a short cooldown.
@@ -250,6 +306,8 @@ export default class GameScene extends Phaser.Scene {
   _die() {
     if (this._solved || this._dying) return;
     this._dying = true;
+    this._stuck = false;
+    if (this.ball.body.isStatic) this.ball.setStatic(false);
     AudioManager.death();
     Effects.burst(this, this.ball.x, this.ball.y, { color: 0xff4d5e, count: 18, speed: 220, lifespan: 500, scale: 0.7 });
     this.cameras.main.shake(220, 0.014);
