@@ -231,7 +231,196 @@
         }
       ]
     },
-    { "id": 3, "name": "Bounce House", "mechanic": "Trampolines + sticky walls", "levels": [] },
+    {
+      "id": 3,
+      "name": "Bounce House",
+      "mechanic": "Trampolines + sticky pads",
+      "levels": [
+        {
+          "id": "3-1", "hint": "Violet pads are sticky — they hold you. Stop, then flip a new way.", "par": 2, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 400, "y": 40 },
+          "sticky": [{ "x": 400, "y": 564, "w": 44, "h": 24 }],
+          "solution": ["right", "up"]
+        },
+        {
+          "id": "3-2", "hint": "Stick to the ceiling, then drop straight down.", "par": 3, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 400, "y": 560 },
+          "sticky": [{ "x": 400, "y": 36, "w": 44, "h": 24 }],
+          "solution": ["up", "right", "down"]
+        },
+        {
+          "id": "3-3", "par": 2, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 560, "y": 40 },
+          "sticky": [{ "x": 560, "y": 564, "w": 44, "h": 24 }],
+          "solution": ["right", "up"]
+        },
+        {
+          "id": "3-4", "par": 3, "gravity": "down",
+          "spawn": { "x": 680, "y": 120 }, "goal": { "x": 300, "y": 560 },
+          "sticky": [{ "x": 300, "y": 36, "w": 44, "h": 24 }],
+          "solution": ["up", "left", "down"]
+        },
+        {
+          "id": "3-5", "hint": "Chain the pads: floor, then ceiling.", "par": 4, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 600, "y": 560 },
+          "sticky": [
+            { "x": 300, "y": 564, "w": 44, "h": 24 },
+            { "x": 600, "y": 36, "w": 44, "h": 24 }
+          ],
+          "solution": ["right", "up", "right", "down"]
+        },
+        {
+          "id": "3-6", "par": 3, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 480, "y": 560 },
+          "sticky": [{ "x": 480, "y": 36, "w": 44, "h": 24 }],
+          "hazards": [
+            { "x": 240, "y": 558, "w": 40, "h": 36, "dir": "up" },
+            { "x": 360, "y": 558, "w": 40, "h": 36, "dir": "up" },
+            { "x": 600, "y": 558, "w": 40, "h": 36, "dir": "up" },
+            { "x": 760, "y": 558, "w": 40, "h": 36, "dir": "up" }
+          ],
+          "solution": ["up", "right", "down"]
+        },
+        {
+          "id": "3-7", "par": 2, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 400, "y": 40 },
+          "sticky": [{ "x": 400, "y": 564, "w": 44, "h": 24 }],
+          "hazards": [
+            { "x": 200, "y": 42, "w": 40, "h": 36, "dir": "down" },
+            { "x": 600, "y": 42, "w": 40, "h": 36, "dir": "down" }
+          ],
+          "solution": ["right", "up"]
+        },
+        {
+          "id": "3-8", "hint": "The pad stops you just short of the spikes.", "par": 2, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 480, "y": 40 },
+          "sticky": [{ "x": 480, "y": 564, "w": 44, "h": 24 }],
+          "hazards": [{ "x": 640, "y": 558, "w": 40, "h": 36, "dir": "up" }],
+          "solution": ["right", "up"]
+        },
+        {
+          "id": "3-9", "par": 3, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 600, "y": 560 },
+          "sticky": [{ "x": 600, "y": 36, "w": 44, "h": 24 }],
+          "hazards": [
+            { "x": 240, "y": 558, "w": 40, "h": 36, "dir": "up" },
+            { "x": 480, "y": 558, "w": 40, "h": 36, "dir": "up" },
+            { "x": 760, "y": 558, "w": 40, "h": 36, "dir": "up" }
+          ],
+          "solution": ["up", "right", "down"]
+        },
+        {
+          "id": "3-10", "hint": "Green pads fling you; sticky pads catch you.", "par": 2, "gravity": "down",
+          "spawn": { "x": 400, "y": 100 }, "goal": { "x": 760, "y": 560 },
+          "sticky": [{ "x": 400, "y": 36, "w": 44, "h": 24 }],
+          "bouncers": [{ "x": 400, "y": 566, "w": 48, "h": 20, "dir": "up", "power": 20 }],
+          "solution": ["right", "down"]
+        },
+        {
+          "id": "3-11", "par": 2, "gravity": "down",
+          "spawn": { "x": 400, "y": 100 }, "goal": { "x": 40, "y": 560 },
+          "sticky": [{ "x": 400, "y": 36, "w": 44, "h": 24 }],
+          "bouncers": [{ "x": 400, "y": 566, "w": 48, "h": 20, "dir": "up", "power": 20 }],
+          "solution": ["left", "down"]
+        },
+        {
+          "id": "3-12", "par": 2, "gravity": "down",
+          "spawn": { "x": 400, "y": 100 }, "goal": { "x": 760, "y": 560 },
+          "sticky": [{ "x": 400, "y": 36, "w": 44, "h": 24 }],
+          "bouncers": [{ "x": 400, "y": 566, "w": 48, "h": 20, "dir": "up", "power": 20 }],
+          "hazards": [
+            { "x": 200, "y": 558, "w": 40, "h": 36, "dir": "up" },
+            { "x": 600, "y": 558, "w": 40, "h": 36, "dir": "up" }
+          ],
+          "solution": ["right", "down"]
+        },
+        {
+          "id": "3-13", "par": 2, "gravity": "down",
+          "spawn": { "x": 200, "y": 100 }, "goal": { "x": 600, "y": 560 },
+          "sticky": [
+            { "x": 200, "y": 36, "w": 44, "h": 24 },
+            { "x": 600, "y": 36, "w": 44, "h": 24 }
+          ],
+          "bouncers": [{ "x": 200, "y": 566, "w": 48, "h": 20, "dir": "up", "power": 20 }],
+          "solution": ["right", "down"]
+        },
+        {
+          "id": "3-14", "par": 2, "gravity": "down",
+          "spawn": { "x": 400, "y": 100 }, "goal": { "x": 760, "y": 560 },
+          "sticky": [{ "x": 400, "y": 36, "w": 44, "h": 24 }],
+          "bouncers": [{ "x": 400, "y": 566, "w": 48, "h": 20, "dir": "up", "power": 20 }],
+          "hazards": [
+            { "x": 600, "y": 558, "w": 40, "h": 36, "dir": "up" },
+            { "x": 700, "y": 558, "w": 40, "h": 36, "dir": "up" }
+          ],
+          "solution": ["right", "down"]
+        },
+        {
+          "id": "3-15", "par": 2, "gravity": "down",
+          "spawn": { "x": 600, "y": 100 }, "goal": { "x": 40, "y": 560 },
+          "sticky": [{ "x": 600, "y": 36, "w": 44, "h": 24 }],
+          "bouncers": [{ "x": 600, "y": 566, "w": 48, "h": 20, "dir": "up", "power": 20 }],
+          "hazards": [
+            { "x": 300, "y": 558, "w": 40, "h": 36, "dir": "up" },
+            { "x": 450, "y": 558, "w": 40, "h": 36, "dir": "up" }
+          ],
+          "solution": ["left", "down"]
+        },
+        {
+          "id": "3-16", "par": 3, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 400, "y": 560 },
+          "sticky": [{ "x": 400, "y": 36, "w": 44, "h": 24 }],
+          "hazards": [
+            { "x": 240, "y": 558, "w": 40, "h": 36, "dir": "up" },
+            { "x": 560, "y": 558, "w": 40, "h": 36, "dir": "up" }
+          ],
+          "solution": ["up", "right", "down"]
+        },
+        {
+          "id": "3-17", "par": 2, "gravity": "down",
+          "spawn": { "x": 200, "y": 100 }, "goal": { "x": 760, "y": 560 },
+          "sticky": [{ "x": 200, "y": 36, "w": 44, "h": 24 }],
+          "bouncers": [{ "x": 200, "y": 566, "w": 48, "h": 20, "dir": "up", "power": 20 }],
+          "hazards": [
+            { "x": 400, "y": 558, "w": 40, "h": 36, "dir": "up" },
+            { "x": 500, "y": 558, "w": 40, "h": 36, "dir": "up" },
+            { "x": 600, "y": 558, "w": 40, "h": 36, "dir": "up" }
+          ],
+          "solution": ["right", "down"]
+        },
+        {
+          "id": "3-18", "par": 2, "gravity": "down",
+          "spawn": { "x": 400, "y": 100 }, "goal": { "x": 700, "y": 560 },
+          "sticky": [
+            { "x": 400, "y": 36, "w": 44, "h": 24 },
+            { "x": 700, "y": 36, "w": 44, "h": 24 }
+          ],
+          "bouncers": [{ "x": 400, "y": 566, "w": 48, "h": 20, "dir": "up", "power": 20 }],
+          "solution": ["right", "down"]
+        },
+        {
+          "id": "3-19", "par": 4, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 600, "y": 560 },
+          "sticky": [
+            { "x": 300, "y": 564, "w": 44, "h": 24 },
+            { "x": 600, "y": 36, "w": 44, "h": 24 }
+          ],
+          "hazards": [{ "x": 450, "y": 558, "w": 40, "h": 36, "dir": "up" }],
+          "solution": ["right", "up", "right", "down"]
+        },
+        {
+          "id": "3-20", "hint": "The bounce house. Weave the pads to the top.", "par": 6, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 680, "y": 40 },
+          "sticky": [
+            { "x": 280, "y": 564, "w": 44, "h": 24 },
+            { "x": 480, "y": 36, "w": 44, "h": 24 },
+            { "x": 680, "y": 564, "w": 44, "h": 24 }
+          ],
+          "hazards": [{ "x": 400, "y": 558, "w": 40, "h": 36, "dir": "up" }],
+          "solution": ["right", "up", "right", "down", "right", "up"]
+        }
+      ]
+    },
     { "id": 4, "name": "Locksmith", "mechanic": "Keys & doors", "levels": [] },
     { "id": 5, "name": "Fragile Ground", "mechanic": "Breakable blocks + weight zones", "levels": [] },
     { "id": 6, "name": "Wormholes", "mechanic": "Momentum-preserving portals", "levels": [] },
