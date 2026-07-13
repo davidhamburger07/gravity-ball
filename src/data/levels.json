@@ -622,7 +622,189 @@
         }
       ]
     },
-    { "id": 5, "name": "Fragile Ground", "mechanic": "Breakable blocks + weight zones", "levels": [] },
+    {
+      "id": 5,
+      "name": "Fragile Ground",
+      "mechanic": "Breakable blocks + weight zones",
+      "levels": [
+        {
+          "id": "5-1", "hint": "Orange zones make you HEAVY. A heavy ball smashes orange blocks.", "par": 1, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
+          "weights": [{ "x": 170, "y": 300, "w": 300, "h": 552, "kind": "heavy" }],
+          "breakables": [{ "x": 400, "y": 300, "w": 24, "h": 552 }],
+          "solution": ["right"]
+        },
+        {
+          "id": "5-2", "par": 2, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
+          "weights": [{ "x": 170, "y": 300, "w": 300, "h": 552, "kind": "heavy" }],
+          "breakables": [{ "x": 440, "y": 300, "w": 24, "h": 552 }],
+          "solution": ["right", "up"]
+        },
+        {
+          "id": "5-3", "par": 1, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
+          "weights": [{ "x": 170, "y": 300, "w": 300, "h": 552, "kind": "heavy" }],
+          "breakables": [
+            { "x": 350, "y": 300, "w": 24, "h": 552 },
+            { "x": 550, "y": 300, "w": 24, "h": 552 }
+          ],
+          "solution": ["right"]
+        },
+        {
+          "id": "5-4", "hint": "Grab the weight first, then smash through.", "par": 3, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
+          "weights": [{ "x": 150, "y": 112, "w": 260, "h": 180, "kind": "heavy" }],
+          "breakables": [{ "x": 440, "y": 300, "w": 24, "h": 552 }],
+          "solution": ["up", "right", "down"]
+        },
+        {
+          "id": "5-5", "par": 3, "gravity": "down",
+          "spawn": { "x": 680, "y": 120 }, "goal": { "x": 40, "y": 560 },
+          "weights": [{ "x": 650, "y": 112, "w": 260, "h": 180, "kind": "heavy" }],
+          "breakables": [{ "x": 400, "y": 300, "w": 24, "h": 552 }],
+          "solution": ["up", "left", "down"]
+        },
+        {
+          "id": "5-6", "hint": "No orange zone here — the block is solid. Go around.", "par": 3, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
+          "breakables": [{ "x": 400, "y": 450, "w": 24, "h": 252 }],
+          "solution": ["up", "right", "down"]
+        },
+        {
+          "id": "5-7", "par": 2, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 600, "y": 40 },
+          "weights": [{ "x": 170, "y": 300, "w": 300, "h": 552, "kind": "heavy" }],
+          "breakables": [{ "x": 400, "y": 300, "w": 24, "h": 552 }],
+          "sticky": [{ "x": 600, "y": 564, "w": 44, "h": 24 }],
+          "solution": ["right", "up"]
+        },
+        {
+          "id": "5-8", "par": 3, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
+          "weights": [{ "x": 150, "y": 112, "w": 260, "h": 180, "kind": "heavy" }],
+          "breakables": [{ "x": 440, "y": 300, "w": 24, "h": 552 }],
+          "hazards": [
+            { "x": 600, "y": 558, "w": 40, "h": 36, "dir": "up" },
+            { "x": 700, "y": 558, "w": 40, "h": 36, "dir": "up" }
+          ],
+          "solution": ["up", "right", "down"]
+        },
+        {
+          "id": "5-9", "par": 4, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
+          "weights": [{ "x": 170, "y": 300, "w": 300, "h": 552, "kind": "heavy" }],
+          "breakables": [{ "x": 300, "y": 300, "w": 24, "h": 552 }],
+          "walls": [{ "x": 600, "y": 450, "w": 24, "h": 252 }],
+          "solution": ["right", "up", "right", "down"]
+        },
+        {
+          "id": "5-10", "par": 3, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 650, "y": 560 },
+          "weights": [{ "x": 150, "y": 112, "w": 260, "h": 180, "kind": "heavy" }],
+          "breakables": [{ "x": 400, "y": 300, "w": 24, "h": 552 }],
+          "sticky": [{ "x": 650, "y": 36, "w": 44, "h": 24 }],
+          "hazards": [{ "x": 500, "y": 558, "w": 40, "h": 36, "dir": "up" }],
+          "solution": ["up", "right", "down"]
+        },
+        {
+          "id": "5-11", "par": 1, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
+          "weights": [{ "x": 170, "y": 300, "w": 300, "h": 552, "kind": "heavy" }],
+          "breakables": [
+            { "x": 300, "y": 300, "w": 24, "h": 552 },
+            { "x": 500, "y": 300, "w": 24, "h": 552 },
+            { "x": 700, "y": 300, "w": 24, "h": 552 }
+          ],
+          "solution": ["right"]
+        },
+        {
+          "id": "5-12", "par": 2, "gravity": "down",
+          "spawn": { "x": 680, "y": 120 }, "goal": { "x": 40, "y": 40 },
+          "weights": [{ "x": 630, "y": 300, "w": 300, "h": 552, "kind": "heavy" }],
+          "breakables": [{ "x": 400, "y": 300, "w": 24, "h": 552 }],
+          "solution": ["left", "up"]
+        },
+        {
+          "id": "5-13", "par": 2, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
+          "weights": [{ "x": 150, "y": 112, "w": 260, "h": 180, "kind": "heavy" }],
+          "breakables": [{ "x": 440, "y": 300, "w": 24, "h": 552 }],
+          "solution": ["up", "right"]
+        },
+        {
+          "id": "5-14", "par": 1, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
+          "weights": [{ "x": 170, "y": 300, "w": 300, "h": 552, "kind": "heavy" }],
+          "breakables": [
+            { "x": 400, "y": 300, "w": 24, "h": 552 },
+            { "x": 600, "y": 450, "w": 24, "h": 252 }
+          ],
+          "solution": ["right"]
+        },
+        {
+          "id": "5-15", "par": 3, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 600, "y": 560 },
+          "weights": [{ "x": 150, "y": 112, "w": 260, "h": 180, "kind": "heavy" }],
+          "breakables": [{ "x": 300, "y": 300, "w": 24, "h": 552 }],
+          "sticky": [{ "x": 600, "y": 36, "w": 44, "h": 24 }],
+          "solution": ["up", "right", "down"]
+        },
+        {
+          "id": "5-16", "par": 2, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 650, "y": 40 },
+          "weights": [{ "x": 170, "y": 300, "w": 300, "h": 552, "kind": "heavy" }],
+          "breakables": [{ "x": 400, "y": 300, "w": 24, "h": 552 }],
+          "sticky": [{ "x": 650, "y": 564, "w": 44, "h": 24 }],
+          "solution": ["right", "up"]
+        },
+        {
+          "id": "5-17", "par": 3, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
+          "weights": [{ "x": 150, "y": 112, "w": 260, "h": 180, "kind": "heavy" }],
+          "breakables": [
+            { "x": 400, "y": 300, "w": 24, "h": 552 },
+            { "x": 600, "y": 300, "w": 24, "h": 552 }
+          ],
+          "solution": ["up", "right", "down"]
+        },
+        {
+          "id": "5-18", "par": 3, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
+          "weights": [{ "x": 170, "y": 300, "w": 300, "h": 552, "kind": "heavy" }],
+          "breakables": [{ "x": 300, "y": 300, "w": 24, "h": 552 }],
+          "walls": [{ "x": 550, "y": 450, "w": 24, "h": 252 }],
+          "solution": ["right", "up", "right"]
+        },
+        {
+          "id": "5-19", "par": 3, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 650, "y": 560 },
+          "weights": [{ "x": 150, "y": 112, "w": 260, "h": 180, "kind": "heavy" }],
+          "breakables": [{ "x": 440, "y": 300, "w": 24, "h": 552 }],
+          "sticky": [{ "x": 650, "y": 36, "w": 44, "h": 24 }],
+          "hazards": [
+            { "x": 300, "y": 558, "w": 40, "h": 36, "dir": "up" },
+            { "x": 760, "y": 558, "w": 40, "h": 36, "dir": "up" }
+          ],
+          "solution": ["up", "right", "down"]
+        },
+        {
+          "id": "5-20", "hint": "Fragile ground. Weight up, smash through, drop in.", "par": 3, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 720, "y": 560 },
+          "weights": [{ "x": 150, "y": 112, "w": 260, "h": 180, "kind": "heavy" }],
+          "breakables": [
+            { "x": 350, "y": 300, "w": 24, "h": 552 },
+            { "x": 550, "y": 300, "w": 24, "h": 552 }
+          ],
+          "sticky": [{ "x": 720, "y": 36, "w": 44, "h": 24 }],
+          "hazards": [
+            { "x": 450, "y": 558, "w": 40, "h": 36, "dir": "up" },
+            { "x": 650, "y": 558, "w": 40, "h": 36, "dir": "up" }
+          ],
+          "solution": ["up", "right", "down"]
+        }
+      ]
+    },
     { "id": 6, "name": "Wormholes", "mechanic": "Momentum-preserving portals", "levels": [] },
     { "id": 7, "name": "Chromatic", "mechanic": "Color switches", "levels": [] },
     { "id": 8, "name": "Time Warp", "mechanic": "Slow-motion zones + lasers", "levels": [] },
