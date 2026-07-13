@@ -1330,7 +1330,151 @@
         }
       ]
     },
-    { "id": 9, "name": "Singularity", "mechanic": "Black holes + gravity reversal", "levels": [] },
+    {
+      "id": 9,
+      "name": "Singularity",
+      "mechanic": "Black holes + gravity reversal",
+      "levels": [
+        {
+          "id": "9-1", "hint": "Inside a teal zone, gravity points a fixed way — up here.", "par": 2, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
+          "gravzones": [{ "x": 600, "y": 300, "w": 352, "h": 552, "dir": "up" }],
+          "solution": ["up", "right"]
+        },
+        {
+          "id": "9-2", "par": 2, "gravity": "down",
+          "spawn": { "x": 680, "y": 120 }, "goal": { "x": 40, "y": 40 },
+          "gravzones": [{ "x": 200, "y": 300, "w": 352, "h": 552, "dir": "up" }],
+          "solution": ["up", "left"]
+        },
+        {
+          "id": "9-3", "hint": "Black holes pull you in. Keep your distance.", "par": 3, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
+          "blackholes": [{ "x": 400, "y": 410, "radius": 170 }],
+          "solution": ["up", "right", "down"]
+        },
+        {
+          "id": "9-4", "par": 2, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 500, "y": 40 },
+          "gravzones": [{ "x": 500, "y": 300, "w": 240, "h": 552, "dir": "up" }],
+          "solution": ["up", "right"]
+        },
+        {
+          "id": "9-5", "par": 2, "gravity": "down",
+          "spawn": { "x": 120, "y": 480 }, "goal": { "x": 760, "y": 40 },
+          "blackholes": [{ "x": 400, "y": 180, "radius": 150 }],
+          "solution": ["right", "up"]
+        },
+        {
+          "id": "9-6", "par": 3, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
+          "blackholes": [{ "x": 400, "y": 400, "radius": 180 }],
+          "solution": ["up", "right", "down"]
+        },
+        {
+          "id": "9-7", "par": 2, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
+          "gravzones": [{ "x": 620, "y": 300, "w": 312, "h": 552, "dir": "up" }],
+          "walls": [{ "x": 350, "y": 450, "w": 24, "h": 252 }],
+          "solution": ["up", "right"]
+        },
+        {
+          "id": "9-8", "par": 3, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
+          "blackholes": [
+            { "x": 300, "y": 410, "radius": 150 },
+            { "x": 600, "y": 410, "radius": 150 }
+          ],
+          "solution": ["up", "right", "down"]
+        },
+        {
+          "id": "9-9", "hint": "Skirt the pull, then float up.", "par": 2, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
+          "gravzones": [{ "x": 600, "y": 300, "w": 352, "h": 552, "dir": "up" }],
+          "blackholes": [{ "x": 300, "y": 410, "radius": 150 }],
+          "solution": ["up", "right"]
+        },
+        {
+          "id": "9-10", "par": 2, "gravity": "down",
+          "spawn": { "x": 680, "y": 120 }, "goal": { "x": 40, "y": 40 },
+          "gravzones": [{ "x": 200, "y": 300, "w": 352, "h": 552, "dir": "up" }],
+          "blackholes": [{ "x": 500, "y": 410, "radius": 150 }],
+          "solution": ["up", "left"]
+        },
+        {
+          "id": "9-11", "par": 3, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
+          "blackholes": [{ "x": 500, "y": 410, "radius": 160 }],
+          "solution": ["up", "right", "down"]
+        },
+        {
+          "id": "9-12", "par": 2, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 500, "y": 40 },
+          "gravzones": [{ "x": 500, "y": 300, "w": 240, "h": 552, "dir": "up" }],
+          "hazards": [{ "x": 250, "y": 558, "w": 40, "h": 36, "dir": "up" }],
+          "solution": ["up", "right"]
+        },
+        {
+          "id": "9-13", "par": 2, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
+          "blackholes": [{ "x": 400, "y": 410, "radius": 160 }],
+          "solution": ["up", "right"]
+        },
+        {
+          "id": "9-14", "par": 2, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 500, "y": 40 },
+          "gravzones": [{ "x": 500, "y": 300, "w": 240, "h": 552, "dir": "up" }],
+          "blackholes": [{ "x": 300, "y": 410, "radius": 140 }],
+          "solution": ["up", "right"]
+        },
+        {
+          "id": "9-15", "par": 2, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
+          "gravzones": [{ "x": 700, "y": 300, "w": 152, "h": 552, "dir": "up" }],
+          "blackholes": [{ "x": 400, "y": 410, "radius": 160 }],
+          "solution": ["up", "right"]
+        },
+        {
+          "id": "9-16", "par": 2, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
+          "blackholes": [
+            { "x": 300, "y": 410, "radius": 150 },
+            { "x": 600, "y": 410, "radius": 150 }
+          ],
+          "solution": ["up", "right"]
+        },
+        {
+          "id": "9-17", "par": 2, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
+          "gravzones": [{ "x": 600, "y": 300, "w": 352, "h": 552, "dir": "up" }],
+          "walls": [{ "x": 300, "y": 450, "w": 24, "h": 252 }],
+          "solution": ["up", "right"]
+        },
+        {
+          "id": "9-18", "par": 3, "gravity": "down",
+          "spawn": { "x": 680, "y": 120 }, "goal": { "x": 40, "y": 560 },
+          "blackholes": [{ "x": 400, "y": 400, "radius": 170 }],
+          "solution": ["up", "left", "down"]
+        },
+        {
+          "id": "9-19", "par": 2, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
+          "gravzones": [{ "x": 600, "y": 300, "w": 352, "h": 552, "dir": "up" }],
+          "hazards": [
+            { "x": 300, "y": 558, "w": 40, "h": 36, "dir": "up" },
+            { "x": 400, "y": 558, "w": 40, "h": 36, "dir": "up" }
+          ],
+          "solution": ["up", "right"]
+        },
+        {
+          "id": "9-20", "hint": "The singularity. Slip past the pull, ride the reversal.", "par": 2, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
+          "gravzones": [{ "x": 690, "y": 300, "w": 172, "h": 552, "dir": "up" }],
+          "blackholes": [{ "x": 400, "y": 410, "radius": 150 }],
+          "solution": ["up", "right"]
+        }
+      ]
+    },
     { "id": 10, "name": "Event Horizon", "mechanic": "Capstone: limited gravity shifts", "levels": [] }
   ]
 }
