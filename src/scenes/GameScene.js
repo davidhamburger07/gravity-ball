@@ -16,6 +16,9 @@ const BORDER = 24; // auto border-wall thickness
 // Key/door colors (Ch.4). A key opens every door of the same color.
 const KEY_COLORS = { gold: 0xffd23f, blue: 0x38a1ff, pink: 0xff5c8a };
 
+// Portal pair colors (Ch.6), cycled per pair.
+const PORTAL_COLORS = [0x2bd6c0, 0xff5cf0, 0xffef5c];
+
 export default class GameScene extends Phaser.Scene {
   constructor() {
     super('GameScene');
@@ -33,6 +36,7 @@ export default class GameScene extends Phaser.Scene {
     this._stickCooldownUntil = 0;
     this._keys = new Set(); // colors of keys collected
     this._heavy = false; // Ch.5 weight state
+    this._portalCooldownUntil = 0; // Ch.6 anti re-trigger
     this.shiftCount = 0;
   }
 
@@ -138,6 +142,21 @@ export default class GameScene extends Phaser.Scene {
       body.gbColor = colorKey;
       const visual = this.add.rectangle(d.x, d.y, d.w, d.h, tint, 0.45).setStrokeStyle(2, tint).setDepth(3);
       return { body, visual, color: colorKey };
+    });
+
+    // Portals (Ch.6): linked pairs. Entering one warps the ball to the other, keeping velocity.
+    (level.portals ?? []).forEach((pair, i) => {
+      const color = PORTAL_COLORS[i % PORTAL_COLORS.length];
+      const mk = (from) => {
+        const body = this.matter.add.rectangle(from.x, from.y, 40, 40, { isStatic: true, isSensor: true, label: 'portal' });
+        this.add.circle(from.x, from.y, 20, color, 0.22).setStrokeStyle(3, color).setDepth(5);
+        this.add.circle(from.x, from.y, 9, color, 0.6).setDepth(5);
+        return body;
+      };
+      const a = mk(pair.a);
+      const b = mk(pair.b);
+      a.gbExit = pair.b; a.gbPartner = b;
+      b.gbExit = pair.a; b.gbPartner = a;
     });
 
     // Weight zones (Ch.5): sensors that make the ball heavy (or reset it to normal).
@@ -278,6 +297,7 @@ export default class GameScene extends Phaser.Scene {
       if (other.label === 'sticky') { this._onSticky(other); continue; }
       if (other.label === 'key') { this._collectKey(other); continue; }
       if (other.label === 'door') { if (!other.gbOpen) this._onWallImpact(); continue; }
+      if (other.label === 'portal') { this._onPortal(other); continue; }
       if (other.label === 'weight') { this._setHeavy(other.gbKind === 'heavy'); continue; }
       if (other.label === 'breakable') {
         if (other.gbOpen) continue;
@@ -287,6 +307,25 @@ export default class GameScene extends Phaser.Scene {
       }
       if (other.label === 'wall') this._onWallImpact();
     }
+  }
+
+  // Portal (Ch.6): teleport to the linked portal, preserving velocity. The exit is nudged along
+  // the travel direction to clear the sensor. Only the DESTINATION portal is put on a brief
+  // cooldown (to stop an instant warp-back) — other pairs stay live, so warps can be chained.
+  _onPortal(body) {
+    if (this._solved || this._dying) return;
+    if (this.time.now < (body._cooldownUntil ?? 0)) return;
+    const v = this.ball.body.velocity;
+    const speed = Math.hypot(v.x, v.y);
+    const off = 40;
+    const ox = speed > 0.1 ? (v.x / speed) * off : 0;
+    const oy = speed > 0.1 ? (v.y / speed) * off : 0;
+    Effects.burst(this, this.ball.x, this.ball.y, { color: 0x9a7bff, count: 8, speed: 120, lifespan: 300, scale: 0.4 });
+    this.ball.setPosition(body.gbExit.x + ox, body.gbExit.y + oy);
+    this.ball.setVelocity(v.x, v.y); // preserve momentum through the warp
+    if (body.gbPartner) body.gbPartner._cooldownUntil = this.time.now + 220;
+    AudioManager.portal();
+    Effects.burst(this, body.gbExit.x, body.gbExit.y, { color: 0x9a7bff, count: 10, speed: 160, lifespan: 350, scale: 0.5 });
   }
 
   // Weight zones (Ch.5): a heavy ball falls faster and can smash breakables.
