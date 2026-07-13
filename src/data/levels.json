@@ -1174,7 +1174,162 @@
         }
       ]
     },
-    { "id": 8, "name": "Time Warp", "mechanic": "Slow-motion zones + lasers", "levels": [] },
+    {
+      "id": 8,
+      "name": "Time Warp",
+      "mechanic": "Slow-motion zones + lasers",
+      "levels": [
+        {
+          "id": "8-1", "hint": "The laser blinks. Cross while it's off.", "par": 1, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
+          "lasers": [{ "x": 400, "y": 300, "w": 12, "h": 552, "on": 700, "off": 1800 }],
+          "solution": ["right"]
+        },
+        {
+          "id": "8-2", "par": 2, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
+          "lasers": [{ "x": 400, "y": 300, "w": 12, "h": 552, "on": 700, "off": 1800 }],
+          "solution": ["right", "up"]
+        },
+        {
+          "id": "8-3", "hint": "Cross a horizontal beam by going up.", "par": 2, "gravity": "down",
+          "spawn": { "x": 120, "y": 480 }, "goal": { "x": 760, "y": 40 },
+          "lasers": [{ "x": 400, "y": 300, "w": 752, "h": 12, "on": 700, "off": 1800 }],
+          "solution": ["up", "right"]
+        },
+        {
+          "id": "8-4", "hint": "Slow-mo zones cap your speed — more time to thread.", "par": 1, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
+          "slowzones": [{ "x": 400, "y": 300, "w": 150, "h": 552 }],
+          "lasers": [{ "x": 400, "y": 300, "w": 12, "h": 552, "on": 600, "off": 2400 }],
+          "solution": ["right"]
+        },
+        {
+          "id": "8-5", "par": 1, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
+          "lasers": [
+            { "x": 300, "y": 300, "w": 12, "h": 552, "on": 700, "off": 1900 },
+            { "x": 500, "y": 300, "w": 12, "h": 552, "on": 700, "off": 1900 }
+          ],
+          "solution": ["right"]
+        },
+        {
+          "id": "8-6", "par": 2, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 650, "y": 40 },
+          "lasers": [{ "x": 400, "y": 300, "w": 12, "h": 552, "on": 700, "off": 1800 }],
+          "sticky": [{ "x": 650, "y": 564, "w": 44, "h": 24 }],
+          "solution": ["right", "up"]
+        },
+        {
+          "id": "8-7", "par": 1, "gravity": "down",
+          "spawn": { "x": 680, "y": 120 }, "goal": { "x": 40, "y": 560 },
+          "lasers": [{ "x": 400, "y": 300, "w": 12, "h": 552, "on": 700, "off": 1800 }],
+          "solution": ["left"]
+        },
+        {
+          "id": "8-8", "par": 3, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
+          "lasers": [{ "x": 350, "y": 300, "w": 12, "h": 552, "on": 700, "off": 1800 }],
+          "walls": [{ "x": 600, "y": 450, "w": 24, "h": 252 }],
+          "solution": ["right", "up", "right"]
+        },
+        {
+          "id": "8-9", "par": 2, "gravity": "down",
+          "spawn": { "x": 680, "y": 480 }, "goal": { "x": 40, "y": 40 },
+          "lasers": [{ "x": 400, "y": 300, "w": 752, "h": 12, "on": 700, "off": 1800 }],
+          "solution": ["up", "left"]
+        },
+        {
+          "id": "8-10", "par": 1, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
+          "lasers": [
+            { "x": 250, "y": 300, "w": 12, "h": 552, "on": 700, "off": 2000 },
+            { "x": 550, "y": 300, "w": 12, "h": 552, "on": 700, "off": 2000 }
+          ],
+          "solution": ["right"]
+        },
+        {
+          "id": "8-11", "par": 2, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
+          "slowzones": [{ "x": 400, "y": 300, "w": 170, "h": 552 }],
+          "lasers": [{ "x": 400, "y": 300, "w": 12, "h": 552, "on": 600, "off": 2600 }],
+          "solution": ["right", "up"]
+        },
+        {
+          "id": "8-12", "par": 2, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 600, "y": 40 },
+          "lasers": [{ "x": 350, "y": 300, "w": 12, "h": 552, "on": 700, "off": 1800 }],
+          "sticky": [{ "x": 600, "y": 564, "w": 44, "h": 24 }],
+          "solution": ["right", "up"]
+        },
+        {
+          "id": "8-13", "par": 1, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
+          "lasers": [
+            { "x": 300, "y": 300, "w": 12, "h": 552, "on": 700, "off": 2100 },
+            { "x": 500, "y": 300, "w": 12, "h": 552, "on": 700, "off": 2100 },
+            { "x": 700, "y": 300, "w": 12, "h": 552, "on": 700, "off": 2100 }
+          ],
+          "solution": ["right"]
+        },
+        {
+          "id": "8-14", "hint": "No laser — just slow, precise motion.", "par": 2, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 600, "y": 40 },
+          "slowzones": [{ "x": 400, "y": 300, "w": 320, "h": 552 }],
+          "sticky": [{ "x": 600, "y": 564, "w": 44, "h": 24 }],
+          "solution": ["right", "up"]
+        },
+        {
+          "id": "8-15", "par": 2, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
+          "lasers": [{ "x": 400, "y": 300, "w": 12, "h": 552, "on": 700, "off": 1800 }],
+          "hazards": [{ "x": 600, "y": 42, "w": 40, "h": 36, "dir": "down" }],
+          "solution": ["right", "up"]
+        },
+        {
+          "id": "8-16", "par": 3, "gravity": "down",
+          "spawn": { "x": 120, "y": 480 }, "goal": { "x": 600, "y": 560 },
+          "lasers": [{ "x": 400, "y": 250, "w": 752, "h": 12, "on": 700, "off": 2000 }],
+          "sticky": [{ "x": 600, "y": 36, "w": 44, "h": 24 }],
+          "solution": ["up", "right", "down"]
+        },
+        {
+          "id": "8-17", "par": 2, "gravity": "down",
+          "spawn": { "x": 680, "y": 120 }, "goal": { "x": 40, "y": 40 },
+          "slowzones": [{ "x": 400, "y": 300, "w": 150, "h": 552 }],
+          "lasers": [{ "x": 400, "y": 300, "w": 12, "h": 552, "on": 600, "off": 2400 }],
+          "solution": ["left", "up"]
+        },
+        {
+          "id": "8-18", "par": 2, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 450, "y": 40 },
+          "lasers": [
+            { "x": 300, "y": 300, "w": 12, "h": 552, "on": 700, "off": 1900 },
+            { "x": 600, "y": 300, "w": 12, "h": 552, "on": 700, "off": 1900 }
+          ],
+          "sticky": [{ "x": 450, "y": 564, "w": 44, "h": 24 }],
+          "solution": ["right", "up"]
+        },
+        {
+          "id": "8-19", "par": 2, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 500, "y": 40 },
+          "lasers": [{ "x": 400, "y": 300, "w": 12, "h": 552, "on": 700, "off": 1800 }],
+          "sticky": [{ "x": 500, "y": 564, "w": 44, "h": 24 }],
+          "hazards": [{ "x": 620, "y": 558, "w": 40, "h": 36, "dir": "up" }],
+          "solution": ["right", "up"]
+        },
+        {
+          "id": "8-20", "hint": "Beat the clock. Cross the whole grid in one gap.", "par": 2, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
+          "lasers": [
+            { "x": 250, "y": 300, "w": 12, "h": 552, "on": 600, "off": 2200 },
+            { "x": 500, "y": 300, "w": 12, "h": 552, "on": 600, "off": 2200 },
+            { "x": 700, "y": 300, "w": 12, "h": 552, "on": 600, "off": 2200 }
+          ],
+          "solution": ["right", "up"]
+        }
+      ]
+    },
     { "id": 9, "name": "Singularity", "mechanic": "Black holes + gravity reversal", "levels": [] },
     { "id": 10, "name": "Event Horizon", "mechanic": "Capstone: limited gravity shifts", "levels": [] }
   ]
