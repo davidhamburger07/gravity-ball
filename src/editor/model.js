@@ -50,6 +50,7 @@ class EditorModel {
     this.hint = '';
     this.activeColor = 'red';          // which color-block color starts solid
     this.resetGravityOnDeath = false;  // death rule: reset gravity to level start
+    this.maxShifts = 0;                // shift budget; 0 = unlimited
     this.spawn = { x: 120, y: 120 };
     this.goal = { x: 680, y: 500, requires: null };
     this.walls = [];
@@ -83,6 +84,7 @@ class EditorModel {
     if (this.goal.requires) lvl.goal.requires = this.goal.requires;
     if (this.hint) lvl.hint = this.hint;
     if (this.resetGravityOnDeath) lvl.resetGravityOnDeath = true;
+    if (Number(this.maxShifts) > 0) lvl.maxShifts = Number(this.maxShifts);
     if (this.cblocks.length) lvl.activeColor = this.activeColor;
     const arrays = ['walls', 'hazards', 'sticky', 'bouncers', 'keys', 'doors', 'portals', 'weights', 'breakables', 'cblocks', 'switches', 'slowzones', 'lasers', 'gravzones', 'blackholes'];
     for (const key of arrays) {
@@ -99,6 +101,7 @@ class EditorModel {
     this.hint = l.hint ?? '';
     this.activeColor = l.activeColor ?? 'red';
     this.resetGravityOnDeath = !!l.resetGravityOnDeath;
+    this.maxShifts = l.maxShifts ?? 0;
     if (l.spawn) this.spawn = { x: l.spawn.x, y: l.spawn.y };
     if (l.goal) this.goal = { x: l.goal.x, y: l.goal.y, requires: l.goal.requires ?? null };
     const arrays = ['walls', 'hazards', 'sticky', 'bouncers', 'keys', 'doors', 'portals', 'weights', 'breakables', 'cblocks', 'switches', 'slowzones', 'lasers', 'gravzones', 'blackholes'];

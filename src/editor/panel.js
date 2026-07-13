@@ -92,6 +92,8 @@ export function initPanel(root) {
   inputs.gravity.onchange = () => { model.gravity = inputs.gravity.value; };
   inputs.par = el('input', { id: 'lvl-par', type: 'number', min: '1', value: model.par });
   inputs.par.oninput = () => { model.par = Number(inputs.par.value) || 1; };
+  inputs.maxShifts = el('input', { id: 'lvl-max-shifts', type: 'number', min: '0', value: model.maxShifts });
+  inputs.maxShifts.oninput = () => { model.maxShifts = Number(inputs.maxShifts.value) || 0; };
   inputs.activeColor = select('lvl-active-color', ['red', 'blue'], model.activeColor);
   inputs.activeColor.onchange = () => { model.activeColor = inputs.activeColor.value; model.dirty = true; };
   inputs.resetGravity = checkbox('lvl-reset-gravity', model.resetGravityOnDeath);
@@ -119,6 +121,7 @@ export function initPanel(root) {
     inputs.id.value = model.id;
     inputs.gravity.value = model.gravity;
     inputs.par.value = model.par;
+    inputs.maxShifts.value = model.maxShifts;
     inputs.activeColor.value = model.activeColor;
     inputs.resetGravity.checked = model.resetGravityOnDeath;
     inputs.requires.value = model.goal.requires ?? '';
@@ -146,6 +149,7 @@ export function initPanel(root) {
       labeled('ID', inputs.id),
       labeled('Start gravity', inputs.gravity),
       labeled('Par (shifts)', inputs.par),
+      labeled('Shift budget (0 = unlimited)', inputs.maxShifts),
       labeled('Solid color at start (color blocks)', inputs.activeColor),
       row(inputs.resetGravity, 'Reset gravity when the player dies'),
       labeled('Goal needs key', inputs.requires),
