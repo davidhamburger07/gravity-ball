@@ -19,6 +19,9 @@ const KEY_COLORS = { gold: 0xffd23f, blue: 0x38a1ff, pink: 0xff5c8a };
 // Portal pair colors (Ch.6), cycled per pair.
 const PORTAL_COLORS = [0x2bd6c0, 0xff5cf0, 0xffef5c];
 
+// Color-switch colors (Ch.7). One color is solid at a time; a switch toggles which.
+const SWITCH_COLORS = { red: 0xe0574f, blue: 0x4f8fe0 };
+
 export default class GameScene extends Phaser.Scene {
   constructor() {
     super('GameScene');
@@ -37,6 +40,8 @@ export default class GameScene extends Phaser.Scene {
     this._keys = new Set(); // colors of keys collected
     this._heavy = false; // Ch.5 weight state
     this._portalCooldownUntil = 0; // Ch.6 anti re-trigger
+    this._active = 'red'; // Ch.7 active (solid) color
+    this._switchCooldownUntil = 0;
     this.shiftCount = 0;
   }
 
@@ -57,6 +62,7 @@ export default class GameScene extends Phaser.Scene {
     this.matter.world.setBounds(0, 0, bounds.w, bounds.h);
     this.cameras.main.setBounds(0, 0, bounds.w, bounds.h);
 
+    this._active = level.activeColor ?? 'red';
     this._buildParallax(bounds);
     this._buildStatic(level, bounds);
     this.ball = new Ball(this, level.spawn.x, level.spawn.y);
@@ -142,6 +148,24 @@ export default class GameScene extends Phaser.Scene {
       body.gbColor = colorKey;
       const visual = this.add.rectangle(d.x, d.y, d.w, d.h, tint, 0.45).setStrokeStyle(2, tint).setDepth(3);
       return { body, visual, color: colorKey };
+    });
+
+    // Color blocks (Ch.7): solid when their color is active, passable (ghosted) otherwise.
+    this._cblocks = (level.cblocks ?? []).map((c) => {
+      const color = c.color ?? 'red';
+      const body = this.matter.add.rectangle(c.x, c.y, c.w, c.h, { isStatic: true, label: 'cblock' });
+      body.gbColor = color;
+      const visual = this.add.rectangle(c.x, c.y, c.w, c.h, SWITCH_COLORS[color]).setDepth(3);
+      const entry = { body, visual, color };
+      this._applyBlockState(entry);
+      return entry;
+    });
+
+    // Color switches (Ch.7): toggle which color is solid.
+    (level.switches ?? []).forEach((s) => {
+      this.matter.add.rectangle(s.x, s.y, 36, 36, { isStatic: true, isSensor: true, label: 'cswitch' });
+      this.add.rectangle(s.x, s.y, 36, 36, 0x3a3f5c, 0.95).setStrokeStyle(2, 0xc9cde8, 0.8).setDepth(4);
+      this.add.text(s.x, s.y, '⇄', { fontSize: '20px', color: '#dfe3f5' }).setOrigin(0.5).setDepth(5);
     });
 
     // Portals (Ch.6): linked pairs. Entering one warps the ball to the other, keeping velocity.
@@ -252,6 +276,14 @@ export default class GameScene extends Phaser.Scene {
       .setInteractive({ useHandCursor: true });
     mute.on('pointerdown', () => mute.setText(AudioManager.toggleMute() ? '\u{1F507}' : '\u{1F50A}'));
 
+    // Ch.7: show which color is currently solid.
+    if ((level.cblocks ?? []).length) {
+      this._activeDot = this.add
+        .rectangle(VIEW.WIDTH - 150, 28, 20, 20, SWITCH_COLORS[this._active])
+        .setStrokeStyle(2, 0xffffff, 0.4)
+        .setScrollFactor(0).setDepth(100);
+    }
+
     if (level.hint) {
       this.add
         .text(VIEW.WIDTH / 2, VIEW.HEIGHT - 24, level.hint, {
@@ -298,6 +330,8 @@ export default class GameScene extends Phaser.Scene {
       if (other.label === 'key') { this._collectKey(other); continue; }
       if (other.label === 'door') { if (!other.gbOpen) this._onWallImpact(); continue; }
       if (other.label === 'portal') { this._onPortal(other); continue; }
+      if (other.label === 'cswitch') { this._toggleColor(other); continue; }
+      if (other.label === 'cblock') { if (!other.isSensor) this._onWallImpact(); continue; }
       if (other.label === 'weight') { this._setHeavy(other.gbKind === 'heavy'); continue; }
       if (other.label === 'breakable') {
         if (other.gbOpen) continue;
@@ -307,6 +341,27 @@ export default class GameScene extends Phaser.Scene {
       }
       if (other.label === 'wall') this._onWallImpact();
     }
+  }
+
+  // Color switch (Ch.7): flip which color is solid, and restyle every color block.
+  _applyBlockState(entry) {
+    const solid = entry.color === this._active;
+    entry.body.isSensor = !solid;
+    entry.visual
+      .setFillStyle(SWITCH_COLORS[entry.color], solid ? 0.85 : 0.15)
+      .setStrokeStyle(solid ? 3 : 1, SWITCH_COLORS[entry.color], solid ? 1 : 0.5);
+  }
+
+  _toggleColor(sw) {
+    if (this._solved || this._dying) return;
+    // Per-switch cooldown: debounces one switch's repeated contacts without blocking others,
+    // so several switches hit in quick succession each fire.
+    if (this.time.now < (sw._cooldownUntil ?? 0)) return;
+    sw._cooldownUntil = this.time.now + 150;
+    this._active = this._active === 'red' ? 'blue' : 'red';
+    this._cblocks.forEach((e) => this._applyBlockState(e));
+    if (this._activeDot) this._activeDot.setFillStyle(SWITCH_COLORS[this._active]);
+    AudioManager.swap();
   }
 
   // Portal (Ch.6): teleport to the linked portal, preserving velocity. The exit is nudged along
