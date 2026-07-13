@@ -987,7 +987,193 @@
         }
       ]
     },
-    { "id": 7, "name": "Chromatic", "mechanic": "Color switches", "levels": [] },
+    {
+      "id": 7,
+      "name": "Chromatic",
+      "mechanic": "Color switches",
+      "levels": [
+        {
+          "id": "7-1", "hint": "Hit the ⇄ switch to flip which color is solid.", "par": 1, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 }, "activeColor": "red",
+          "cblocks": [{ "x": 400, "y": 300, "w": 24, "h": 552, "color": "red" }],
+          "switches": [{ "x": 250, "y": 560 }],
+          "solution": ["right"]
+        },
+        {
+          "id": "7-2", "par": 1, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 }, "activeColor": "blue",
+          "cblocks": [{ "x": 400, "y": 300, "w": 24, "h": 552, "color": "blue" }],
+          "switches": [{ "x": 250, "y": 560 }],
+          "solution": ["right"]
+        },
+        {
+          "id": "7-3", "hint": "Two colors — flip at each switch to open the way.", "par": 1, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 }, "activeColor": "red",
+          "cblocks": [
+            { "x": 300, "y": 300, "w": 24, "h": 552, "color": "red" },
+            { "x": 600, "y": 300, "w": 24, "h": 552, "color": "blue" }
+          ],
+          "switches": [{ "x": 200, "y": 560 }, { "x": 450, "y": 560 }],
+          "solution": ["right"]
+        },
+        {
+          "id": "7-4", "par": 1, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 }, "activeColor": "blue",
+          "cblocks": [
+            { "x": 300, "y": 300, "w": 24, "h": 552, "color": "blue" },
+            { "x": 600, "y": 300, "w": 24, "h": 552, "color": "red" }
+          ],
+          "switches": [{ "x": 200, "y": 560 }, { "x": 450, "y": 560 }],
+          "solution": ["right"]
+        },
+        {
+          "id": "7-5", "hint": "Make a block solid to stop before the spikes.", "par": 2, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 580, "y": 40 }, "activeColor": "red",
+          "cblocks": [{ "x": 620, "y": 300, "w": 24, "h": 552, "color": "blue" }],
+          "switches": [{ "x": 250, "y": 560 }],
+          "hazards": [{ "x": 740, "y": 558, "w": 40, "h": 36, "dir": "up" }],
+          "solution": ["right", "up"]
+        },
+        {
+          "id": "7-6", "par": 2, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 }, "activeColor": "red",
+          "cblocks": [{ "x": 400, "y": 300, "w": 24, "h": 552, "color": "red" }],
+          "switches": [{ "x": 250, "y": 560 }],
+          "solution": ["right", "up"]
+        },
+        {
+          "id": "7-7", "par": 1, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 }, "activeColor": "red",
+          "cblocks": [
+            { "x": 300, "y": 300, "w": 24, "h": 552, "color": "red" },
+            { "x": 600, "y": 300, "w": 24, "h": 552, "color": "blue" }
+          ],
+          "switches": [{ "x": 200, "y": 560 }, { "x": 450, "y": 560 }],
+          "hazards": [{ "x": 750, "y": 42, "w": 40, "h": 36, "dir": "down" }],
+          "solution": ["right"]
+        },
+        {
+          "id": "7-8", "par": 1, "gravity": "down",
+          "spawn": { "x": 680, "y": 120 }, "goal": { "x": 40, "y": 560 }, "activeColor": "blue",
+          "cblocks": [{ "x": 400, "y": 300, "w": 24, "h": 552, "color": "blue" }],
+          "switches": [{ "x": 550, "y": 560 }],
+          "solution": ["left"]
+        },
+        {
+          "id": "7-9", "par": 1, "gravity": "down",
+          "spawn": { "x": 680, "y": 120 }, "goal": { "x": 40, "y": 560 }, "activeColor": "red",
+          "cblocks": [
+            { "x": 500, "y": 300, "w": 24, "h": 552, "color": "red" },
+            { "x": 200, "y": 300, "w": 24, "h": 552, "color": "blue" }
+          ],
+          "switches": [{ "x": 600, "y": 560 }, { "x": 350, "y": 560 }],
+          "solution": ["left"]
+        },
+        {
+          "id": "7-10", "par": 2, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 650, "y": 40 }, "activeColor": "red",
+          "cblocks": [{ "x": 440, "y": 300, "w": 24, "h": 552, "color": "red" }],
+          "switches": [{ "x": 250, "y": 560 }],
+          "sticky": [{ "x": 650, "y": 564, "w": 44, "h": 24 }],
+          "solution": ["right", "up"]
+        },
+        {
+          "id": "7-11", "par": 2, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 580, "y": 40 }, "activeColor": "blue",
+          "cblocks": [{ "x": 620, "y": 300, "w": 24, "h": 552, "color": "red" }],
+          "switches": [{ "x": 250, "y": 560 }],
+          "hazards": [{ "x": 740, "y": 558, "w": 40, "h": 36, "dir": "up" }],
+          "solution": ["right", "up"]
+        },
+        {
+          "id": "7-12", "par": 1, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 }, "activeColor": "red",
+          "cblocks": [
+            { "x": 300, "y": 300, "w": 24, "h": 552, "color": "red" },
+            { "x": 500, "y": 300, "w": 24, "h": 552, "color": "blue" },
+            { "x": 700, "y": 300, "w": 24, "h": 552, "color": "red" }
+          ],
+          "switches": [{ "x": 200, "y": 560 }, { "x": 400, "y": 560 }, { "x": 600, "y": 560 }],
+          "solution": ["right"]
+        },
+        {
+          "id": "7-13", "par": 2, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 380, "y": 40 }, "activeColor": "red",
+          "cblocks": [{ "x": 400, "y": 300, "w": 24, "h": 552, "color": "blue" }],
+          "switches": [{ "x": 250, "y": 560 }],
+          "solution": ["right", "up"]
+        },
+        {
+          "id": "7-14", "par": 3, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 }, "activeColor": "red",
+          "cblocks": [{ "x": 400, "y": 300, "w": 24, "h": 552, "color": "red" }],
+          "switches": [{ "x": 250, "y": 560 }],
+          "walls": [{ "x": 600, "y": 450, "w": 24, "h": 252 }],
+          "solution": ["right", "up", "right"]
+        },
+        {
+          "id": "7-15", "par": 1, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 }, "activeColor": "red",
+          "cblocks": [
+            { "x": 250, "y": 300, "w": 24, "h": 552, "color": "red" },
+            { "x": 450, "y": 300, "w": 24, "h": 552, "color": "blue" },
+            { "x": 650, "y": 300, "w": 24, "h": 552, "color": "red" }
+          ],
+          "switches": [{ "x": 180, "y": 560 }, { "x": 350, "y": 560 }, { "x": 550, "y": 560 }],
+          "solution": ["right"]
+        },
+        {
+          "id": "7-16", "par": 1, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 }, "activeColor": "blue",
+          "cblocks": [{ "x": 440, "y": 300, "w": 24, "h": 552, "color": "blue" }],
+          "switches": [{ "x": 250, "y": 560 }],
+          "solution": ["right"]
+        },
+        {
+          "id": "7-17", "par": 2, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 700, "y": 40 }, "activeColor": "red",
+          "cblocks": [
+            { "x": 300, "y": 300, "w": 24, "h": 552, "color": "red" },
+            { "x": 550, "y": 300, "w": 24, "h": 552, "color": "blue" }
+          ],
+          "switches": [{ "x": 200, "y": 560 }, { "x": 420, "y": 560 }],
+          "sticky": [{ "x": 700, "y": 564, "w": 44, "h": 24 }],
+          "solution": ["right", "up"]
+        },
+        {
+          "id": "7-18", "par": 3, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 }, "activeColor": "red",
+          "cblocks": [{ "x": 500, "y": 450, "w": 24, "h": 252, "color": "blue" }],
+          "switches": [{ "x": 250, "y": 560 }],
+          "hazards": [{ "x": 600, "y": 558, "w": 40, "h": 36, "dir": "up" }],
+          "solution": ["right", "up", "right"]
+        },
+        {
+          "id": "7-19", "par": 2, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 680, "y": 40 }, "activeColor": "red",
+          "cblocks": [
+            { "x": 300, "y": 300, "w": 24, "h": 552, "color": "red" },
+            { "x": 600, "y": 300, "w": 24, "h": 552, "color": "blue" }
+          ],
+          "switches": [{ "x": 200, "y": 560 }, { "x": 450, "y": 560 }],
+          "sticky": [{ "x": 680, "y": 564, "w": 44, "h": 24 }],
+          "hazards": [{ "x": 760, "y": 558, "w": 40, "h": 36, "dir": "up" }],
+          "solution": ["right", "up"]
+        },
+        {
+          "id": "7-20", "hint": "Chromatic chaos. Flip through every gate.", "par": 2, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 }, "activeColor": "red",
+          "cblocks": [
+            { "x": 250, "y": 300, "w": 24, "h": 552, "color": "red" },
+            { "x": 500, "y": 300, "w": 24, "h": 552, "color": "blue" },
+            { "x": 700, "y": 300, "w": 24, "h": 552, "color": "red" }
+          ],
+          "switches": [{ "x": 180, "y": 560 }, { "x": 380, "y": 560 }, { "x": 600, "y": 560 }],
+          "hazards": [{ "x": 400, "y": 42, "w": 40, "h": 36, "dir": "down" }],
+          "solution": ["right", "up"]
+        }
+      ]
+    },
     { "id": 8, "name": "Time Warp", "mechanic": "Slow-motion zones + lasers", "levels": [] },
     { "id": 9, "name": "Singularity", "mechanic": "Black holes + gravity reversal", "levels": [] },
     { "id": 10, "name": "Event Horizon", "mechanic": "Capstone: limited gravity shifts", "levels": [] }
