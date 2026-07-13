@@ -40,31 +40,39 @@ export default class InputManager {
     }
   }
 
-  // --- Mobile / touch: directional swipe ----------------------------------
+  // --- Mobile / touch: swipe anywhere on the screen -----------------------
+  // Listens on `window` (not the Phaser canvas) so a swipe works across the whole viewport,
+  // including any letterbox area around a portrait-fit playfield. Cleaned up on scene shutdown.
   _registerTouch() {
     let startX = 0;
     let startY = 0;
     let tracking = false;
 
-    this.scene.input.on('pointerdown', (p) => {
-      startX = p.x;
-      startY = p.y;
+    const onStart = (e) => {
+      const t = e.changedTouches[0];
+      startX = t.clientX;
+      startY = t.clientY;
       tracking = true;
-    });
-
-    this.scene.input.on('pointerup', (p) => {
+    };
+    const onEnd = (e) => {
       if (!tracking) return;
       tracking = false;
-      const dx = p.x - startX;
-      const dy = p.y - startY;
+      const t = e.changedTouches[0];
+      const dx = t.clientX - startX;
+      const dy = t.clientY - startY;
       if (Math.abs(dx) < this.swipeThreshold && Math.abs(dy) < this.swipeThreshold) return;
-
-      // Dominant axis wins → one clean cardinal direction per swipe.
       if (Math.abs(dx) > Math.abs(dy)) {
         this._emit(dx > 0 ? GravityDirection.RIGHT : GravityDirection.LEFT);
       } else {
         this._emit(dy > 0 ? GravityDirection.DOWN : GravityDirection.UP);
       }
+    };
+
+    window.addEventListener('touchstart', onStart, { passive: true });
+    window.addEventListener('touchend', onEnd, { passive: true });
+    this.scene.events.once('shutdown', () => {
+      window.removeEventListener('touchstart', onStart);
+      window.removeEventListener('touchend', onEnd);
     });
   }
 }

@@ -8,7 +8,6 @@ import InputManager from '../systems/InputManager.js';
 import Button from '../ui/Button.js';
 import { AudioManager } from '../systems/AudioManager.js';
 import { Effects } from '../systems/Effects.js';
-import { isTouch } from '../systems/DeviceUI.js';
 import { CrazyGamesSDK } from '../sdk/CrazyGamesSDK.js';
 import { VIEW, PHYSICS, FEEL } from '../config/GameConfig.js';
 
@@ -52,7 +51,6 @@ export default class GameScene extends Phaser.Scene {
 
     this.matter.world.setBounds(0, 0, bounds.w, bounds.h);
     this.cameras.main.setBounds(0, 0, bounds.w, bounds.h);
-    this.cameras.main.setBackgroundColor(VIEW.BACKGROUND);
 
     this._buildParallax(bounds);
     this._buildStatic(level, bounds);
@@ -226,40 +224,6 @@ export default class GameScene extends Phaser.Scene {
         })
         .setOrigin(0.5).setScrollFactor(0).setDepth(100);
     }
-
-    if (isTouch()) this._buildTouchControls();
-  }
-
-  // On-screen directional pad for touch devices (swipe still works too). Bottom-left,
-  // translucent so it stays out of the way; each button emits the same gravity request.
-  _buildTouchControls() {
-    const cx = 104;
-    const cy = VIEW.HEIGHT - 150; // sit above the bottom row so it doesn't cover a resting ball/goal
-    const d = 54;
-    [
-      [cx, cy - d, '▲', GravityDirection.UP],
-      [cx, cy + d, '▼', GravityDirection.DOWN],
-      [cx - d, cy, '◀', GravityDirection.LEFT],
-      [cx + d, cy, '▶', GravityDirection.RIGHT],
-    ].forEach(([x, y, glyph, dir]) => this._touchButton(x, y, glyph, dir));
-  }
-
-  _touchButton(x, y, glyph, dir) {
-    const bg = this.add
-      .rectangle(x, y, 52, 52, 0x2a2f45, 0.3)
-      .setStrokeStyle(2, 0x4c5378, 0.6)
-      .setScrollFactor(0).setDepth(150)
-      .setInteractive({ useHandCursor: true });
-    this.add
-      .text(x, y, glyph, { fontFamily: 'sans-serif', fontSize: '24px', color: '#c9cde8' })
-      .setOrigin(0.5).setScrollFactor(0).setDepth(151);
-    const reset = () => bg.setFillStyle(0x2a2f45, 0.3);
-    bg.on('pointerdown', () => {
-      this.events.emit('gravity:request', dir);
-      bg.setFillStyle(0x38e1ff, 0.5);
-    });
-    bg.on('pointerup', reset);
-    bg.on('pointerout', reset);
   }
 
   _updateHud() {

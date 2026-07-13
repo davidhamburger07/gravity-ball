@@ -22,12 +22,20 @@ const PROD_HTML = `<!doctype html>
     <style>
       html, body {
         margin: 0; padding: 0; height: 100%;
-        background: #10131f; overflow: hidden;
+        overflow: hidden;
         font-family: system-ui, sans-serif;
         touch-action: none; overscroll-behavior: none;
+        background: #0d1018;
+        background: radial-gradient(130% 90% at 50% 30%, #171d31 0%, #0d1018 72%);
       }
-      #game-root { width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; }
+      #game-root { width: 100vw; height: 100vh; height: 100dvh; }
       canvas { display: block; }
+      #loading { position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column;
+        align-items: center; justify-content: center; gap: 16px; }
+      #loading .spinner { width: 42px; height: 42px; border-radius: 50%;
+        border: 4px solid #2a3050; border-top-color: #38e1ff; animation: gb-spin .9s linear infinite; }
+      #loading .label { color: #7a80a8; font-size: 13px; letter-spacing: .15em; text-transform: uppercase; }
+      @keyframes gb-spin { to { transform: rotate(360deg); } }
     </style>
 
     <!-- Physics/render engine, vendored locally (no external CDN in production). -->
@@ -37,6 +45,7 @@ const PROD_HTML = `<!doctype html>
   </head>
   <body>
     <div id="game-root"></div>
+    <div id="loading"><div class="spinner"></div><div class="label">Loading</div></div>
     <script src="bundle.js"></script>
   </body>
 </html>

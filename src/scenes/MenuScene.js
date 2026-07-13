@@ -1,7 +1,6 @@
 // MenuScene.js — title screen. Springy title, tagline, PLAY button, and a parallax dot
 // backdrop for depth. PLAY leads into level select.
 import Button from '../ui/Button.js';
-import { VIEW } from '../config/GameConfig.js';
 
 export default class MenuScene extends Phaser.Scene {
   constructor() {
@@ -10,7 +9,6 @@ export default class MenuScene extends Phaser.Scene {
 
   create() {
     const { width, height } = this.scale;
-    this.cameras.main.setBackgroundColor(VIEW.BACKGROUND);
     this._backdrop(width, height);
 
     const title = this.add

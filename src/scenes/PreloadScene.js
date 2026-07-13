@@ -23,6 +23,9 @@ export default class PreloadScene extends Phaser.Scene {
     const save = await new SaveManager(levels).load();
     this.registry.set('save', save);
 
+    // Everything's ready — dismiss the HTML loading overlay.
+    if (typeof document !== 'undefined') document.getElementById('loading')?.remove();
+
     // Playtest hand-off from the level editor (editor.html → ./?playtest=1).
     if (new URLSearchParams(location.search).has('playtest')) {
       try {

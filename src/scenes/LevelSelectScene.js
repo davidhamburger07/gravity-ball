@@ -1,7 +1,6 @@
 // LevelSelectScene.js — chapter tabs + a grid of level tiles showing lock state and star
 // ratings pulled from SaveManager. Chapters with no built levels show "Coming soon".
 import Button from '../ui/Button.js';
-import { VIEW } from '../config/GameConfig.js';
 
 const COLS = 5;
 const TILE = 90;
@@ -19,7 +18,6 @@ export default class LevelSelectScene extends Phaser.Scene {
   create() {
     this.save = this.registry.get('save');
     this.levelsData = this.registry.get('levels');
-    this.cameras.main.setBackgroundColor(VIEW.BACKGROUND);
     const { width } = this.scale;
 
     this.add

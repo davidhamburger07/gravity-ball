@@ -5,18 +5,14 @@ import PreloadScene from './scenes/PreloadScene.js';
 import MenuScene from './scenes/MenuScene.js';
 import LevelSelectScene from './scenes/LevelSelectScene.js';
 import GameScene from './scenes/GameScene.js';
-import { installOrientationGate } from './systems/DeviceUI.js';
 import { VIEW, PHYSICS } from './config/GameConfig.js';
-
-// Landscape-only gate for phones held in portrait (no-op on desktop).
-installOrientationGate();
 
 const config = {
   type: Phaser.AUTO, // WebGL with Canvas fallback
   parent: 'game-root',
-  backgroundColor: VIEW.BACKGROUND,
+  transparent: true, // let the page's full-screen background show behind the centered playfield
   scale: {
-    mode: Phaser.Scale.FIT, // responsive: scales to fit any screen, keeps aspect ratio
+    mode: Phaser.Scale.FIT, // responsive: scales to fit any screen (portrait or landscape), keeps aspect ratio
     autoCenter: Phaser.Scale.CENTER_BOTH,
     width: VIEW.WIDTH,
     height: VIEW.HEIGHT,
