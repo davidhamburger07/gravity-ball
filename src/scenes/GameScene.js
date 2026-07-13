@@ -3,7 +3,7 @@
 //   GravityController → 'gravity:changed' → juice (camera lead, screen shake)
 // Tracks shift count, computes a star rating on win, and persists it via SaveManager.
 import Ball from '../objects/Ball.js';
-import GravityController, { GravityDirection } from '../systems/GravityController.js';
+import GravityController, { GravityDirection, GRAVITY_VECTORS } from '../systems/GravityController.js';
 import InputManager from '../systems/InputManager.js';
 import Button from '../ui/Button.js';
 import { AudioManager } from '../systems/AudioManager.js';
@@ -122,6 +122,27 @@ export default class GameScene extends Phaser.Scene {
       // Orient the spike sprite toward the surface it sits on (texture points up by default).
       const angle = { up: 0, right: 90, down: 180, left: 270 }[hz.dir ?? 'up'];
       this.add.image(hz.x, hz.y, 'spike').setDisplaySize(w, h).setAngle(angle).setDepth(4);
+    });
+
+    // Gravity zones (Ch.9): while inside, gravity is a fixed local direction (e.g. reversed).
+    this._gravzones = (level.gravzones ?? []).map((z) => {
+      const dir = z.dir ?? 'up';
+      this.add.rectangle(z.x, z.y, z.w, z.h, 0x4fd0c0, 0.12).setStrokeStyle(1, 0x8affea, 0.5).setDepth(1);
+      const glyph = { up: '↑', down: '↓', left: '←', right: '→' }[dir];
+      for (let gy = z.y - z.h / 2 + 40; gy < z.y + z.h / 2; gy += 90) {
+        for (let gx = z.x - z.w / 2 + 40; gx < z.x + z.w / 2; gx += 90) {
+          this.add.text(gx, gy, glyph, { fontSize: '22px', color: '#8affea' }).setOrigin(0.5).setAlpha(0.35).setDepth(1);
+        }
+      }
+      return { x: z.x, y: z.y, w: z.w, h: z.h, dir };
+    });
+
+    // Black holes (Ch.9): pull the ball toward the center within a radius; lethal at the core.
+    this._blackholes = (level.blackholes ?? []).map((h) => {
+      const radius = h.radius ?? 120;
+      this.add.circle(h.x, h.y, radius, 0x120a24, 0.35).setStrokeStyle(2, 0x9a5cff, 0.35).setDepth(1);
+      this.add.circle(h.x, h.y, 16, 0x1a0f34, 1).setStrokeStyle(3, 0xc79aff, 0.9).setDepth(2);
+      return { x: h.x, y: h.y, radius, strength: h.strength ?? 0.5 };
     });
 
     // Slow-motion zones (Ch.8): cap the ball's speed while inside (lasers keep real time).
@@ -289,6 +310,28 @@ export default class GameScene extends Phaser.Scene {
       }
     }
     this._lasersActive = anyOn; // read by the verifier to time crossings
+
+    // Gravity zones: override world gravity to a fixed local direction while the ball is inside.
+    if (this._gravzones?.length) {
+      const z = this._gravzones.find((g) => Math.abs(this.ball.x - g.x) < g.w / 2 && Math.abs(this.ball.y - g.y) < g.h / 2);
+      const dir = z ? z.dir : this.gravity.direction;
+      const gv = GRAVITY_VECTORS[dir];
+      this.matter.world.setGravity(gv.x * this.gravity.strength, gv.y * this.gravity.strength);
+    }
+
+    // Black holes: pull the ball toward the core; die if it reaches the center.
+    if (!this._solved && !this._dying) {
+      for (const H of this._blackholes ?? []) {
+        const dx = H.x - this.ball.x;
+        const dy = H.y - this.ball.y;
+        const dist = Math.hypot(dx, dy) || 1;
+        if (dist < H.radius) {
+          if (dist < 22) { this._die(); break; }
+          const v = this.ball.body.velocity;
+          this.ball.setVelocity(v.x + (dx / dist) * H.strength, v.y + (dy / dist) * H.strength);
+        }
+      }
+    }
 
     // Slow-motion zones: cap speed while inside.
     if (!this._solved && !this._dying && this._slowzones?.length) {

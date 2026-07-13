@@ -12,7 +12,7 @@ export const GravityDirection = Object.freeze({
 });
 
 // Unit vectors for each direction. Matter world gravity is (direction * strength).
-const GRAVITY_VECTORS = Object.freeze({
+export const GRAVITY_VECTORS = Object.freeze({
   [GravityDirection.DOWN]: { x: 0, y: 1 },
   [GravityDirection.UP]: { x: 0, y: -1 },
   [GravityDirection.LEFT]: { x: -1, y: 0 },
