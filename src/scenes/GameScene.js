@@ -124,6 +124,20 @@ export default class GameScene extends Phaser.Scene {
       this.add.image(hz.x, hz.y, 'spike').setDisplaySize(w, h).setAngle(angle).setDepth(4);
     });
 
+    // Slow-motion zones (Ch.8): cap the ball's speed while inside (lasers keep real time).
+    this._slowzones = (level.slowzones ?? []).map((z) => {
+      this.add.rectangle(z.x, z.y, z.w, z.h, 0x8a6bff, 0.14).setStrokeStyle(1, 0xb9a3ff, 0.5).setDepth(1);
+      return { x: z.x, y: z.y, w: z.w, h: z.h };
+    });
+
+    // Lasers (Ch.8): blinking beams, lethal only while on. Overlap is checked in update().
+    this._lasers = (level.lasers ?? []).map((l) => {
+      const onDur = l.on ?? 700;
+      const period = onDur + (l.off ?? 1800);
+      const visual = this.add.rectangle(l.x, l.y, l.w, l.h, 0xff3b3b, 0.12).setStrokeStyle(1, 0xff8a8a, 0.4).setDepth(4);
+      return { x: l.x, y: l.y, w: l.w, h: l.h, onDur, period, phase: l.phase ?? 0, visual, isOn: false };
+    });
+
     // Sticky pads (Ch.3): sensors that pin the ball until the next gravity flip.
     (level.sticky ?? []).forEach((s) => {
       const body = this.matter.add.rectangle(s.x, s.y, s.w, s.h, { isStatic: true, isSensor: true, label: 'sticky' });
@@ -255,6 +269,40 @@ export default class GameScene extends Phaser.Scene {
 
   update() {
     if (this.ball) this.ball.sync();
+    if (!this.ball) return;
+
+    const now = this.time.now;
+    const r = PHYSICS.BALL_RADIUS;
+
+    // Lasers: toggle on/off, restyle, and kill on overlap while on.
+    let anyOn = false;
+    for (const L of this._lasers ?? []) {
+      L.isOn = ((now + L.phase) % L.period) < L.onDur;
+      if (L.isOn) anyOn = true;
+      L.visual.setFillStyle(0xff3b3b, L.isOn ? 0.9 : 0.12);
+      if (
+        L.isOn && !this._solved && !this._dying &&
+        Math.abs(this.ball.x - L.x) < L.w / 2 + r &&
+        Math.abs(this.ball.y - L.y) < L.h / 2 + r
+      ) {
+        this._die();
+      }
+    }
+    this._lasersActive = anyOn; // read by the verifier to time crossings
+
+    // Slow-motion zones: cap speed while inside.
+    if (!this._solved && !this._dying && this._slowzones?.length) {
+      const b = this.ball;
+      const inSlow = this._slowzones.some(
+        (z) => Math.abs(b.x - z.x) < z.w / 2 + r && Math.abs(b.y - z.y) < z.h / 2 + r
+      );
+      if (inSlow) {
+        const v = b.body.velocity;
+        const sp = Math.hypot(v.x, v.y);
+        const cap = 3.5;
+        if (sp > cap) b.setVelocity((v.x / sp) * cap, (v.y / sp) * cap);
+      }
+    }
   }
 
   _buildHud(level) {
