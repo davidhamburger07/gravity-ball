@@ -3,6 +3,7 @@ node_modules/
 
 # Build output
 dist/
+dist.zip
 build/
 
 # Screenshot output (generated locally for visual QA)

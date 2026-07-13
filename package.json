@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "node serve.mjs",
     "start": "node serve.mjs",
+    "build": "node build.mjs",
+    "preview": "node preview.mjs",
     "shot": "node screenshot.mjs"
   },
   "keywords": [
@@ -23,6 +25,10 @@
     "node": ">=18"
   },
   "devDependencies": {
+    "esbuild": "^0.28.1",
     "puppeteer": "^25.3.0"
+  },
+  "dependencies": {
+    "phaser": "^3.80.1"
   }
 }

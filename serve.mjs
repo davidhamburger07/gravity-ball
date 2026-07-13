@@ -4,10 +4,13 @@
 // Canvas/WebGL context all work without CORS errors.
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
-import { extname, join, normalize } from 'node:path';
+import { extname, join, normalize, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const ROOT = fileURLToPath(new URL('.', import.meta.url));
+// Serve the project root by default, or a subfolder (e.g. the production build) via SERVE_DIR.
+const ROOT = process.env.SERVE_DIR
+  ? resolve(process.cwd(), process.env.SERVE_DIR)
+  : fileURLToPath(new URL('.', import.meta.url));
 const PORT = process.env.PORT || 3000;
 
 const MIME = {
