@@ -103,7 +103,12 @@ gravity-ball/
 │   ├── systems/
 │   │   ├── GravityController.js   # ★ THE CORE MECHANIC
 │   │   ├── InputManager.js        # Keyboard + swipe → gravity requests
-│   │   └── SaveManager.js         # Progress, star ratings, unlock logic
+│   │   ├── SaveManager.js         # Progress, star ratings, unlock logic
+│   │   └── Textures.js            # Shared placeholder-shape generation
+│   ├── editor/                    # Standalone level editor (editor.html)
+│   │   ├── EditorScene.js         # Canvas: grid, render model, click/drag placement
+│   │   ├── panel.js               # DOM control panel (tools, props, JSON, playtest)
+│   │   └── model.js               # Shared level model (single source of truth)
 │   ├── objects/
 │   │   └── Ball.js          # Matter circle body; no self-locomotion by design
 │   ├── ui/
@@ -112,6 +117,7 @@ gravity-ball/
 │   │   └── CrazyGamesSDK.js # Ads, gameplay lifecycle, cloud/local save
 │   └── data/
 │       └── levels.json      # Levels arrayed by chapter → level
+├── editor.html             # Level editor page (linked from the main menu)
 └── assets/                  # sprites / audio / fonts (placeholders until final art)
 ```
 
@@ -129,6 +135,26 @@ gravity-ball/
 **Mobile:** touch devices get an on-screen directional pad (in addition to swipe), enlarged tap
 targets, and a "rotate to landscape" prompt in portrait — all touch-gated via a coarse-pointer
 query, so desktop is unaffected. It ships in the production bundle too.
+
+---
+
+## 🛠️ Level Editor
+
+A standalone visual editor at **`/editor.html`** (also linked from the main menu). Build levels the
+same way they're authored in `levels.json`, then play them instantly.
+
+- **Place any piece** — spawn, goal, walls, spikes, sticky pads, trampolines, keys, doors. Click for
+  a default size or click-drag to draw a box; the grid snaps to 20px. Erase removes the piece under
+  the cursor.
+- **Configure** — spike/trampoline direction, key/door color, trampoline power, start gravity, par,
+  hint, and whether the goal is locked behind a key.
+- **▶ Playtest** — hands the level to the *real game* (via `localStorage` + `?playtest=1`) so it plays
+  with full physics and juice; a work-in-progress autosaves so the round-trip is lossless.
+- **Export / Import** — copy or download the level as `levels.json`-shaped JSON, or paste JSON back
+  in to keep editing.
+
+The editor shares the game's textures and reuses `GameScene` for playtesting, and is bundled into the
+production build (`dist/editor.html`).
 
 ---
 
@@ -174,6 +200,7 @@ Full details, the mechanics library, and game-feel spec live in [`docs/GDD.md`](
 - [x] Ch.1 Ground Zero (4) · Ch.2 Spike Fields (20) · Ch.3 Bounce House (20) · Ch.4 Locksmith (20)
 - [x] Juice pass — procedural audio, particle bursts, squash-and-stretch, parallax, mute
 - [x] Production build (esbuild bundle + vendored Phaser) — upload-ready `dist/` for CrazyGames
+- [x] Visual level editor with playtest round-trip + JSON export/import
 - [ ] Chapters 5–10 mechanics + full level set
 
 ## 🧪 Tooling & QA
