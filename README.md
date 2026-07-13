@@ -145,9 +145,9 @@ Full details, the mechanics library, and game-feel spec live in [`docs/GDD.md`](
 - [x] Data-driven levels + runnable Chapter 1 slice
 - [x] Menu + Level-select scenes with star ratings & unlock progression
 - [x] Save system (CrazyGames data module, localStorage fallback)
-- [x] Chapter 1 — Ground Zero (4 levels) & Chapter 2 — Spike Fields (20 levels)
+- [x] Chapter 1 — Ground Zero (4) · Chapter 2 — Spike Fields (20) · Chapter 3 — Bounce House (20)
 - [x] Juice pass — procedural audio, particle bursts, squash-and-stretch, parallax, mute
-- [ ] Chapters 3–10 mechanics + full level set
+- [ ] Chapters 4–10 mechanics + full level set
 - [ ] Production bundle (local Phaser/SDK) for CrazyGames upload
 
 ## 🧪 Tooling & QA
@@ -162,7 +162,7 @@ node verify-levels.mjs URL 2              # play every Chapter-2 solution, asser
 
 `verify-levels.mjs` loads the real game, plays each level's embedded `solution` key-sequence with
 physics-settle waits, and fails if the ball doesn't reach the goal — so an unsolvable level can't
-slip in. All 24 shipped levels pass.
+slip in. All 44 shipped levels pass.
 
 ---
 
