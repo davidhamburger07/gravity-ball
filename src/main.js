@@ -5,7 +5,11 @@ import PreloadScene from './scenes/PreloadScene.js';
 import MenuScene from './scenes/MenuScene.js';
 import LevelSelectScene from './scenes/LevelSelectScene.js';
 import GameScene from './scenes/GameScene.js';
+import { installOrientationGate } from './systems/DeviceUI.js';
 import { VIEW, PHYSICS } from './config/GameConfig.js';
+
+// Landscape-only gate for phones held in portrait (no-op on desktop).
+installOrientationGate();
 
 const config = {
   type: Phaser.AUTO, // WebGL with Canvas fallback

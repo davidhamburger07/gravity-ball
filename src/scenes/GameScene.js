@@ -8,6 +8,7 @@ import InputManager from '../systems/InputManager.js';
 import Button from '../ui/Button.js';
 import { AudioManager } from '../systems/AudioManager.js';
 import { Effects } from '../systems/Effects.js';
+import { isTouch } from '../systems/DeviceUI.js';
 import { CrazyGamesSDK } from '../sdk/CrazyGamesSDK.js';
 import { VIEW, PHYSICS, FEEL } from '../config/GameConfig.js';
 
@@ -198,13 +199,14 @@ export default class GameScene extends Phaser.Scene {
       .setDepth(100);
     this._updateHud();
 
-    new Button(this, VIEW.WIDTH - 40, 26, '‹', () => this._toLevelSelect(), {
-      width: 44, height: 36, fontSize: '22px', color: 0x2a2f45, textColor: '#ffffff',
+    // Back button — sized as a comfortable touch target (>=44px).
+    new Button(this, VIEW.WIDTH - 44, 28, '‹', () => this._toLevelSelect(), {
+      width: 48, height: 44, fontSize: '22px', color: 0x2a2f45, textColor: '#ffffff',
     }).setScrollFactor(0).setDepth(100);
 
-    // Mute toggle (persists via AudioManager/localStorage).
+    // Mute toggle (persists via AudioManager/localStorage). Padding enlarges the tap area.
     const mute = this.add
-      .text(VIEW.WIDTH - 92, 26, AudioManager.muted ? '\u{1F507}' : '\u{1F50A}', { fontSize: '20px' })
+      .text(VIEW.WIDTH - 98, 28, AudioManager.muted ? '\u{1F507}' : '\u{1F50A}', { fontSize: '24px', padding: { x: 8, y: 8 } })
       .setOrigin(0.5).setScrollFactor(0).setDepth(100)
       .setInteractive({ useHandCursor: true });
     mute.on('pointerdown', () => mute.setText(AudioManager.toggleMute() ? '\u{1F507}' : '\u{1F50A}'));
@@ -216,6 +218,40 @@ export default class GameScene extends Phaser.Scene {
         })
         .setOrigin(0.5).setScrollFactor(0).setDepth(100);
     }
+
+    if (isTouch()) this._buildTouchControls();
+  }
+
+  // On-screen directional pad for touch devices (swipe still works too). Bottom-left,
+  // translucent so it stays out of the way; each button emits the same gravity request.
+  _buildTouchControls() {
+    const cx = 104;
+    const cy = VIEW.HEIGHT - 150; // sit above the bottom row so it doesn't cover a resting ball/goal
+    const d = 54;
+    [
+      [cx, cy - d, '▲', GravityDirection.UP],
+      [cx, cy + d, '▼', GravityDirection.DOWN],
+      [cx - d, cy, '◀', GravityDirection.LEFT],
+      [cx + d, cy, '▶', GravityDirection.RIGHT],
+    ].forEach(([x, y, glyph, dir]) => this._touchButton(x, y, glyph, dir));
+  }
+
+  _touchButton(x, y, glyph, dir) {
+    const bg = this.add
+      .rectangle(x, y, 52, 52, 0x2a2f45, 0.3)
+      .setStrokeStyle(2, 0x4c5378, 0.6)
+      .setScrollFactor(0).setDepth(150)
+      .setInteractive({ useHandCursor: true });
+    this.add
+      .text(x, y, glyph, { fontFamily: 'sans-serif', fontSize: '24px', color: '#c9cde8' })
+      .setOrigin(0.5).setScrollFactor(0).setDepth(151);
+    const reset = () => bg.setFillStyle(0x2a2f45, 0.3);
+    bg.on('pointerdown', () => {
+      this.events.emit('gravity:request', dir);
+      bg.setFillStyle(0x38e1ff, 0.5);
+    });
+    bg.on('pointerup', reset);
+    bg.on('pointerout', reset);
   }
 
   _updateHud() {

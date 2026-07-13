@@ -28,8 +28,8 @@ export default class LevelSelectScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
-    new Button(this, 54, 40, '‹', () => this.scene.start('MenuScene'), {
-      width: 44, height: 38, fontSize: '22px', color: 0x2a2f45, textColor: '#ffffff',
+    new Button(this, 56, 40, '‹', () => this.scene.start('MenuScene'), {
+      width: 48, height: 44, fontSize: '22px', color: 0x2a2f45, textColor: '#ffffff',
     });
 
     this.add
