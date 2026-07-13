@@ -23,6 +23,18 @@ export default class PreloadScene extends Phaser.Scene {
     const save = await new SaveManager(levels).load();
     this.registry.set('save', save);
 
+    // Playtest hand-off from the level editor (editor.html → ./?playtest=1).
+    if (new URLSearchParams(location.search).has('playtest')) {
+      try {
+        const lvl = JSON.parse(localStorage.getItem('gravityball:playtest'));
+        if (lvl && lvl.spawn && lvl.goal) {
+          this.registry.set('playtestLevel', lvl);
+          this.scene.start('GameScene', { playtest: true });
+          return;
+        }
+      } catch { /* fall through to the menu */ }
+    }
+
     this.scene.start('MenuScene');
   }
 }

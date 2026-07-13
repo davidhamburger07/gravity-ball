@@ -23,6 +23,7 @@ export default class GameScene extends Phaser.Scene {
   }
 
   init(data = {}) {
+    this._playtest = data.playtest ?? false;
     this.levelId = data.levelId ?? this.levelId ?? '1-1';
     this.chapterId = data.chapterId ?? this.chapterId ?? 1;
     this._solved = false;
@@ -38,7 +39,14 @@ export default class GameScene extends Phaser.Scene {
   create() {
     this.save = this.registry.get('save');
     this.levelsData = this.registry.get('levels');
-    const level = this._resolveLevel(this.levelId);
+    let level;
+    if (this._playtest) {
+      level = this.registry.get('playtestLevel');
+      this.chapterId = 0;
+      if (!level.id) level.id = 'test';
+    } else {
+      level = this._resolveLevel(this.levelId);
+    }
     this.level = level;
     const bounds = level.bounds ?? { w: VIEW.WIDTH, h: VIEW.HEIGHT };
 
@@ -68,7 +76,7 @@ export default class GameScene extends Phaser.Scene {
     this.matter.world.on('collisionstart', (event) => this._onCollision(event));
 
     this._buildHud(level);
-    this.input.keyboard.on('keydown-R', () => this.scene.restart());
+    this.input.keyboard.on('keydown-R', () => this.scene.restart(this._playtest ? { playtest: true } : undefined));
     this.input.keyboard.on('keydown-ESC', () => this._toLevelSelect());
 
     CrazyGamesSDK.gameplayStart();
@@ -380,7 +388,7 @@ export default class GameScene extends Phaser.Scene {
     if (this._solved) return;
     this._solved = true;
     const stars = this._computeStars();
-    this.save.recordResult(this.level.id, { stars, shifts: this.shiftCount });
+    if (!this._playtest) this.save.recordResult(this.level.id, { stars, shifts: this.shiftCount });
     CrazyGamesSDK.happytime();
     CrazyGamesSDK.gameplayStop();
 
@@ -445,13 +453,21 @@ export default class GameScene extends Phaser.Scene {
       panel.add(star);
     }
 
-    // Retry / Levels / (Next if another level exists).
-    const nextId = this.save.nextLevelId(this.level.id);
-    const actions = [
-      ['Retry', () => this.scene.restart(), 0x2a2f45, '#ffffff'],
-      ['Levels', () => this._toLevelSelect(), 0x2a2f45, '#ffffff'],
-    ];
-    if (nextId) actions.push(['Next', () => this.scene.restart({ levelId: nextId }), 0x38e1ff, '#0b1020']);
+    // Playtest → Retry / Editor. Normal → Retry / Levels / (Next if another level exists).
+    let actions;
+    if (this._playtest) {
+      actions = [
+        ['Retry', () => this.scene.restart({ playtest: true }), 0x2a2f45, '#ffffff'],
+        ['Editor', () => { window.location.href = 'editor.html'; }, 0x38e1ff, '#0b1020'],
+      ];
+    } else {
+      const nextId = this.save.nextLevelId(this.level.id);
+      actions = [
+        ['Retry', () => this.scene.restart(), 0x2a2f45, '#ffffff'],
+        ['Levels', () => this._toLevelSelect(), 0x2a2f45, '#ffffff'],
+      ];
+      if (nextId) actions.push(['Next', () => this.scene.restart({ levelId: nextId }), 0x38e1ff, '#0b1020']);
+    }
 
     const spacing = 116;
     const startX = -((actions.length - 1) * spacing) / 2;
@@ -468,6 +484,7 @@ export default class GameScene extends Phaser.Scene {
 
   _toLevelSelect() {
     CrazyGamesSDK.gameplayStop();
+    if (this._playtest) { window.location.href = 'editor.html'; return; }
     this.scene.start('LevelSelectScene', { chapterId: this.chapterId });
   }
 }
