@@ -19,7 +19,7 @@
     "crazygames",
     "webgl"
   ],
-  "author": "David Hambi",
+  "author": "David Hamburger",
   "license": "MIT",
   "engines": {
     "node": ">=18"
