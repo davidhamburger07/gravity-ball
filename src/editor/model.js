@@ -39,6 +39,8 @@ class EditorModel {
     this.bhRadius = 150;       // black hole influence radius
     this.weightKind = 'heavy'; // weight zone: heavy | normal (reset)
     this.lineMode = false;     // drag to stamp a row
+    this.snapEnabled = true;   // grid snapping on/off (editor pref, not serialized)
+    this.snapSize = GRID;      // snap increment in px
     this.dirty = true;
     this.reset();
   }

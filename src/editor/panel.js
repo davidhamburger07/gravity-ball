@@ -84,6 +84,10 @@ export function initPanel(root) {
   inputs.weightKind.onchange = () => { model.weightKind = inputs.weightKind.value; };
   inputs.lineMode = checkbox('prop-line', model.lineMode);
   inputs.lineMode.onchange = () => { model.lineMode = inputs.lineMode.checked; };
+  inputs.snapOn = checkbox('prop-snap', model.snapEnabled);
+  inputs.snapOn.onchange = () => { model.snapEnabled = inputs.snapOn.checked; };
+  inputs.snapSize = select('prop-snap-size', [['5', '5 px'], ['10', '10 px'], ['20', '20 px'], ['40', '40 px']], String(model.snapSize));
+  inputs.snapSize.onchange = () => { model.snapSize = Number(inputs.snapSize.value) || 20; };
 
   // --- Level settings -------------------------------------------------------
   inputs.id = el('input', { id: 'lvl-id', value: model.id });
@@ -153,6 +157,8 @@ export function initPanel(root) {
     inputs.bhRadius.value = model.bhRadius;
     inputs.weightKind.value = model.weightKind;
     inputs.lineMode.checked = model.lineMode;
+    inputs.snapOn.checked = model.snapEnabled;
+    inputs.snapSize.value = String(model.snapSize);
     inputs.id.value = model.id;
     inputs.gravity.value = model.gravity;
     inputs.par.value = model.par;
@@ -168,6 +174,8 @@ export function initPanel(root) {
     section('Tool', el('div', { class: 'grid' }, toolButtons)),
     section('Placement', [
       row(inputs.lineMode, 'Line tool — drag to stamp a row'),
+      row(inputs.snapOn, 'Grid snapping'),
+      labeled('Snap size', inputs.snapSize),
     ]),
     section('Piece options', [
       labeled('Direction (spike / bounce / grav zone)', inputs.dir),
@@ -210,7 +218,8 @@ export function initPanel(root) {
     ]),
     el('p', { class: 'help' }, document.createTextNode(
       'Click to place (default size) or drag to draw a box. Portal takes two clicks (a linked pair). ' +
-      'Line tool stamps a row of the selected piece along a drag. Erase removes the piece under the cursor. Grid snaps to 20px.'
+      'Line tool stamps a row of the selected piece along a drag. Erase removes the piece under the cursor. ' +
+      'Grid snapping and snap size are set under Placement.'
     )),
     el('a', { href: './', class: 'back' }, document.createTextNode('← Back to game')),
   );

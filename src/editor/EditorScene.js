@@ -46,11 +46,13 @@ export default class EditorScene extends Phaser.Scene {
     if (model.dirty) this._redraw();
     const sig = [model.tool, model.dir, model.color, model.cblockColor, model.weightKind, model.bhRadius, model.activeColor].join('|');
     if (sig !== this._ghostSig) { this._ghostSig = sig; this._buildGhost(); }
+    const gridSig = `${model.snapEnabled}|${model.snapSize}`;
+    if (gridSig !== this._gridSig) { this._gridSig = gridSig; this._drawGrid(); }
   }
 
   // --- helpers -------------------------------------------------------------
   _snap(v, max) {
-    const s = Math.round(v / GRID) * GRID;
+    const s = model.snapEnabled ? Math.round(v / model.snapSize) * model.snapSize : Math.round(v);
     return Phaser.Math.Clamp(s, MIN, max);
   }
 
@@ -58,18 +60,32 @@ export default class EditorScene extends Phaser.Scene {
     return { x: this._snap(p.x, MAXX), y: this._snap(p.y, MAXY) };
   }
 
-  // --- static grid + border ------------------------------------------------
+  // --- grid + border ---------------------------------------------------------
+  // The grid is redrawn whenever snap settings change so the lines always show the
+  // real snap increment; with snapping off it dims to a faint reference grid.
   _drawGridAndBorder() {
+    this.gridGfx = this.add.graphics().setDepth(0);
+    this._gridSig = `${model.snapEnabled}|${model.snapSize}`;
+    this._drawGrid();
+
     const g = this.add.graphics().setDepth(0);
-    g.lineStyle(1, 0x232840, 1);
-    for (let x = 0; x <= ARENA.w; x += 40) g.lineBetween(x, 0, x, ARENA.h);
-    for (let y = 0; y <= ARENA.h; y += 40) g.lineBetween(0, y, ARENA.w, y);
     const t = ARENA.border;
     g.fillStyle(0x3a3f5c, 1);
     g.fillRect(0, 0, ARENA.w, t);
     g.fillRect(0, ARENA.h - t, ARENA.w, t);
     g.fillRect(0, 0, t, ARENA.h);
     g.fillRect(ARENA.w - t, 0, t, ARENA.h);
+  }
+
+  _drawGrid() {
+    const g = this.gridGfx;
+    g.clear();
+    const step = model.snapEnabled ? model.snapSize : 40;
+    // Fine grids get lighter lines so a 5-10px snap doesn't wall the canvas in.
+    const alpha = !model.snapEnabled ? 0.35 : step >= 20 ? 1 : step >= 10 ? 0.55 : 0.4;
+    g.lineStyle(1, 0x232840, alpha);
+    for (let x = 0; x <= ARENA.w; x += step) g.lineBetween(x, 0, x, ARENA.h);
+    for (let y = 0; y <= ARENA.h; y += step) g.lineBetween(0, y, ARENA.w, y);
   }
 
   // --- render model --------------------------------------------------------
@@ -273,7 +289,8 @@ export default class EditorScene extends Phaser.Scene {
     const dx = b.x - a.x;
     const dy = b.y - a.y;
     const dist = Math.hypot(dx, dy);
-    const spacing = Math.max(GRID, Math.abs(dx) >= Math.abs(dy) ? fp.w : fp.h);
+    const minStep = model.snapEnabled ? model.snapSize : 10;
+    const spacing = Math.max(minStep, Math.abs(dx) >= Math.abs(dy) ? fp.w : fp.h);
     const count = Math.floor(dist / spacing) + 1;
     const out = [];
     let last = null;
