@@ -7,44 +7,22 @@
       "mechanic": "4-way gravity shift",
       "levels": [
         {
-          "id": "1-1",
-          "hint": "Press an Arrow key / WASD (or swipe) to change which way is down.",
-          "par": 1,
-          "gravity": "down",
-          "spawn": { "x": 120, "y": 120 },
-          "goal": { "x": 760, "y": 560 },
-          "walls": [],
-          "hazards": []
+          "id": "1-1", "par": 1, "gravity": "down", "hint": "Press an Arrow key / WASD (or swipe) to change which way is down.",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 }
         },
         {
-          "id": "1-2",
-          "hint": "Reach the far corner. Sometimes you must fall sideways, then up.",
-          "par": 2,
-          "gravity": "down",
-          "spawn": { "x": 120, "y": 480 },
-          "goal": { "x": 760, "y": 40 },
-          "walls": [],
-          "hazards": []
+          "id": "1-2", "par": 2, "gravity": "down", "hint": "Reach the far corner. Sometimes you must fall sideways, then up.",
+          "spawn": { "x": 120, "y": 480 }, "goal": { "x": 760, "y": 40 }
         },
         {
-          "id": "1-3",
-          "hint": "A wall blocks the floor. Go up and over.",
-          "par": 2,
-          "gravity": "down",
-          "spawn": { "x": 120, "y": 120 },
-          "goal": { "x": 760, "y": 40 },
-          "walls": [{ "x": 400, "y": 450, "w": 24, "h": 252 }],
-          "hazards": []
+          "id": "1-3", "par": 2, "gravity": "down", "hint": "A wall blocks the floor. Go up and over.",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
+          "walls": [{ "x": 400, "y": 450, "w": 24, "h": 252 }]
         },
         {
-          "id": "1-4",
-          "hint": "Over the wall, then all the way back down.",
-          "par": 3,
-          "gravity": "down",
-          "spawn": { "x": 120, "y": 120 },
-          "goal": { "x": 760, "y": 560 },
-          "walls": [{ "x": 400, "y": 450, "w": 24, "h": 252 }],
-          "hazards": []
+          "id": "1-4", "par": 3, "gravity": "down", "hint": "Over the wall, then all the way back down.",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
+          "walls": [{ "x": 400, "y": 450, "w": 24, "h": 252 }]
         }
       ]
     },
@@ -54,178 +32,82 @@
       "mechanic": "Static hazards (spikes)",
       "levels": [
         {
-          "id": "2-1", "hint": "Spikes are deadly. Go up and over them.", "par": 2, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 }, "walls": [],
+          "id": "2-1", "par": 2, "gravity": "down", "hint": "Spikes are deadly. Go up and over them.",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
           "hazards": [{ "x": 440, "y": 558, "w": 40, "h": 36, "dir": "up" }],
           "solution": ["up", "right"]
         },
         {
-          "id": "2-2", "hint": "Over the spike, then back down to the goal.", "par": 3, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 }, "walls": [],
+          "id": "2-2", "par": 3, "gravity": "down", "hint": "Over the spike, then back down to the goal.",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
           "hazards": [{ "x": 440, "y": 558, "w": 40, "h": 36, "dir": "up" }],
           "solution": ["up", "right", "down"]
         },
         {
-          "id": "2-3", "hint": "Two spikes, same idea — the ceiling is safe.", "par": 3, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 }, "walls": [],
-          "hazards": [
-            { "x": 320, "y": 558, "w": 40, "h": 36, "dir": "up" },
-            { "x": 520, "y": 558, "w": 40, "h": 36, "dir": "up" }
-          ],
-          "solution": ["up", "right", "down"]
-        },
-        {
-          "id": "2-4", "hint": "Spikes hang from the ceiling now. Stay low.", "par": 2, "gravity": "down",
-          "spawn": { "x": 120, "y": 480 }, "goal": { "x": 760, "y": 40 }, "walls": [],
-          "hazards": [
-            { "x": 400, "y": 42, "w": 40, "h": 36, "dir": "down" },
-            { "x": 600, "y": 42, "w": 40, "h": 36, "dir": "down" }
-          ],
+          "id": "2-3", "par": 2, "gravity": "down", "hint": "Spikes hang from the ceiling now. Stay low.",
+          "spawn": { "x": 120, "y": 480 }, "goal": { "x": 760, "y": 40 },
+          "hazards": [{ "x": 400, "y": 42, "w": 40, "h": 36, "dir": "down" }, { "x": 600, "y": 42, "w": 40, "h": 36, "dir": "down" }],
           "solution": ["right", "up"]
         },
         {
-          "id": "2-5", "hint": "Head the other way this time.", "par": 2, "gravity": "down",
-          "spawn": { "x": 680, "y": 480 }, "goal": { "x": 40, "y": 40 }, "walls": [],
-          "hazards": [
-            { "x": 300, "y": 42, "w": 40, "h": 36, "dir": "down" },
-            { "x": 500, "y": 42, "w": 40, "h": 36, "dir": "down" }
-          ],
+          "id": "2-4", "par": 2, "gravity": "down", "hint": "Head the other way this time.",
+          "spawn": { "x": 680, "y": 480 }, "goal": { "x": 40, "y": 40 },
+          "hazards": [{ "x": 300, "y": 42, "w": 40, "h": 36, "dir": "down" }, { "x": 500, "y": 42, "w": 40, "h": 36, "dir": "down" }],
           "solution": ["left", "up"]
         },
         {
-          "id": "2-6", "hint": "A row of teeth — glide over the top.", "par": 3, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 }, "walls": [],
-          "hazards": [
-            { "x": 240, "y": 558, "w": 40, "h": 36, "dir": "up" },
-            { "x": 440, "y": 558, "w": 40, "h": 36, "dir": "up" },
-            { "x": 640, "y": 558, "w": 40, "h": 36, "dir": "up" }
-          ],
+          "id": "2-5", "par": 3, "gravity": "down", "hint": "A row of teeth — glide over the top.",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
+          "hazards": [{ "x": 240, "y": 558, "w": 40, "h": 36, "dir": "up" }, { "x": 440, "y": 558, "w": 40, "h": 36, "dir": "up" }, { "x": 640, "y": 558, "w": 40, "h": 36, "dir": "up" }],
           "solution": ["up", "right", "down"]
         },
         {
-          "id": "2-7", "par": 3, "gravity": "down",
-          "spawn": { "x": 680, "y": 120 }, "goal": { "x": 40, "y": 560 }, "walls": [],
+          "id": "2-6", "par": 3, "gravity": "down",
+          "spawn": { "x": 680, "y": 120 }, "goal": { "x": 40, "y": 560 },
           "hazards": [{ "x": 440, "y": 558, "w": 40, "h": 36, "dir": "up" }],
           "solution": ["up", "left", "down"]
         },
         {
-          "id": "2-8", "par": 2, "gravity": "down",
-          "spawn": { "x": 120, "y": 480 }, "goal": { "x": 760, "y": 40 }, "walls": [],
-          "hazards": [
-            { "x": 260, "y": 42, "w": 40, "h": 36, "dir": "down" },
-            { "x": 460, "y": 42, "w": 40, "h": 36, "dir": "down" },
-            { "x": 660, "y": 42, "w": 40, "h": 36, "dir": "down" }
-          ],
-          "solution": ["right", "up"]
-        },
-        {
-          "id": "2-9", "hint": "Spikes on the wall block that lane.", "par": 2, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 }, "walls": [],
+          "id": "2-7", "par": 2, "gravity": "down", "hint": "Spikes on the wall block that lane.",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
           "hazards": [{ "x": 758, "y": 300, "w": 36, "h": 40, "dir": "left" }],
           "solution": ["up", "right"]
         },
         {
-          "id": "2-10", "par": 2, "gravity": "down",
-          "spawn": { "x": 680, "y": 120 }, "goal": { "x": 40, "y": 40 }, "walls": [],
+          "id": "2-8", "par": 2, "gravity": "down",
+          "spawn": { "x": 680, "y": 120 }, "goal": { "x": 40, "y": 40 },
           "hazards": [{ "x": 42, "y": 300, "w": 36, "h": 40, "dir": "right" }],
           "solution": ["up", "left"]
         },
         {
-          "id": "2-11", "par": 3, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 }, "walls": [],
-          "hazards": [
-            { "x": 300, "y": 558, "w": 40, "h": 36, "dir": "up" },
-            { "x": 620, "y": 558, "w": 40, "h": 36, "dir": "up" }
-          ],
-          "solution": ["up", "right", "down"]
-        },
-        {
-          "id": "2-12", "hint": "Drop past the pillar, then roll into the gap.", "par": 4, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 440, "y": 560 },
-          "walls": [{ "x": 380, "y": 150, "w": 24, "h": 252 }],
-          "hazards": [
-            { "x": 280, "y": 558, "w": 40, "h": 36, "dir": "up" },
-            { "x": 520, "y": 558, "w": 40, "h": 36, "dir": "up" }
-          ],
+          "id": "2-9", "par": 4, "gravity": "down",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
+          "walls": [{ "x": 400, "y": 450, "w": 24, "h": 252 }, { "x": 600, "y": 150, "w": 24, "h": 252 }],
           "solution": ["up", "right", "down", "right"]
         },
         {
-          "id": "2-13", "par": 4, "gravity": "down",
+          "id": "2-10", "par": 5, "gravity": "down", "hint": "The ceiling is guarded — take the low road first.",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
-          "walls": [
-            { "x": 400, "y": 450, "w": 24, "h": 252 },
-            { "x": 600, "y": 150, "w": 24, "h": 252 }
-          ],
-          "hazards": [],
-          "solution": ["up", "right", "down", "right"]
-        },
-        {
-          "id": "2-14", "par": 2, "gravity": "down",
-          "spawn": { "x": 680, "y": 120 }, "goal": { "x": 40, "y": 40 }, "walls": [],
-          "hazards": [{ "x": 440, "y": 558, "w": 40, "h": 36, "dir": "up" }],
-          "solution": ["up", "left"]
-        },
-        {
-          "id": "2-15", "hint": "The ceiling is guarded — take the low road first.", "par": 5, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
-          "walls": [
-            { "x": 300, "y": 450, "w": 24, "h": 252 },
-            { "x": 520, "y": 150, "w": 24, "h": 252 }
-          ],
+          "walls": [{ "x": 300, "y": 450, "w": 24, "h": 252 }, { "x": 520, "y": 150, "w": 24, "h": 252 }],
           "hazards": [{ "x": 200, "y": 42, "w": 40, "h": 36, "dir": "down" }],
           "solution": ["right", "up", "right", "down", "right"]
         },
         {
-          "id": "2-16", "par": 4, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 500, "y": 560 },
-          "walls": [{ "x": 500, "y": 150, "w": 24, "h": 252 }],
-          "hazards": [
-            { "x": 300, "y": 558, "w": 40, "h": 36, "dir": "up" },
-            { "x": 700, "y": 558, "w": 40, "h": 36, "dir": "up" }
-          ],
-          "solution": ["up", "right", "down", "right"]
-        },
-        {
-          "id": "2-17", "par": 6, "gravity": "down",
+          "id": "2-11", "par": 6, "gravity": "down",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
-          "walls": [
-            { "x": 260, "y": 450, "w": 24, "h": 252 },
-            { "x": 440, "y": 150, "w": 24, "h": 252 },
-            { "x": 620, "y": 450, "w": 24, "h": 252 }
-          ],
-          "hazards": [],
+          "walls": [{ "x": 260, "y": 450, "w": 24, "h": 252 }, { "x": 440, "y": 150, "w": 24, "h": 252 }, { "x": 620, "y": 450, "w": 24, "h": 252 }],
           "solution": ["up", "right", "down", "right", "up", "right"]
         },
         {
-          "id": "2-18", "par": 8, "gravity": "down",
+          "id": "2-12", "par": 8, "gravity": "down",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
-          "walls": [
-            { "x": 360, "y": 150, "w": 24, "h": 252 },
-            { "x": 540, "y": 450, "w": 24, "h": 252 },
-            { "x": 680, "y": 150, "w": 24, "h": 252 }
-          ],
-          "hazards": [],
+          "walls": [{ "x": 360, "y": 150, "w": 24, "h": 252 }, { "x": 540, "y": 450, "w": 24, "h": 252 }, { "x": 680, "y": 150, "w": 24, "h": 252 }],
           "solution": ["up", "right", "down", "right", "up", "right", "down", "right"]
         },
         {
-          "id": "2-19", "hint": "Guarded ceiling again — start low.", "par": 7, "gravity": "down",
+          "id": "2-13", "par": 7, "gravity": "down", "hint": "The gauntlet. Everything you've learned.",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
-          "walls": [
-            { "x": 300, "y": 450, "w": 24, "h": 252 },
-            { "x": 500, "y": 150, "w": 24, "h": 252 },
-            { "x": 680, "y": 450, "w": 24, "h": 252 }
-          ],
-          "hazards": [{ "x": 200, "y": 42, "w": 40, "h": 36, "dir": "down" }],
-          "solution": ["right", "up", "right", "down", "right", "up", "right"]
-        },
-        {
-          "id": "2-20", "hint": "The gauntlet. Everything you've learned.", "par": 7, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
-          "walls": [
-            { "x": 260, "y": 450, "w": 24, "h": 252 },
-            { "x": 440, "y": 150, "w": 24, "h": 252 },
-            { "x": 620, "y": 450, "w": 24, "h": 252 }
-          ],
+          "walls": [{ "x": 260, "y": 450, "w": 24, "h": 252 }, { "x": 440, "y": 150, "w": 24, "h": 252 }, { "x": 620, "y": 450, "w": 24, "h": 252 }],
           "hazards": [{ "x": 180, "y": 42, "w": 40, "h": 36, "dir": "down" }],
           "solution": ["right", "up", "right", "down", "right", "up", "right"]
         }
@@ -237,13 +119,13 @@
       "mechanic": "Trampolines + sticky pads",
       "levels": [
         {
-          "id": "3-1", "hint": "Violet pads are sticky — they hold you. Stop, then flip a new way.", "par": 2, "gravity": "down",
+          "id": "3-1", "par": 2, "gravity": "down", "hint": "Violet pads are sticky — they hold you. Stop, then flip a new way.",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 400, "y": 40 },
           "sticky": [{ "x": 400, "y": 564, "w": 44, "h": 24 }],
           "solution": ["right", "up"]
         },
         {
-          "id": "3-2", "hint": "Stick to the ceiling, then drop straight down.", "par": 3, "gravity": "down",
+          "id": "3-2", "par": 3, "gravity": "down", "hint": "Stick to the ceiling, then drop straight down.",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 400, "y": 560 },
           "sticky": [{ "x": 400, "y": 36, "w": 44, "h": 24 }],
           "solution": ["up", "right", "down"]
@@ -261,162 +143,89 @@
           "solution": ["up", "left", "down"]
         },
         {
-          "id": "3-5", "hint": "Chain the pads: floor, then ceiling.", "par": 4, "gravity": "down",
+          "id": "3-5", "par": 4, "gravity": "down", "hint": "Chain the pads: floor, then ceiling.",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 600, "y": 560 },
-          "sticky": [
-            { "x": 300, "y": 564, "w": 44, "h": 24 },
-            { "x": 600, "y": 36, "w": 44, "h": 24 }
-          ],
+          "sticky": [{ "x": 300, "y": 564, "w": 44, "h": 24 }, { "x": 600, "y": 36, "w": 44, "h": 24 }],
           "solution": ["right", "up", "right", "down"]
         },
         {
           "id": "3-6", "par": 3, "gravity": "down",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 480, "y": 560 },
+          "hazards": [{ "x": 240, "y": 558, "w": 40, "h": 36, "dir": "up" }, { "x": 360, "y": 558, "w": 40, "h": 36, "dir": "up" }, { "x": 600, "y": 558, "w": 40, "h": 36, "dir": "up" }, { "x": 760, "y": 558, "w": 40, "h": 36, "dir": "up" }],
           "sticky": [{ "x": 480, "y": 36, "w": 44, "h": 24 }],
-          "hazards": [
-            { "x": 240, "y": 558, "w": 40, "h": 36, "dir": "up" },
-            { "x": 360, "y": 558, "w": 40, "h": 36, "dir": "up" },
-            { "x": 600, "y": 558, "w": 40, "h": 36, "dir": "up" },
-            { "x": 760, "y": 558, "w": 40, "h": 36, "dir": "up" }
-          ],
           "solution": ["up", "right", "down"]
         },
         {
           "id": "3-7", "par": 2, "gravity": "down",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 400, "y": 40 },
+          "hazards": [{ "x": 200, "y": 42, "w": 40, "h": 36, "dir": "down" }, { "x": 600, "y": 42, "w": 40, "h": 36, "dir": "down" }],
           "sticky": [{ "x": 400, "y": 564, "w": 44, "h": 24 }],
-          "hazards": [
-            { "x": 200, "y": 42, "w": 40, "h": 36, "dir": "down" },
-            { "x": 600, "y": 42, "w": 40, "h": 36, "dir": "down" }
-          ],
           "solution": ["right", "up"]
         },
         {
-          "id": "3-8", "hint": "The pad stops you just short of the spikes.", "par": 2, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 480, "y": 40 },
-          "sticky": [{ "x": 480, "y": 564, "w": 44, "h": 24 }],
-          "hazards": [{ "x": 640, "y": 558, "w": 40, "h": 36, "dir": "up" }],
-          "solution": ["right", "up"]
-        },
-        {
-          "id": "3-9", "par": 3, "gravity": "down",
+          "id": "3-8", "par": 3, "gravity": "down",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 600, "y": 560 },
+          "hazards": [{ "x": 240, "y": 558, "w": 40, "h": 36, "dir": "up" }, { "x": 480, "y": 558, "w": 40, "h": 36, "dir": "up" }, { "x": 760, "y": 558, "w": 40, "h": 36, "dir": "up" }],
           "sticky": [{ "x": 600, "y": 36, "w": 44, "h": 24 }],
-          "hazards": [
-            { "x": 240, "y": 558, "w": 40, "h": 36, "dir": "up" },
-            { "x": 480, "y": 558, "w": 40, "h": 36, "dir": "up" },
-            { "x": 760, "y": 558, "w": 40, "h": 36, "dir": "up" }
-          ],
           "solution": ["up", "right", "down"]
         },
         {
-          "id": "3-10", "hint": "Green pads fling you; sticky pads catch you.", "par": 2, "gravity": "down",
+          "id": "3-9", "par": 2, "gravity": "down", "hint": "Green pads fling you; sticky pads catch you.",
           "spawn": { "x": 400, "y": 100 }, "goal": { "x": 760, "y": 560 },
           "sticky": [{ "x": 400, "y": 36, "w": 44, "h": 24 }],
           "bouncers": [{ "x": 400, "y": 566, "w": 48, "h": 20, "dir": "up", "power": 20 }],
           "solution": ["right", "down"]
         },
         {
-          "id": "3-11", "par": 2, "gravity": "down",
+          "id": "3-10", "par": 2, "gravity": "down",
           "spawn": { "x": 400, "y": 100 }, "goal": { "x": 40, "y": 560 },
           "sticky": [{ "x": 400, "y": 36, "w": 44, "h": 24 }],
           "bouncers": [{ "x": 400, "y": 566, "w": 48, "h": 20, "dir": "up", "power": 20 }],
           "solution": ["left", "down"]
         },
         {
-          "id": "3-12", "par": 2, "gravity": "down",
+          "id": "3-11", "par": 2, "gravity": "down",
           "spawn": { "x": 400, "y": 100 }, "goal": { "x": 760, "y": 560 },
+          "hazards": [{ "x": 200, "y": 558, "w": 40, "h": 36, "dir": "up" }, { "x": 600, "y": 558, "w": 40, "h": 36, "dir": "up" }],
           "sticky": [{ "x": 400, "y": 36, "w": 44, "h": 24 }],
           "bouncers": [{ "x": 400, "y": 566, "w": 48, "h": 20, "dir": "up", "power": 20 }],
-          "hazards": [
-            { "x": 200, "y": 558, "w": 40, "h": 36, "dir": "up" },
-            { "x": 600, "y": 558, "w": 40, "h": 36, "dir": "up" }
-          ],
+          "solution": ["right", "down"]
+        },
+        {
+          "id": "3-12", "par": 2, "gravity": "down",
+          "spawn": { "x": 200, "y": 100 }, "goal": { "x": 600, "y": 560 },
+          "sticky": [{ "x": 200, "y": 36, "w": 44, "h": 24 }, { "x": 600, "y": 36, "w": 44, "h": 24 }],
+          "bouncers": [{ "x": 200, "y": 566, "w": 48, "h": 20, "dir": "up", "power": 20 }],
           "solution": ["right", "down"]
         },
         {
           "id": "3-13", "par": 2, "gravity": "down",
-          "spawn": { "x": 200, "y": 100 }, "goal": { "x": 600, "y": 560 },
-          "sticky": [
-            { "x": 200, "y": 36, "w": 44, "h": 24 },
-            { "x": 600, "y": 36, "w": 44, "h": 24 }
-          ],
-          "bouncers": [{ "x": 200, "y": 566, "w": 48, "h": 20, "dir": "up", "power": 20 }],
-          "solution": ["right", "down"]
-        },
-        {
-          "id": "3-14", "par": 2, "gravity": "down",
-          "spawn": { "x": 400, "y": 100 }, "goal": { "x": 760, "y": 560 },
-          "sticky": [{ "x": 400, "y": 36, "w": 44, "h": 24 }],
-          "bouncers": [{ "x": 400, "y": 566, "w": 48, "h": 20, "dir": "up", "power": 20 }],
-          "hazards": [
-            { "x": 600, "y": 558, "w": 40, "h": 36, "dir": "up" },
-            { "x": 700, "y": 558, "w": 40, "h": 36, "dir": "up" }
-          ],
-          "solution": ["right", "down"]
-        },
-        {
-          "id": "3-15", "par": 2, "gravity": "down",
           "spawn": { "x": 600, "y": 100 }, "goal": { "x": 40, "y": 560 },
+          "hazards": [{ "x": 300, "y": 558, "w": 40, "h": 36, "dir": "up" }, { "x": 450, "y": 558, "w": 40, "h": 36, "dir": "up" }],
           "sticky": [{ "x": 600, "y": 36, "w": 44, "h": 24 }],
           "bouncers": [{ "x": 600, "y": 566, "w": 48, "h": 20, "dir": "up", "power": 20 }],
-          "hazards": [
-            { "x": 300, "y": 558, "w": 40, "h": 36, "dir": "up" },
-            { "x": 450, "y": 558, "w": 40, "h": 36, "dir": "up" }
-          ],
           "solution": ["left", "down"]
         },
         {
-          "id": "3-16", "par": 3, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 400, "y": 560 },
-          "sticky": [{ "x": 400, "y": 36, "w": 44, "h": 24 }],
-          "hazards": [
-            { "x": 240, "y": 558, "w": 40, "h": 36, "dir": "up" },
-            { "x": 560, "y": 558, "w": 40, "h": 36, "dir": "up" }
-          ],
-          "solution": ["up", "right", "down"]
-        },
-        {
-          "id": "3-17", "par": 2, "gravity": "down",
+          "id": "3-14", "par": 2, "gravity": "down",
           "spawn": { "x": 200, "y": 100 }, "goal": { "x": 760, "y": 560 },
+          "hazards": [{ "x": 400, "y": 558, "w": 40, "h": 36, "dir": "up" }, { "x": 500, "y": 558, "w": 40, "h": 36, "dir": "up" }, { "x": 600, "y": 558, "w": 40, "h": 36, "dir": "up" }],
           "sticky": [{ "x": 200, "y": 36, "w": 44, "h": 24 }],
           "bouncers": [{ "x": 200, "y": 566, "w": 48, "h": 20, "dir": "up", "power": 20 }],
-          "hazards": [
-            { "x": 400, "y": 558, "w": 40, "h": 36, "dir": "up" },
-            { "x": 500, "y": 558, "w": 40, "h": 36, "dir": "up" },
-            { "x": 600, "y": 558, "w": 40, "h": 36, "dir": "up" }
-          ],
           "solution": ["right", "down"]
         },
         {
-          "id": "3-18", "par": 2, "gravity": "down",
-          "spawn": { "x": 400, "y": 100 }, "goal": { "x": 700, "y": 560 },
-          "sticky": [
-            { "x": 400, "y": 36, "w": 44, "h": 24 },
-            { "x": 700, "y": 36, "w": 44, "h": 24 }
-          ],
-          "bouncers": [{ "x": 400, "y": 566, "w": 48, "h": 20, "dir": "up", "power": 20 }],
-          "solution": ["right", "down"]
-        },
-        {
-          "id": "3-19", "par": 4, "gravity": "down",
+          "id": "3-15", "par": 4, "gravity": "down",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 600, "y": 560 },
-          "sticky": [
-            { "x": 300, "y": 564, "w": 44, "h": 24 },
-            { "x": 600, "y": 36, "w": 44, "h": 24 }
-          ],
           "hazards": [{ "x": 450, "y": 558, "w": 40, "h": 36, "dir": "up" }],
+          "sticky": [{ "x": 300, "y": 564, "w": 44, "h": 24 }, { "x": 600, "y": 36, "w": 44, "h": 24 }],
           "solution": ["right", "up", "right", "down"]
         },
         {
-          "id": "3-20", "hint": "The bounce house. Weave the pads to the top.", "par": 6, "gravity": "down",
+          "id": "3-16", "par": 6, "gravity": "down", "hint": "The bounce house. Weave the pads to the top.",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 680, "y": 40 },
-          "sticky": [
-            { "x": 280, "y": 564, "w": 44, "h": 24 },
-            { "x": 480, "y": 36, "w": 44, "h": 24 },
-            { "x": 680, "y": 564, "w": 44, "h": 24 }
-          ],
           "hazards": [{ "x": 400, "y": 558, "w": 40, "h": 36, "dir": "up" }],
+          "sticky": [{ "x": 280, "y": 564, "w": 44, "h": 24 }, { "x": 480, "y": 36, "w": 44, "h": 24 }, { "x": 680, "y": 564, "w": 44, "h": 24 }],
           "solution": ["right", "up", "right", "down", "right", "up"]
         }
       ]
@@ -427,7 +236,7 @@
       "mechanic": "Keys & doors",
       "levels": [
         {
-          "id": "4-1", "hint": "Grab the key, then reach the goal.", "par": 2, "gravity": "down",
+          "id": "4-1", "par": 2, "gravity": "down", "hint": "Grab the key, then reach the goal.",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40, "requires": "gold" },
           "keys": [{ "x": 400, "y": 560, "color": "gold" }],
           "solution": ["right", "up"]
@@ -447,177 +256,93 @@
         {
           "id": "4-4", "par": 3, "gravity": "down",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560, "requires": "gold" },
-          "keys": [{ "x": 400, "y": 40, "color": "gold" }],
           "hazards": [{ "x": 600, "y": 558, "w": 40, "h": 36, "dir": "up" }],
+          "keys": [{ "x": 400, "y": 40, "color": "gold" }],
           "solution": ["up", "right", "down"]
         },
         {
-          "id": "4-5", "hint": "Keys open doors of the same color.", "par": 3, "gravity": "down",
+          "id": "4-5", "par": 3, "gravity": "down", "hint": "Keys open doors of the same color.",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
-          "doors": [{ "x": 440, "y": 300, "w": 24, "h": 552, "color": "gold" }],
           "keys": [{ "x": 200, "y": 40, "color": "gold" }],
+          "doors": [{ "x": 440, "y": 300, "w": 24, "h": 552, "color": "gold" }],
           "solution": ["up", "right", "down"]
         },
         {
           "id": "4-6", "par": 4, "gravity": "down",
           "spawn": { "x": 680, "y": 120 }, "goal": { "x": 40, "y": 560 },
-          "doors": [{ "x": 440, "y": 300, "w": 24, "h": 552, "color": "gold" }],
           "keys": [{ "x": 760, "y": 40, "color": "gold" }],
+          "doors": [{ "x": 440, "y": 300, "w": 24, "h": 552, "color": "gold" }],
           "solution": ["right", "up", "left", "down"]
         },
         {
           "id": "4-7", "par": 2, "gravity": "down",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
-          "doors": [{ "x": 500, "y": 300, "w": 24, "h": 552, "color": "gold" }],
           "keys": [{ "x": 300, "y": 560, "color": "gold" }],
+          "doors": [{ "x": 500, "y": 300, "w": 24, "h": 552, "color": "gold" }],
           "solution": ["right", "up"]
         },
         {
           "id": "4-8", "par": 3, "gravity": "down",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
-          "doors": [{ "x": 400, "y": 300, "w": 24, "h": 552, "color": "gold" }],
-          "keys": [{ "x": 120, "y": 40, "color": "gold" }],
+          "hazards": [{ "x": 600, "y": 558, "w": 40, "h": 36, "dir": "up" }, { "x": 720, "y": 558, "w": 40, "h": 36, "dir": "up" }],
+          "keys": [{ "x": 200, "y": 40, "color": "gold" }],
+          "doors": [{ "x": 440, "y": 300, "w": 24, "h": 552, "color": "gold" }],
           "solution": ["up", "right", "down"]
         },
         {
           "id": "4-9", "par": 3, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
-          "doors": [{ "x": 440, "y": 300, "w": 24, "h": 552, "color": "gold" }],
-          "keys": [{ "x": 200, "y": 40, "color": "gold" }],
-          "hazards": [
-            { "x": 600, "y": 558, "w": 40, "h": 36, "dir": "up" },
-            { "x": 720, "y": 558, "w": 40, "h": 36, "dir": "up" }
-          ],
-          "solution": ["up", "right", "down"]
-        },
-        {
-          "id": "4-10", "par": 3, "gravity": "down",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 600, "y": 560 },
-          "doors": [{ "x": 400, "y": 300, "w": 24, "h": 552, "color": "gold" }],
-          "keys": [{ "x": 200, "y": 40, "color": "gold" }],
           "sticky": [{ "x": 600, "y": 36, "w": 44, "h": 24 }],
+          "keys": [{ "x": 200, "y": 40, "color": "gold" }],
+          "doors": [{ "x": 400, "y": 300, "w": 24, "h": 552, "color": "gold" }],
           "solution": ["up", "right", "down"]
         },
         {
-          "id": "4-11", "par": 2, "gravity": "down",
+          "id": "4-10", "par": 2, "gravity": "down",
           "spawn": { "x": 400, "y": 100 }, "goal": { "x": 760, "y": 560 },
-          "doors": [{ "x": 600, "y": 300, "w": 24, "h": 552, "color": "gold" }],
-          "keys": [{ "x": 400, "y": 40, "color": "gold" }],
           "sticky": [{ "x": 400, "y": 36, "w": 44, "h": 24 }],
           "bouncers": [{ "x": 400, "y": 566, "w": 48, "h": 20, "dir": "up", "power": 20 }],
+          "keys": [{ "x": 400, "y": 40, "color": "gold" }],
+          "doors": [{ "x": 600, "y": 300, "w": 24, "h": 552, "color": "gold" }],
           "solution": ["right", "down"]
         },
         {
-          "id": "4-12", "hint": "One key can open several doors.", "par": 3, "gravity": "down",
+          "id": "4-11", "par": 3, "gravity": "down", "hint": "One key can open several doors.",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
-          "doors": [
-            { "x": 300, "y": 300, "w": 24, "h": 552, "color": "gold" },
-            { "x": 600, "y": 300, "w": 24, "h": 552, "color": "gold" }
-          ],
           "keys": [{ "x": 120, "y": 40, "color": "gold" }],
+          "doors": [{ "x": 300, "y": 300, "w": 24, "h": 552, "color": "gold" }, { "x": 600, "y": 300, "w": 24, "h": 552, "color": "gold" }],
           "solution": ["up", "right", "down"]
         },
         {
-          "id": "4-13", "par": 4, "gravity": "down",
+          "id": "4-12", "par": 4, "gravity": "down",
           "spawn": { "x": 680, "y": 120 }, "goal": { "x": 40, "y": 560 },
-          "doors": [{ "x": 400, "y": 300, "w": 24, "h": 552, "color": "gold" }],
+          "hazards": [{ "x": 200, "y": 558, "w": 40, "h": 36, "dir": "up" }, { "x": 300, "y": 558, "w": 40, "h": 36, "dir": "up" }],
           "keys": [{ "x": 760, "y": 40, "color": "gold" }],
-          "hazards": [
-            { "x": 200, "y": 558, "w": 40, "h": 36, "dir": "up" },
-            { "x": 300, "y": 558, "w": 40, "h": 36, "dir": "up" }
-          ],
+          "doors": [{ "x": 400, "y": 300, "w": 24, "h": 552, "color": "gold" }],
           "solution": ["right", "up", "left", "down"]
         },
         {
-          "id": "4-14", "par": 2, "gravity": "down",
+          "id": "4-13", "par": 2, "gravity": "down",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 450, "y": 40 },
-          "doors": [{ "x": 300, "y": 300, "w": 24, "h": 552, "color": "gold" }],
-          "keys": [{ "x": 200, "y": 560, "color": "gold" }],
           "sticky": [{ "x": 450, "y": 564, "w": 44, "h": 24 }],
+          "keys": [{ "x": 200, "y": 560, "color": "gold" }],
+          "doors": [{ "x": 300, "y": 300, "w": 24, "h": 552, "color": "gold" }],
           "solution": ["right", "up"]
         },
         {
-          "id": "4-15", "hint": "Two colors. Take each key before its door.", "par": 3, "gravity": "down",
+          "id": "4-14", "par": 3, "gravity": "down", "hint": "Two colors. Take each key before its door.",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
-          "doors": [
-            { "x": 300, "y": 300, "w": 24, "h": 552, "color": "gold" },
-            { "x": 600, "y": 300, "w": 24, "h": 552, "color": "blue" }
-          ],
-          "keys": [
-            { "x": 120, "y": 40, "color": "gold" },
-            { "x": 450, "y": 40, "color": "blue" }
-          ],
+          "keys": [{ "x": 120, "y": 40, "color": "gold" }, { "x": 450, "y": 40, "color": "blue" }],
+          "doors": [{ "x": 300, "y": 300, "w": 24, "h": 552, "color": "gold" }, { "x": 600, "y": 300, "w": 24, "h": 552, "color": "blue" }],
           "solution": ["up", "right", "down"]
         },
         {
-          "id": "4-16", "par": 3, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
-          "doors": [
-            { "x": 400, "y": 300, "w": 24, "h": 552, "color": "gold" },
-            { "x": 700, "y": 300, "w": 24, "h": 552, "color": "blue" }
-          ],
-          "keys": [
-            { "x": 120, "y": 40, "color": "gold" },
-            { "x": 600, "y": 40, "color": "blue" }
-          ],
-          "solution": ["up", "right", "down"]
-        },
-        {
-          "id": "4-17", "par": 4, "gravity": "down",
-          "spawn": { "x": 680, "y": 120 }, "goal": { "x": 40, "y": 560 },
-          "doors": [
-            { "x": 500, "y": 300, "w": 24, "h": 552, "color": "gold" },
-            { "x": 250, "y": 300, "w": 24, "h": 552, "color": "blue" }
-          ],
-          "keys": [
-            { "x": 760, "y": 40, "color": "gold" },
-            { "x": 400, "y": 40, "color": "blue" }
-          ],
-          "solution": ["right", "up", "left", "down"]
-        },
-        {
-          "id": "4-18", "par": 3, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
-          "doors": [{ "x": 500, "y": 300, "w": 24, "h": 552, "color": "gold" }],
-          "keys": [{ "x": 300, "y": 40, "color": "gold" }],
-          "hazards": [
-            { "x": 200, "y": 558, "w": 40, "h": 36, "dir": "up" },
-            { "x": 600, "y": 558, "w": 40, "h": 36, "dir": "up" },
-            { "x": 700, "y": 558, "w": 40, "h": 36, "dir": "up" }
-          ],
-          "solution": ["up", "right", "down"]
-        },
-        {
-          "id": "4-19", "par": 3, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 680, "y": 560 },
-          "doors": [
-            { "x": 350, "y": 300, "w": 24, "h": 552, "color": "gold" },
-            { "x": 650, "y": 300, "w": 24, "h": 552, "color": "blue" }
-          ],
-          "keys": [
-            { "x": 120, "y": 40, "color": "gold" },
-            { "x": 500, "y": 40, "color": "blue" }
-          ],
-          "sticky": [{ "x": 680, "y": 36, "w": 44, "h": 24 }],
-          "hazards": [{ "x": 760, "y": 558, "w": 40, "h": 36, "dir": "up" }],
-          "solution": ["up", "right", "down"]
-        },
-        {
-          "id": "4-20", "hint": "The vault. Two keys, two doors, mind the spikes.", "par": 3, "gravity": "down",
+          "id": "4-15", "par": 3, "gravity": "down", "hint": "The vault. Two keys, two doors, mind the spikes.",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 740, "y": 560 },
-          "doors": [
-            { "x": 300, "y": 300, "w": 24, "h": 552, "color": "gold" },
-            { "x": 620, "y": 300, "w": 24, "h": 552, "color": "blue" }
-          ],
-          "keys": [
-            { "x": 120, "y": 40, "color": "gold" },
-            { "x": 480, "y": 40, "color": "blue" }
-          ],
+          "hazards": [{ "x": 400, "y": 558, "w": 40, "h": 36, "dir": "up" }, { "x": 560, "y": 558, "w": 40, "h": 36, "dir": "up" }],
           "sticky": [{ "x": 740, "y": 36, "w": 44, "h": 24 }],
-          "hazards": [
-            { "x": 400, "y": 558, "w": 40, "h": 36, "dir": "up" },
-            { "x": 560, "y": 558, "w": 40, "h": 36, "dir": "up" }
-          ],
+          "keys": [{ "x": 120, "y": 40, "color": "gold" }, { "x": 480, "y": 40, "color": "blue" }],
+          "doors": [{ "x": 300, "y": 300, "w": 24, "h": 552, "color": "gold" }, { "x": 620, "y": 300, "w": 24, "h": 552, "color": "blue" }],
           "solution": ["up", "right", "down"]
         }
       ]
@@ -628,7 +353,7 @@
       "mechanic": "Breakable blocks + weight zones",
       "levels": [
         {
-          "id": "5-1", "hint": "Orange zones make you HEAVY. A heavy ball smashes orange blocks.", "par": 1, "gravity": "down",
+          "id": "5-1", "par": 1, "gravity": "down", "hint": "Orange zones make you HEAVY. A heavy ball smashes orange blocks.",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
           "weights": [{ "x": 170, "y": 300, "w": 300, "h": 552, "kind": "heavy" }],
           "breakables": [{ "x": 400, "y": 300, "w": 24, "h": 552 }],
@@ -642,165 +367,93 @@
           "solution": ["right", "up"]
         },
         {
-          "id": "5-3", "par": 1, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
-          "weights": [{ "x": 170, "y": 300, "w": 300, "h": 552, "kind": "heavy" }],
-          "breakables": [
-            { "x": 350, "y": 300, "w": 24, "h": 552 },
-            { "x": 550, "y": 300, "w": 24, "h": 552 }
-          ],
-          "solution": ["right"]
-        },
-        {
-          "id": "5-4", "hint": "Grab the weight first, then smash through.", "par": 3, "gravity": "down",
+          "id": "5-3", "par": 3, "gravity": "down", "hint": "Grab the weight first, then smash through.",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
           "weights": [{ "x": 150, "y": 112, "w": 260, "h": 180, "kind": "heavy" }],
           "breakables": [{ "x": 440, "y": 300, "w": 24, "h": 552 }],
           "solution": ["up", "right", "down"]
         },
         {
-          "id": "5-5", "par": 3, "gravity": "down",
+          "id": "5-4", "par": 3, "gravity": "down",
           "spawn": { "x": 680, "y": 120 }, "goal": { "x": 40, "y": 560 },
           "weights": [{ "x": 650, "y": 112, "w": 260, "h": 180, "kind": "heavy" }],
           "breakables": [{ "x": 400, "y": 300, "w": 24, "h": 552 }],
           "solution": ["up", "left", "down"]
         },
         {
-          "id": "5-6", "hint": "No orange zone here — the block is solid. Go around.", "par": 3, "gravity": "down",
+          "id": "5-5", "par": 3, "gravity": "down", "hint": "No orange zone here — the block is solid. Go around.",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
           "breakables": [{ "x": 400, "y": 450, "w": 24, "h": 252 }],
           "solution": ["up", "right", "down"]
         },
         {
-          "id": "5-7", "par": 2, "gravity": "down",
+          "id": "5-6", "par": 2, "gravity": "down",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 600, "y": 40 },
+          "sticky": [{ "x": 600, "y": 564, "w": 44, "h": 24 }],
           "weights": [{ "x": 170, "y": 300, "w": 300, "h": 552, "kind": "heavy" }],
           "breakables": [{ "x": 400, "y": 300, "w": 24, "h": 552 }],
-          "sticky": [{ "x": 600, "y": 564, "w": 44, "h": 24 }],
           "solution": ["right", "up"]
         },
         {
-          "id": "5-8", "par": 3, "gravity": "down",
+          "id": "5-7", "par": 3, "gravity": "down",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
+          "hazards": [{ "x": 600, "y": 558, "w": 40, "h": 36, "dir": "up" }, { "x": 700, "y": 558, "w": 40, "h": 36, "dir": "up" }],
           "weights": [{ "x": 150, "y": 112, "w": 260, "h": 180, "kind": "heavy" }],
           "breakables": [{ "x": 440, "y": 300, "w": 24, "h": 552 }],
-          "hazards": [
-            { "x": 600, "y": 558, "w": 40, "h": 36, "dir": "up" },
-            { "x": 700, "y": 558, "w": 40, "h": 36, "dir": "up" }
-          ],
           "solution": ["up", "right", "down"]
         },
         {
-          "id": "5-9", "par": 4, "gravity": "down",
+          "id": "5-8", "par": 4, "gravity": "down",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
+          "walls": [{ "x": 600, "y": 450, "w": 24, "h": 252 }],
           "weights": [{ "x": 170, "y": 300, "w": 300, "h": 552, "kind": "heavy" }],
           "breakables": [{ "x": 300, "y": 300, "w": 24, "h": 552 }],
-          "walls": [{ "x": 600, "y": 450, "w": 24, "h": 252 }],
           "solution": ["right", "up", "right", "down"]
         },
         {
-          "id": "5-10", "par": 3, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 650, "y": 560 },
-          "weights": [{ "x": 150, "y": 112, "w": 260, "h": 180, "kind": "heavy" }],
-          "breakables": [{ "x": 400, "y": 300, "w": 24, "h": 552 }],
-          "sticky": [{ "x": 650, "y": 36, "w": 44, "h": 24 }],
-          "hazards": [{ "x": 500, "y": 558, "w": 40, "h": 36, "dir": "up" }],
-          "solution": ["up", "right", "down"]
-        },
-        {
-          "id": "5-11", "par": 1, "gravity": "down",
+          "id": "5-9", "par": 1, "gravity": "down",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
           "weights": [{ "x": 170, "y": 300, "w": 300, "h": 552, "kind": "heavy" }],
-          "breakables": [
-            { "x": 300, "y": 300, "w": 24, "h": 552 },
-            { "x": 500, "y": 300, "w": 24, "h": 552 },
-            { "x": 700, "y": 300, "w": 24, "h": 552 }
-          ],
+          "breakables": [{ "x": 300, "y": 300, "w": 24, "h": 552 }, { "x": 500, "y": 300, "w": 24, "h": 552 }, { "x": 700, "y": 300, "w": 24, "h": 552 }],
           "solution": ["right"]
         },
         {
-          "id": "5-12", "par": 2, "gravity": "down",
+          "id": "5-10", "par": 2, "gravity": "down",
           "spawn": { "x": 680, "y": 120 }, "goal": { "x": 40, "y": 40 },
           "weights": [{ "x": 630, "y": 300, "w": 300, "h": 552, "kind": "heavy" }],
           "breakables": [{ "x": 400, "y": 300, "w": 24, "h": 552 }],
           "solution": ["left", "up"]
         },
         {
-          "id": "5-13", "par": 2, "gravity": "down",
+          "id": "5-11", "par": 2, "gravity": "down",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
           "weights": [{ "x": 150, "y": 112, "w": 260, "h": 180, "kind": "heavy" }],
           "breakables": [{ "x": 440, "y": 300, "w": 24, "h": 552 }],
           "solution": ["up", "right"]
         },
         {
-          "id": "5-14", "par": 1, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
-          "weights": [{ "x": 170, "y": 300, "w": 300, "h": 552, "kind": "heavy" }],
-          "breakables": [
-            { "x": 400, "y": 300, "w": 24, "h": 552 },
-            { "x": 600, "y": 450, "w": 24, "h": 252 }
-          ],
-          "solution": ["right"]
-        },
-        {
-          "id": "5-15", "par": 3, "gravity": "down",
+          "id": "5-12", "par": 3, "gravity": "down",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 600, "y": 560 },
-          "weights": [{ "x": 150, "y": 112, "w": 260, "h": 180, "kind": "heavy" }],
-          "breakables": [{ "x": 300, "y": 300, "w": 24, "h": 552 }],
           "sticky": [{ "x": 600, "y": 36, "w": 44, "h": 24 }],
-          "solution": ["up", "right", "down"]
-        },
-        {
-          "id": "5-16", "par": 2, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 650, "y": 40 },
-          "weights": [{ "x": 170, "y": 300, "w": 300, "h": 552, "kind": "heavy" }],
-          "breakables": [{ "x": 400, "y": 300, "w": 24, "h": 552 }],
-          "sticky": [{ "x": 650, "y": 564, "w": 44, "h": 24 }],
-          "solution": ["right", "up"]
-        },
-        {
-          "id": "5-17", "par": 3, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
           "weights": [{ "x": 150, "y": 112, "w": 260, "h": 180, "kind": "heavy" }],
-          "breakables": [
-            { "x": 400, "y": 300, "w": 24, "h": 552 },
-            { "x": 600, "y": 300, "w": 24, "h": 552 }
-          ],
+          "breakables": [{ "x": 300, "y": 300, "w": 24, "h": 552 }],
           "solution": ["up", "right", "down"]
         },
         {
-          "id": "5-18", "par": 3, "gravity": "down",
+          "id": "5-13", "par": 3, "gravity": "down",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
+          "walls": [{ "x": 550, "y": 450, "w": 24, "h": 252 }],
           "weights": [{ "x": 170, "y": 300, "w": 300, "h": 552, "kind": "heavy" }],
           "breakables": [{ "x": 300, "y": 300, "w": 24, "h": 552 }],
-          "walls": [{ "x": 550, "y": 450, "w": 24, "h": 252 }],
           "solution": ["right", "up", "right"]
         },
         {
-          "id": "5-19", "par": 3, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 650, "y": 560 },
-          "weights": [{ "x": 150, "y": 112, "w": 260, "h": 180, "kind": "heavy" }],
-          "breakables": [{ "x": 440, "y": 300, "w": 24, "h": 552 }],
-          "sticky": [{ "x": 650, "y": 36, "w": 44, "h": 24 }],
-          "hazards": [
-            { "x": 300, "y": 558, "w": 40, "h": 36, "dir": "up" },
-            { "x": 760, "y": 558, "w": 40, "h": 36, "dir": "up" }
-          ],
-          "solution": ["up", "right", "down"]
-        },
-        {
-          "id": "5-20", "hint": "Fragile ground. Weight up, smash through, drop in.", "par": 3, "gravity": "down",
+          "id": "5-14", "par": 3, "gravity": "down", "hint": "Fragile ground. Weight up, smash through, drop in.",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 720, "y": 560 },
-          "weights": [{ "x": 150, "y": 112, "w": 260, "h": 180, "kind": "heavy" }],
-          "breakables": [
-            { "x": 350, "y": 300, "w": 24, "h": 552 },
-            { "x": 550, "y": 300, "w": 24, "h": 552 }
-          ],
+          "hazards": [{ "x": 450, "y": 558, "w": 40, "h": 36, "dir": "up" }, { "x": 650, "y": 558, "w": 40, "h": 36, "dir": "up" }],
           "sticky": [{ "x": 720, "y": 36, "w": 44, "h": 24 }],
-          "hazards": [
-            { "x": 450, "y": 558, "w": 40, "h": 36, "dir": "up" },
-            { "x": 650, "y": 558, "w": 40, "h": 36, "dir": "up" }
-          ],
+          "weights": [{ "x": 150, "y": 112, "w": 260, "h": 180, "kind": "heavy" }],
+          "breakables": [{ "x": 350, "y": 300, "w": 24, "h": 552 }, { "x": 550, "y": 300, "w": 24, "h": 552 }],
           "solution": ["up", "right", "down"]
         }
       ]
@@ -811,178 +464,117 @@
       "mechanic": "Momentum-preserving portals",
       "levels": [
         {
-          "id": "6-1", "hint": "Portals warp you across — you keep your speed and direction.", "par": 1, "gravity": "down",
+          "id": "6-1", "par": 1, "gravity": "down", "hint": "Portals warp you across — you keep your speed and direction.",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
           "walls": [{ "x": 400, "y": 300, "w": 24, "h": 552 }],
           "portals": [{ "a": { "x": 340, "y": 560 }, "b": { "x": 480, "y": 560 } }],
           "solution": ["right"]
         },
         {
-          "id": "6-2", "hint": "A portal can send you from the floor to the ceiling.", "par": 1, "gravity": "down",
+          "id": "6-2", "par": 1, "gravity": "down", "hint": "A portal can send you from the floor to the ceiling.",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
           "portals": [{ "a": { "x": 400, "y": 560 }, "b": { "x": 400, "y": 40 } }],
           "solution": ["right"]
         },
         {
-          "id": "6-3", "par": 1, "gravity": "down",
+          "id": "6-3", "par": 1, "gravity": "down", "hint": "Warp right over the spikes.",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
-          "walls": [
-            { "x": 300, "y": 300, "w": 24, "h": 552 },
-            { "x": 600, "y": 300, "w": 24, "h": 552 }
-          ],
-          "portals": [{ "a": { "x": 200, "y": 560 }, "b": { "x": 700, "y": 560 } }],
-          "solution": ["right"]
-        },
-        {
-          "id": "6-4", "hint": "Warp right over the spikes.", "par": 1, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
-          "hazards": [
-            { "x": 300, "y": 558, "w": 40, "h": 36, "dir": "up" },
-            { "x": 400, "y": 558, "w": 40, "h": 36, "dir": "up" },
-            { "x": 500, "y": 558, "w": 40, "h": 36, "dir": "up" }
-          ],
+          "hazards": [{ "x": 300, "y": 558, "w": 40, "h": 36, "dir": "up" }, { "x": 400, "y": 558, "w": 40, "h": 36, "dir": "up" }, { "x": 500, "y": 558, "w": 40, "h": 36, "dir": "up" }],
           "portals": [{ "a": { "x": 200, "y": 560 }, "b": { "x": 650, "y": 560 } }],
           "solution": ["right"]
         },
         {
-          "id": "6-5", "par": 2, "gravity": "down",
+          "id": "6-4", "par": 2, "gravity": "down",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
           "portals": [{ "a": { "x": 400, "y": 40 }, "b": { "x": 400, "y": 560 } }],
           "solution": ["up", "right"]
         },
         {
-          "id": "6-6", "par": 1, "gravity": "down",
+          "id": "6-5", "par": 1, "gravity": "down",
           "spawn": { "x": 680, "y": 120 }, "goal": { "x": 40, "y": 560 },
           "walls": [{ "x": 400, "y": 300, "w": 24, "h": 552 }],
           "portals": [{ "a": { "x": 460, "y": 560 }, "b": { "x": 320, "y": 560 } }],
           "solution": ["left"]
         },
         {
-          "id": "6-7", "par": 2, "gravity": "down",
+          "id": "6-6", "par": 2, "gravity": "down",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 700, "y": 560 },
-          "portals": [{ "a": { "x": 400, "y": 560 }, "b": { "x": 400, "y": 40 } }],
           "sticky": [{ "x": 700, "y": 36, "w": 44, "h": 24 }],
+          "portals": [{ "a": { "x": 400, "y": 560 }, "b": { "x": 400, "y": 40 } }],
           "solution": ["right", "down"]
         },
         {
-          "id": "6-8", "par": 1, "gravity": "down",
+          "id": "6-7", "par": 1, "gravity": "down",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
           "walls": [{ "x": 400, "y": 300, "w": 24, "h": 552 }],
           "portals": [{ "a": { "x": 340, "y": 560 }, "b": { "x": 460, "y": 40 } }],
           "solution": ["right"]
         },
         {
-          "id": "6-9", "par": 1, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
-          "portals": [{ "a": { "x": 300, "y": 560 }, "b": { "x": 600, "y": 40 } }],
-          "solution": ["right"]
-        },
-        {
-          "id": "6-10", "hint": "Two portal pairs — chain them.", "par": 1, "gravity": "down",
+          "id": "6-8", "par": 1, "gravity": "down", "hint": "Two portal pairs — chain them.",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
-          "walls": [
-            { "x": 300, "y": 300, "w": 24, "h": 552 },
-            { "x": 600, "y": 300, "w": 24, "h": 552 }
-          ],
-          "portals": [
-            { "a": { "x": 200, "y": 560 }, "b": { "x": 400, "y": 560 } },
-            { "a": { "x": 500, "y": 560 }, "b": { "x": 700, "y": 560 } }
-          ],
+          "walls": [{ "x": 300, "y": 300, "w": 24, "h": 552 }, { "x": 600, "y": 300, "w": 24, "h": 552 }],
+          "portals": [{ "a": { "x": 200, "y": 560 }, "b": { "x": 400, "y": 560 } }, { "a": { "x": 500, "y": 560 }, "b": { "x": 700, "y": 560 } }],
           "solution": ["right"]
         },
         {
-          "id": "6-11", "par": 2, "gravity": "down",
+          "id": "6-9", "par": 2, "gravity": "down",
           "spawn": { "x": 120, "y": 480 }, "goal": { "x": 760, "y": 40 },
-          "hazards": [
-            { "x": 300, "y": 42, "w": 40, "h": 36, "dir": "down" },
-            { "x": 500, "y": 42, "w": 40, "h": 36, "dir": "down" }
-          ],
+          "hazards": [{ "x": 300, "y": 42, "w": 40, "h": 36, "dir": "down" }, { "x": 500, "y": 42, "w": 40, "h": 36, "dir": "down" }],
           "portals": [{ "a": { "x": 200, "y": 40 }, "b": { "x": 650, "y": 40 } }],
           "solution": ["up", "right"]
         },
         {
-          "id": "6-12", "par": 1, "gravity": "down",
+          "id": "6-10", "par": 1, "gravity": "down",
           "spawn": { "x": 680, "y": 120 }, "goal": { "x": 40, "y": 560 },
-          "hazards": [
-            { "x": 350, "y": 558, "w": 40, "h": 36, "dir": "up" },
-            { "x": 450, "y": 558, "w": 40, "h": 36, "dir": "up" }
-          ],
+          "hazards": [{ "x": 350, "y": 558, "w": 40, "h": 36, "dir": "up" }, { "x": 450, "y": 558, "w": 40, "h": 36, "dir": "up" }],
           "portals": [{ "a": { "x": 600, "y": 560 }, "b": { "x": 200, "y": 560 } }],
           "solution": ["left"]
         },
         {
-          "id": "6-13", "par": 2, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 700, "y": 560 },
-          "portals": [{ "a": { "x": 400, "y": 560 }, "b": { "x": 600, "y": 40 } }],
-          "sticky": [{ "x": 700, "y": 36, "w": 44, "h": 24 }],
-          "solution": ["right", "down"]
-        },
-        {
-          "id": "6-14", "par": 2, "gravity": "down",
+          "id": "6-11", "par": 2, "gravity": "down",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 620, "y": 40 },
           "walls": [{ "x": 450, "y": 300, "w": 24, "h": 552 }],
-          "portals": [{ "a": { "x": 360, "y": 560 }, "b": { "x": 540, "y": 560 } }],
-          "sticky": [{ "x": 620, "y": 564, "w": 44, "h": 24 }],
           "hazards": [{ "x": 700, "y": 558, "w": 40, "h": 36, "dir": "up" }],
+          "sticky": [{ "x": 620, "y": 564, "w": 44, "h": 24 }],
+          "portals": [{ "a": { "x": 360, "y": 560 }, "b": { "x": 540, "y": 560 } }],
           "solution": ["right", "up"]
         },
         {
-          "id": "6-15", "par": 2, "gravity": "down",
+          "id": "6-12", "par": 2, "gravity": "down",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
           "walls": [{ "x": 400, "y": 300, "w": 24, "h": 552 }],
           "portals": [{ "a": { "x": 340, "y": 560 }, "b": { "x": 500, "y": 40 } }],
           "solution": ["right", "down"]
         },
         {
-          "id": "6-16", "par": 2, "gravity": "down",
+          "id": "6-13", "par": 2, "gravity": "down",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
-          "hazards": [
-            { "x": 400, "y": 558, "w": 40, "h": 36, "dir": "up" },
-            { "x": 500, "y": 558, "w": 40, "h": 36, "dir": "up" },
-            { "x": 600, "y": 558, "w": 40, "h": 36, "dir": "up" }
-          ],
+          "hazards": [{ "x": 400, "y": 558, "w": 40, "h": 36, "dir": "up" }, { "x": 500, "y": 558, "w": 40, "h": 36, "dir": "up" }, { "x": 600, "y": 558, "w": 40, "h": 36, "dir": "up" }],
           "portals": [{ "a": { "x": 250, "y": 560 }, "b": { "x": 700, "y": 560 } }],
           "solution": ["right", "up"]
         },
         {
-          "id": "6-17", "par": 2, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
-          "portals": [{ "a": { "x": 400, "y": 40 }, "b": { "x": 300, "y": 560 } }],
-          "solution": ["up", "right"]
-        },
-        {
-          "id": "6-18", "par": 3, "gravity": "down",
+          "id": "6-14", "par": 3, "gravity": "down",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
-          "walls": [
-            { "x": 400, "y": 300, "w": 24, "h": 552 },
-            { "x": 600, "y": 450, "w": 24, "h": 252 }
-          ],
+          "walls": [{ "x": 400, "y": 300, "w": 24, "h": 552 }, { "x": 600, "y": 450, "w": 24, "h": 252 }],
           "portals": [{ "a": { "x": 340, "y": 560 }, "b": { "x": 460, "y": 560 } }],
           "solution": ["right", "up", "right"]
         },
         {
-          "id": "6-19", "par": 2, "gravity": "down",
+          "id": "6-15", "par": 2, "gravity": "down",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 650, "y": 560 },
-          "portals": [{ "a": { "x": 400, "y": 560 }, "b": { "x": 400, "y": 40 } }],
+          "hazards": [{ "x": 550, "y": 558, "w": 40, "h": 36, "dir": "up" }, { "x": 720, "y": 558, "w": 40, "h": 36, "dir": "up" }],
           "sticky": [{ "x": 650, "y": 36, "w": 44, "h": 24 }],
-          "hazards": [
-            { "x": 550, "y": 558, "w": 40, "h": 36, "dir": "up" },
-            { "x": 720, "y": 558, "w": 40, "h": 36, "dir": "up" }
-          ],
+          "portals": [{ "a": { "x": 400, "y": 560 }, "b": { "x": 400, "y": 40 } }],
           "solution": ["right", "down"]
         },
         {
-          "id": "6-20", "hint": "The wormhole gauntlet. Chain the warps.", "par": 2, "gravity": "down",
+          "id": "6-16", "par": 2, "gravity": "down", "hint": "The wormhole gauntlet. Chain the warps.",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
-          "walls": [
-            { "x": 300, "y": 300, "w": 24, "h": 552 },
-            { "x": 600, "y": 300, "w": 24, "h": 552 }
-          ],
+          "walls": [{ "x": 300, "y": 300, "w": 24, "h": 552 }, { "x": 600, "y": 300, "w": 24, "h": 552 }],
           "hazards": [{ "x": 380, "y": 558, "w": 40, "h": 36, "dir": "up" }],
-          "portals": [
-            { "a": { "x": 200, "y": 560 }, "b": { "x": 450, "y": 560 } },
-            { "a": { "x": 520, "y": 560 }, "b": { "x": 720, "y": 560 } }
-          ],
+          "portals": [{ "a": { "x": 200, "y": 560 }, "b": { "x": 450, "y": 560 } }, { "a": { "x": 520, "y": 560 }, "b": { "x": 720, "y": 560 } }],
           "solution": ["right", "up"]
         }
       ]
@@ -993,183 +585,102 @@
       "mechanic": "Color switches",
       "levels": [
         {
-          "id": "7-1", "hint": "Hit the ⇄ switch to flip which color is solid.", "par": 1, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 }, "activeColor": "red",
+          "id": "7-1", "par": 1, "gravity": "down", "activeColor": "red", "hint": "Hit the ⇄ switch to flip which color is solid.",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
           "cblocks": [{ "x": 400, "y": 300, "w": 24, "h": 552, "color": "red" }],
           "switches": [{ "x": 250, "y": 560 }],
           "solution": ["right"]
         },
         {
-          "id": "7-2", "par": 1, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 }, "activeColor": "blue",
-          "cblocks": [{ "x": 400, "y": 300, "w": 24, "h": 552, "color": "blue" }],
-          "switches": [{ "x": 250, "y": 560 }],
-          "solution": ["right"]
-        },
-        {
-          "id": "7-3", "hint": "Two colors — flip at each switch to open the way.", "par": 1, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 }, "activeColor": "red",
-          "cblocks": [
-            { "x": 300, "y": 300, "w": 24, "h": 552, "color": "red" },
-            { "x": 600, "y": 300, "w": 24, "h": 552, "color": "blue" }
-          ],
+          "id": "7-2", "par": 1, "gravity": "down", "activeColor": "red", "hint": "Two colors — flip at each switch to open the way.",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
+          "cblocks": [{ "x": 300, "y": 300, "w": 24, "h": 552, "color": "red" }, { "x": 600, "y": 300, "w": 24, "h": 552, "color": "blue" }],
           "switches": [{ "x": 200, "y": 560 }, { "x": 450, "y": 560 }],
           "solution": ["right"]
         },
         {
-          "id": "7-4", "par": 1, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 }, "activeColor": "blue",
-          "cblocks": [
-            { "x": 300, "y": 300, "w": 24, "h": 552, "color": "blue" },
-            { "x": 600, "y": 300, "w": 24, "h": 552, "color": "red" }
-          ],
-          "switches": [{ "x": 200, "y": 560 }, { "x": 450, "y": 560 }],
-          "solution": ["right"]
-        },
-        {
-          "id": "7-5", "hint": "Make a block solid to stop before the spikes.", "par": 2, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 580, "y": 40 }, "activeColor": "red",
+          "id": "7-3", "par": 2, "gravity": "down", "activeColor": "red", "hint": "Make a block solid to stop before the spikes.",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 580, "y": 40 },
+          "hazards": [{ "x": 740, "y": 558, "w": 40, "h": 36, "dir": "up" }],
           "cblocks": [{ "x": 620, "y": 300, "w": 24, "h": 552, "color": "blue" }],
           "switches": [{ "x": 250, "y": 560 }],
-          "hazards": [{ "x": 740, "y": 558, "w": 40, "h": 36, "dir": "up" }],
           "solution": ["right", "up"]
         },
         {
-          "id": "7-6", "par": 2, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 }, "activeColor": "red",
+          "id": "7-4", "par": 2, "gravity": "down", "activeColor": "red",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
           "cblocks": [{ "x": 400, "y": 300, "w": 24, "h": 552, "color": "red" }],
           "switches": [{ "x": 250, "y": 560 }],
           "solution": ["right", "up"]
         },
         {
-          "id": "7-7", "par": 1, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 }, "activeColor": "red",
-          "cblocks": [
-            { "x": 300, "y": 300, "w": 24, "h": 552, "color": "red" },
-            { "x": 600, "y": 300, "w": 24, "h": 552, "color": "blue" }
-          ],
-          "switches": [{ "x": 200, "y": 560 }, { "x": 450, "y": 560 }],
+          "id": "7-5", "par": 1, "gravity": "down", "activeColor": "red",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
           "hazards": [{ "x": 750, "y": 42, "w": 40, "h": 36, "dir": "down" }],
+          "cblocks": [{ "x": 300, "y": 300, "w": 24, "h": 552, "color": "red" }, { "x": 600, "y": 300, "w": 24, "h": 552, "color": "blue" }],
+          "switches": [{ "x": 200, "y": 560 }, { "x": 450, "y": 560 }],
           "solution": ["right"]
         },
         {
-          "id": "7-8", "par": 1, "gravity": "down",
-          "spawn": { "x": 680, "y": 120 }, "goal": { "x": 40, "y": 560 }, "activeColor": "blue",
+          "id": "7-6", "par": 1, "gravity": "down", "activeColor": "blue",
+          "spawn": { "x": 680, "y": 120 }, "goal": { "x": 40, "y": 560 },
           "cblocks": [{ "x": 400, "y": 300, "w": 24, "h": 552, "color": "blue" }],
           "switches": [{ "x": 550, "y": 560 }],
           "solution": ["left"]
         },
         {
-          "id": "7-9", "par": 1, "gravity": "down",
-          "spawn": { "x": 680, "y": 120 }, "goal": { "x": 40, "y": 560 }, "activeColor": "red",
-          "cblocks": [
-            { "x": 500, "y": 300, "w": 24, "h": 552, "color": "red" },
-            { "x": 200, "y": 300, "w": 24, "h": 552, "color": "blue" }
-          ],
-          "switches": [{ "x": 600, "y": 560 }, { "x": 350, "y": 560 }],
-          "solution": ["left"]
-        },
-        {
-          "id": "7-10", "par": 2, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 650, "y": 40 }, "activeColor": "red",
+          "id": "7-7", "par": 2, "gravity": "down", "activeColor": "red",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 650, "y": 40 },
+          "sticky": [{ "x": 650, "y": 564, "w": 44, "h": 24 }],
           "cblocks": [{ "x": 440, "y": 300, "w": 24, "h": 552, "color": "red" }],
           "switches": [{ "x": 250, "y": 560 }],
-          "sticky": [{ "x": 650, "y": 564, "w": 44, "h": 24 }],
           "solution": ["right", "up"]
         },
         {
-          "id": "7-11", "par": 2, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 580, "y": 40 }, "activeColor": "blue",
-          "cblocks": [{ "x": 620, "y": 300, "w": 24, "h": 552, "color": "red" }],
-          "switches": [{ "x": 250, "y": 560 }],
-          "hazards": [{ "x": 740, "y": 558, "w": 40, "h": 36, "dir": "up" }],
-          "solution": ["right", "up"]
-        },
-        {
-          "id": "7-12", "par": 1, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 }, "activeColor": "red",
-          "cblocks": [
-            { "x": 300, "y": 300, "w": 24, "h": 552, "color": "red" },
-            { "x": 500, "y": 300, "w": 24, "h": 552, "color": "blue" },
-            { "x": 700, "y": 300, "w": 24, "h": 552, "color": "red" }
-          ],
+          "id": "7-8", "par": 1, "gravity": "down", "activeColor": "red",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
+          "cblocks": [{ "x": 300, "y": 300, "w": 24, "h": 552, "color": "red" }, { "x": 500, "y": 300, "w": 24, "h": 552, "color": "blue" }, { "x": 700, "y": 300, "w": 24, "h": 552, "color": "red" }],
           "switches": [{ "x": 200, "y": 560 }, { "x": 400, "y": 560 }, { "x": 600, "y": 560 }],
           "solution": ["right"]
         },
         {
-          "id": "7-13", "par": 2, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 380, "y": 40 }, "activeColor": "red",
+          "id": "7-9", "par": 2, "gravity": "down", "activeColor": "red",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 380, "y": 40 },
           "cblocks": [{ "x": 400, "y": 300, "w": 24, "h": 552, "color": "blue" }],
           "switches": [{ "x": 250, "y": 560 }],
           "solution": ["right", "up"]
         },
         {
-          "id": "7-14", "par": 3, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 }, "activeColor": "red",
+          "id": "7-10", "par": 3, "gravity": "down", "activeColor": "red",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
+          "walls": [{ "x": 600, "y": 450, "w": 24, "h": 252 }],
           "cblocks": [{ "x": 400, "y": 300, "w": 24, "h": 552, "color": "red" }],
           "switches": [{ "x": 250, "y": 560 }],
-          "walls": [{ "x": 600, "y": 450, "w": 24, "h": 252 }],
           "solution": ["right", "up", "right"]
         },
         {
-          "id": "7-15", "par": 1, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 }, "activeColor": "red",
-          "cblocks": [
-            { "x": 250, "y": 300, "w": 24, "h": 552, "color": "red" },
-            { "x": 450, "y": 300, "w": 24, "h": 552, "color": "blue" },
-            { "x": 650, "y": 300, "w": 24, "h": 552, "color": "red" }
-          ],
-          "switches": [{ "x": 180, "y": 560 }, { "x": 350, "y": 560 }, { "x": 550, "y": 560 }],
-          "solution": ["right"]
-        },
-        {
-          "id": "7-16", "par": 1, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 }, "activeColor": "blue",
-          "cblocks": [{ "x": 440, "y": 300, "w": 24, "h": 552, "color": "blue" }],
-          "switches": [{ "x": 250, "y": 560 }],
-          "solution": ["right"]
-        },
-        {
-          "id": "7-17", "par": 2, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 700, "y": 40 }, "activeColor": "red",
-          "cblocks": [
-            { "x": 300, "y": 300, "w": 24, "h": 552, "color": "red" },
-            { "x": 550, "y": 300, "w": 24, "h": 552, "color": "blue" }
-          ],
-          "switches": [{ "x": 200, "y": 560 }, { "x": 420, "y": 560 }],
-          "sticky": [{ "x": 700, "y": 564, "w": 44, "h": 24 }],
-          "solution": ["right", "up"]
-        },
-        {
-          "id": "7-18", "par": 3, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 }, "activeColor": "red",
+          "id": "7-11", "par": 3, "gravity": "down", "activeColor": "red",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
+          "hazards": [{ "x": 600, "y": 558, "w": 40, "h": 36, "dir": "up" }],
           "cblocks": [{ "x": 500, "y": 450, "w": 24, "h": 252, "color": "blue" }],
           "switches": [{ "x": 250, "y": 560 }],
-          "hazards": [{ "x": 600, "y": 558, "w": 40, "h": 36, "dir": "up" }],
           "solution": ["right", "up", "right"]
         },
         {
-          "id": "7-19", "par": 2, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 680, "y": 40 }, "activeColor": "red",
-          "cblocks": [
-            { "x": 300, "y": 300, "w": 24, "h": 552, "color": "red" },
-            { "x": 600, "y": 300, "w": 24, "h": 552, "color": "blue" }
-          ],
-          "switches": [{ "x": 200, "y": 560 }, { "x": 450, "y": 560 }],
-          "sticky": [{ "x": 680, "y": 564, "w": 44, "h": 24 }],
+          "id": "7-12", "par": 2, "gravity": "down", "activeColor": "red",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 680, "y": 40 },
           "hazards": [{ "x": 760, "y": 558, "w": 40, "h": 36, "dir": "up" }],
+          "sticky": [{ "x": 680, "y": 564, "w": 44, "h": 24 }],
+          "cblocks": [{ "x": 300, "y": 300, "w": 24, "h": 552, "color": "red" }, { "x": 600, "y": 300, "w": 24, "h": 552, "color": "blue" }],
+          "switches": [{ "x": 200, "y": 560 }, { "x": 450, "y": 560 }],
           "solution": ["right", "up"]
         },
         {
-          "id": "7-20", "hint": "Chromatic chaos. Flip through every gate.", "par": 2, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 }, "activeColor": "red",
-          "cblocks": [
-            { "x": 250, "y": 300, "w": 24, "h": 552, "color": "red" },
-            { "x": 500, "y": 300, "w": 24, "h": 552, "color": "blue" },
-            { "x": 700, "y": 300, "w": 24, "h": 552, "color": "red" }
-          ],
-          "switches": [{ "x": 180, "y": 560 }, { "x": 380, "y": 560 }, { "x": 600, "y": 560 }],
+          "id": "7-13", "par": 2, "gravity": "down", "activeColor": "red", "hint": "Chromatic chaos. Flip through every gate.",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
           "hazards": [{ "x": 400, "y": 42, "w": 40, "h": 36, "dir": "down" }],
+          "cblocks": [{ "x": 250, "y": 300, "w": 24, "h": 552, "color": "red" }, { "x": 500, "y": 300, "w": 24, "h": 552, "color": "blue" }, { "x": 700, "y": 300, "w": 24, "h": 552, "color": "red" }],
+          "switches": [{ "x": 180, "y": 560 }, { "x": 380, "y": 560 }, { "x": 600, "y": 560 }],
           "solution": ["right", "up"]
         }
       ]
@@ -1180,152 +691,110 @@
       "mechanic": "Slow-motion zones + lasers",
       "levels": [
         {
-          "id": "8-1", "hint": "The laser blinks. Cross while it's off.", "par": 1, "gravity": "down",
+          "id": "8-1", "par": 1, "gravity": "down", "hint": "The laser blinks. Cross while it's off.",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
           "lasers": [{ "x": 400, "y": 300, "w": 12, "h": 552, "on": 700, "off": 1800 }],
           "solution": ["right"]
         },
         {
-          "id": "8-2", "par": 2, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
-          "lasers": [{ "x": 400, "y": 300, "w": 12, "h": 552, "on": 700, "off": 1800 }],
-          "solution": ["right", "up"]
-        },
-        {
-          "id": "8-3", "hint": "Cross a horizontal beam by going up.", "par": 2, "gravity": "down",
+          "id": "8-2", "par": 2, "gravity": "down", "hint": "Cross a horizontal beam by going up.",
           "spawn": { "x": 120, "y": 480 }, "goal": { "x": 760, "y": 40 },
           "lasers": [{ "x": 400, "y": 300, "w": 752, "h": 12, "on": 700, "off": 1800 }],
           "solution": ["up", "right"]
         },
         {
-          "id": "8-4", "hint": "Slow-mo zones cap your speed — more time to thread.", "par": 1, "gravity": "down",
+          "id": "8-3", "par": 1, "gravity": "down", "hint": "Slow-mo zones cap your speed — more time to thread.",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
           "slowzones": [{ "x": 400, "y": 300, "w": 150, "h": 552 }],
           "lasers": [{ "x": 400, "y": 300, "w": 12, "h": 552, "on": 600, "off": 2400 }],
           "solution": ["right"]
         },
         {
-          "id": "8-5", "par": 1, "gravity": "down",
+          "id": "8-4", "par": 1, "gravity": "down",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
-          "lasers": [
-            { "x": 300, "y": 300, "w": 12, "h": 552, "on": 700, "off": 1900 },
-            { "x": 500, "y": 300, "w": 12, "h": 552, "on": 700, "off": 1900 }
-          ],
+          "lasers": [{ "x": 300, "y": 300, "w": 12, "h": 552, "on": 700, "off": 1900 }, { "x": 500, "y": 300, "w": 12, "h": 552, "on": 700, "off": 1900 }],
           "solution": ["right"]
         },
         {
-          "id": "8-6", "par": 2, "gravity": "down",
+          "id": "8-5", "par": 2, "gravity": "down",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 650, "y": 40 },
-          "lasers": [{ "x": 400, "y": 300, "w": 12, "h": 552, "on": 700, "off": 1800 }],
           "sticky": [{ "x": 650, "y": 564, "w": 44, "h": 24 }],
+          "lasers": [{ "x": 400, "y": 300, "w": 12, "h": 552, "on": 700, "off": 1800 }],
           "solution": ["right", "up"]
         },
         {
-          "id": "8-7", "par": 1, "gravity": "down",
+          "id": "8-6", "par": 1, "gravity": "down",
           "spawn": { "x": 680, "y": 120 }, "goal": { "x": 40, "y": 560 },
           "lasers": [{ "x": 400, "y": 300, "w": 12, "h": 552, "on": 700, "off": 1800 }],
           "solution": ["left"]
         },
         {
-          "id": "8-8", "par": 3, "gravity": "down",
+          "id": "8-7", "par": 3, "gravity": "down",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
-          "lasers": [{ "x": 350, "y": 300, "w": 12, "h": 552, "on": 700, "off": 1800 }],
           "walls": [{ "x": 600, "y": 450, "w": 24, "h": 252 }],
+          "lasers": [{ "x": 350, "y": 300, "w": 12, "h": 552, "on": 700, "off": 1800 }],
           "solution": ["right", "up", "right"]
         },
         {
-          "id": "8-9", "par": 2, "gravity": "down",
+          "id": "8-8", "par": 2, "gravity": "down",
           "spawn": { "x": 680, "y": 480 }, "goal": { "x": 40, "y": 40 },
           "lasers": [{ "x": 400, "y": 300, "w": 752, "h": 12, "on": 700, "off": 1800 }],
           "solution": ["up", "left"]
         },
         {
-          "id": "8-10", "par": 1, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
-          "lasers": [
-            { "x": 250, "y": 300, "w": 12, "h": 552, "on": 700, "off": 2000 },
-            { "x": 550, "y": 300, "w": 12, "h": 552, "on": 700, "off": 2000 }
-          ],
-          "solution": ["right"]
-        },
-        {
-          "id": "8-11", "par": 2, "gravity": "down",
+          "id": "8-9", "par": 2, "gravity": "down",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
           "slowzones": [{ "x": 400, "y": 300, "w": 170, "h": 552 }],
           "lasers": [{ "x": 400, "y": 300, "w": 12, "h": 552, "on": 600, "off": 2600 }],
           "solution": ["right", "up"]
         },
         {
-          "id": "8-12", "par": 2, "gravity": "down",
+          "id": "8-10", "par": 2, "gravity": "down", "hint": "No laser — just slow, precise motion.",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 600, "y": 40 },
-          "lasers": [{ "x": 350, "y": 300, "w": 12, "h": 552, "on": 700, "off": 1800 }],
           "sticky": [{ "x": 600, "y": 564, "w": 44, "h": 24 }],
-          "solution": ["right", "up"]
-        },
-        {
-          "id": "8-13", "par": 1, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
-          "lasers": [
-            { "x": 300, "y": 300, "w": 12, "h": 552, "on": 700, "off": 2100 },
-            { "x": 500, "y": 300, "w": 12, "h": 552, "on": 700, "off": 2100 },
-            { "x": 700, "y": 300, "w": 12, "h": 552, "on": 700, "off": 2100 }
-          ],
-          "solution": ["right"]
-        },
-        {
-          "id": "8-14", "hint": "No laser — just slow, precise motion.", "par": 2, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 600, "y": 40 },
           "slowzones": [{ "x": 400, "y": 300, "w": 320, "h": 552 }],
-          "sticky": [{ "x": 600, "y": 564, "w": 44, "h": 24 }],
           "solution": ["right", "up"]
         },
         {
-          "id": "8-15", "par": 2, "gravity": "down",
+          "id": "8-11", "par": 2, "gravity": "down",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
-          "lasers": [{ "x": 400, "y": 300, "w": 12, "h": 552, "on": 700, "off": 1800 }],
           "hazards": [{ "x": 600, "y": 42, "w": 40, "h": 36, "dir": "down" }],
+          "lasers": [{ "x": 400, "y": 300, "w": 12, "h": 552, "on": 700, "off": 1800 }],
           "solution": ["right", "up"]
         },
         {
-          "id": "8-16", "par": 3, "gravity": "down",
+          "id": "8-12", "par": 3, "gravity": "down",
           "spawn": { "x": 120, "y": 480 }, "goal": { "x": 600, "y": 560 },
-          "lasers": [{ "x": 400, "y": 250, "w": 752, "h": 12, "on": 700, "off": 2000 }],
           "sticky": [{ "x": 600, "y": 36, "w": 44, "h": 24 }],
+          "lasers": [{ "x": 400, "y": 250, "w": 752, "h": 12, "on": 700, "off": 2000 }],
           "solution": ["up", "right", "down"]
         },
         {
-          "id": "8-17", "par": 2, "gravity": "down",
+          "id": "8-13", "par": 2, "gravity": "down",
           "spawn": { "x": 680, "y": 120 }, "goal": { "x": 40, "y": 40 },
           "slowzones": [{ "x": 400, "y": 300, "w": 150, "h": 552 }],
           "lasers": [{ "x": 400, "y": 300, "w": 12, "h": 552, "on": 600, "off": 2400 }],
           "solution": ["left", "up"]
         },
         {
-          "id": "8-18", "par": 2, "gravity": "down",
+          "id": "8-14", "par": 2, "gravity": "down",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 450, "y": 40 },
-          "lasers": [
-            { "x": 300, "y": 300, "w": 12, "h": 552, "on": 700, "off": 1900 },
-            { "x": 600, "y": 300, "w": 12, "h": 552, "on": 700, "off": 1900 }
-          ],
           "sticky": [{ "x": 450, "y": 564, "w": 44, "h": 24 }],
+          "lasers": [{ "x": 300, "y": 300, "w": 12, "h": 552, "on": 700, "off": 1900 }, { "x": 600, "y": 300, "w": 12, "h": 552, "on": 700, "off": 1900 }],
           "solution": ["right", "up"]
         },
         {
-          "id": "8-19", "par": 2, "gravity": "down",
+          "id": "8-15", "par": 2, "gravity": "down",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 500, "y": 40 },
-          "lasers": [{ "x": 400, "y": 300, "w": 12, "h": 552, "on": 700, "off": 1800 }],
-          "sticky": [{ "x": 500, "y": 564, "w": 44, "h": 24 }],
           "hazards": [{ "x": 620, "y": 558, "w": 40, "h": 36, "dir": "up" }],
+          "sticky": [{ "x": 500, "y": 564, "w": 44, "h": 24 }],
+          "lasers": [{ "x": 400, "y": 300, "w": 12, "h": 552, "on": 700, "off": 1800 }],
           "solution": ["right", "up"]
         },
         {
-          "id": "8-20", "hint": "Beat the clock. Cross the whole grid in one gap.", "par": 2, "gravity": "down",
+          "id": "8-16", "par": 2, "gravity": "down", "hint": "Beat the clock. Cross the whole grid in one gap.",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
-          "lasers": [
-            { "x": 250, "y": 300, "w": 12, "h": 552, "on": 600, "off": 2200 },
-            { "x": 500, "y": 300, "w": 12, "h": 552, "on": 600, "off": 2200 },
-            { "x": 700, "y": 300, "w": 12, "h": 552, "on": 600, "off": 2200 }
-          ],
+          "lasers": [{ "x": 250, "y": 300, "w": 12, "h": 552, "on": 600, "off": 2200 }, { "x": 500, "y": 300, "w": 12, "h": 552, "on": 600, "off": 2200 }, { "x": 700, "y": 300, "w": 12, "h": 552, "on": 600, "off": 2200 }],
           "solution": ["right", "up"]
         }
       ]
@@ -1336,7 +805,7 @@
       "mechanic": "Black holes + gravity reversal",
       "levels": [
         {
-          "id": "9-1", "hint": "Inside a teal zone, gravity points a fixed way — up here.", "par": 2, "gravity": "down",
+          "id": "9-1", "par": 2, "gravity": "down", "hint": "Inside a teal zone, gravity points a fixed way — up here.",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
           "gravzones": [{ "x": 600, "y": 300, "w": 352, "h": 552, "dir": "up" }],
           "solution": ["up", "right"]
@@ -1348,7 +817,7 @@
           "solution": ["up", "left"]
         },
         {
-          "id": "9-3", "hint": "Black holes pull you in. Keep your distance.", "par": 3, "gravity": "down",
+          "id": "9-3", "par": 3, "gravity": "down", "hint": "Black holes pull you in. Keep your distance.",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
           "blackholes": [{ "x": 400, "y": 410, "radius": 170 }],
           "solution": ["up", "right", "down"]
@@ -1366,108 +835,60 @@
           "solution": ["right", "up"]
         },
         {
-          "id": "9-6", "par": 3, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
-          "blackholes": [{ "x": 400, "y": 400, "radius": 180 }],
-          "solution": ["up", "right", "down"]
-        },
-        {
-          "id": "9-7", "par": 2, "gravity": "down",
+          "id": "9-6", "par": 2, "gravity": "down",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
-          "gravzones": [{ "x": 620, "y": 300, "w": 312, "h": 552, "dir": "up" }],
           "walls": [{ "x": 350, "y": 450, "w": 24, "h": 252 }],
+          "gravzones": [{ "x": 620, "y": 300, "w": 312, "h": 552, "dir": "up" }],
           "solution": ["up", "right"]
         },
         {
-          "id": "9-8", "par": 3, "gravity": "down",
+          "id": "9-7", "par": 3, "gravity": "down",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
-          "blackholes": [
-            { "x": 300, "y": 410, "radius": 150 },
-            { "x": 600, "y": 410, "radius": 150 }
-          ],
+          "blackholes": [{ "x": 300, "y": 410, "radius": 150 }, { "x": 600, "y": 410, "radius": 150 }],
           "solution": ["up", "right", "down"]
         },
         {
-          "id": "9-9", "hint": "Skirt the pull, then float up.", "par": 2, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
-          "gravzones": [{ "x": 600, "y": 300, "w": 352, "h": 552, "dir": "up" }],
-          "blackholes": [{ "x": 300, "y": 410, "radius": 150 }],
-          "solution": ["up", "right"]
-        },
-        {
-          "id": "9-10", "par": 2, "gravity": "down",
+          "id": "9-8", "par": 2, "gravity": "down",
           "spawn": { "x": 680, "y": 120 }, "goal": { "x": 40, "y": 40 },
           "gravzones": [{ "x": 200, "y": 300, "w": 352, "h": 552, "dir": "up" }],
           "blackholes": [{ "x": 500, "y": 410, "radius": 150 }],
           "solution": ["up", "left"]
         },
         {
-          "id": "9-11", "par": 3, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
-          "blackholes": [{ "x": 500, "y": 410, "radius": 160 }],
-          "solution": ["up", "right", "down"]
-        },
-        {
-          "id": "9-12", "par": 2, "gravity": "down",
+          "id": "9-9", "par": 2, "gravity": "down",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 500, "y": 40 },
-          "gravzones": [{ "x": 500, "y": 300, "w": 240, "h": 552, "dir": "up" }],
           "hazards": [{ "x": 250, "y": 558, "w": 40, "h": 36, "dir": "up" }],
+          "gravzones": [{ "x": 500, "y": 300, "w": 240, "h": 552, "dir": "up" }],
           "solution": ["up", "right"]
         },
         {
-          "id": "9-13", "par": 2, "gravity": "down",
+          "id": "9-10", "par": 2, "gravity": "down",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
           "blackholes": [{ "x": 400, "y": 410, "radius": 160 }],
           "solution": ["up", "right"]
         },
         {
-          "id": "9-14", "par": 2, "gravity": "down",
+          "id": "9-11", "par": 2, "gravity": "down",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 500, "y": 40 },
           "gravzones": [{ "x": 500, "y": 300, "w": 240, "h": 552, "dir": "up" }],
           "blackholes": [{ "x": 300, "y": 410, "radius": 140 }],
           "solution": ["up", "right"]
         },
         {
-          "id": "9-15", "par": 2, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
-          "gravzones": [{ "x": 700, "y": 300, "w": 152, "h": 552, "dir": "up" }],
-          "blackholes": [{ "x": 400, "y": 410, "radius": 160 }],
-          "solution": ["up", "right"]
-        },
-        {
-          "id": "9-16", "par": 2, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
-          "blackholes": [
-            { "x": 300, "y": 410, "radius": 150 },
-            { "x": 600, "y": 410, "radius": 150 }
-          ],
-          "solution": ["up", "right"]
-        },
-        {
-          "id": "9-17", "par": 2, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
-          "gravzones": [{ "x": 600, "y": 300, "w": 352, "h": 552, "dir": "up" }],
-          "walls": [{ "x": 300, "y": 450, "w": 24, "h": 252 }],
-          "solution": ["up", "right"]
-        },
-        {
-          "id": "9-18", "par": 3, "gravity": "down",
+          "id": "9-12", "par": 3, "gravity": "down",
           "spawn": { "x": 680, "y": 120 }, "goal": { "x": 40, "y": 560 },
           "blackholes": [{ "x": 400, "y": 400, "radius": 170 }],
           "solution": ["up", "left", "down"]
         },
         {
-          "id": "9-19", "par": 2, "gravity": "down",
+          "id": "9-13", "par": 2, "gravity": "down",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
+          "hazards": [{ "x": 300, "y": 558, "w": 40, "h": 36, "dir": "up" }, { "x": 400, "y": 558, "w": 40, "h": 36, "dir": "up" }],
           "gravzones": [{ "x": 600, "y": 300, "w": 352, "h": 552, "dir": "up" }],
-          "hazards": [
-            { "x": 300, "y": 558, "w": 40, "h": 36, "dir": "up" },
-            { "x": 400, "y": 558, "w": 40, "h": 36, "dir": "up" }
-          ],
           "solution": ["up", "right"]
         },
         {
-          "id": "9-20", "hint": "The singularity. Slip past the pull, ride the reversal.", "par": 2, "gravity": "down",
+          "id": "9-14", "par": 2, "gravity": "down", "hint": "The singularity. Slip past the pull, ride the reversal.",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
           "gravzones": [{ "x": 690, "y": 300, "w": 172, "h": 552, "dir": "up" }],
           "blackholes": [{ "x": 400, "y": 410, "radius": 150 }],
@@ -1481,18 +902,14 @@
       "mechanic": "Capstone: limited gravity shifts",
       "levels": [
         {
-          "id": "10-1", "hint": "You have a SHIFT BUDGET now. Spend it wisely.", "par": 1, "maxShifts": 1, "gravity": "down",
+          "id": "10-1", "par": 1, "maxShifts": 1, "gravity": "down", "hint": "You have a SHIFT BUDGET now. Spend it wisely.",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
           "solution": ["right"]
         },
         {
-          "id": "10-2", "hint": "Three shifts, three moves. No waste.", "par": 3, "maxShifts": 3, "gravity": "down",
+          "id": "10-2", "par": 3, "maxShifts": 3, "gravity": "down", "hint": "Three shifts, three moves. No waste.",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
-          "hazards": [
-            { "x": 240, "y": 558, "w": 40, "h": 36, "dir": "up" },
-            { "x": 440, "y": 558, "w": 40, "h": 36, "dir": "up" },
-            { "x": 640, "y": 558, "w": 40, "h": 36, "dir": "up" }
-          ],
+          "hazards": [{ "x": 240, "y": 558, "w": 40, "h": 36, "dir": "up" }, { "x": 440, "y": 558, "w": 40, "h": 36, "dir": "up" }, { "x": 640, "y": 558, "w": 40, "h": 36, "dir": "up" }],
           "solution": ["up", "right", "down"]
         },
         {
@@ -1511,8 +928,8 @@
         {
           "id": "10-5", "par": 3, "maxShifts": 3, "gravity": "down",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
-          "doors": [{ "x": 440, "y": 300, "w": 24, "h": 552, "color": "gold" }],
           "keys": [{ "x": 200, "y": 40, "color": "gold" }],
+          "doors": [{ "x": 440, "y": 300, "w": 24, "h": 552, "color": "gold" }],
           "solution": ["up", "right", "down"]
         },
         {
@@ -1530,12 +947,9 @@
           "solution": ["right"]
         },
         {
-          "id": "10-8", "par": 1, "maxShifts": 1, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 }, "activeColor": "red",
-          "cblocks": [
-            { "x": 300, "y": 300, "w": 24, "h": 552, "color": "red" },
-            { "x": 600, "y": 300, "w": 24, "h": 552, "color": "blue" }
-          ],
+          "id": "10-8", "par": 1, "maxShifts": 1, "gravity": "down", "activeColor": "red",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
+          "cblocks": [{ "x": 300, "y": 300, "w": 24, "h": 552, "color": "red" }, { "x": 600, "y": 300, "w": 24, "h": 552, "color": "blue" }],
           "switches": [{ "x": 200, "y": 560 }, { "x": 450, "y": 560 }],
           "solution": ["right"]
         },
@@ -1552,104 +966,72 @@
           "solution": ["up", "right"]
         },
         {
-          "id": "10-11", "hint": "Catch on the ceiling pad, then drop between the teeth.", "par": 3, "maxShifts": 3, "gravity": "down",
+          "id": "10-11", "par": 3, "maxShifts": 3, "gravity": "down", "hint": "Catch on the ceiling pad, then drop between the teeth.",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 480, "y": 560 },
+          "hazards": [{ "x": 240, "y": 558, "w": 40, "h": 36, "dir": "up" }, { "x": 360, "y": 558, "w": 40, "h": 36, "dir": "up" }, { "x": 600, "y": 558, "w": 40, "h": 36, "dir": "up" }, { "x": 760, "y": 558, "w": 40, "h": 36, "dir": "up" }],
           "sticky": [{ "x": 480, "y": 36, "w": 44, "h": 24 }],
-          "hazards": [
-            { "x": 240, "y": 558, "w": 40, "h": 36, "dir": "up" },
-            { "x": 360, "y": 558, "w": 40, "h": 36, "dir": "up" },
-            { "x": 600, "y": 558, "w": 40, "h": 36, "dir": "up" },
-            { "x": 760, "y": 558, "w": 40, "h": 36, "dir": "up" }
-          ],
           "solution": ["up", "right", "down"]
         },
         {
-          "id": "10-12", "par": 3, "maxShifts": 3, "gravity": "down",
+          "id": "10-12", "par": 1, "maxShifts": 1, "gravity": "down",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
-          "doors": [{ "x": 440, "y": 300, "w": 24, "h": 552, "color": "gold" }],
-          "keys": [{ "x": 200, "y": 40, "color": "gold" }],
-          "hazards": [
-            { "x": 600, "y": 558, "w": 40, "h": 36, "dir": "up" },
-            { "x": 720, "y": 558, "w": 40, "h": 36, "dir": "up" }
-          ],
-          "solution": ["up", "right", "down"]
-        },
-        {
-          "id": "10-13", "par": 1, "maxShifts": 1, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
-          "hazards": [
-            { "x": 300, "y": 558, "w": 40, "h": 36, "dir": "up" },
-            { "x": 400, "y": 558, "w": 40, "h": 36, "dir": "up" },
-            { "x": 500, "y": 558, "w": 40, "h": 36, "dir": "up" }
-          ],
+          "hazards": [{ "x": 300, "y": 558, "w": 40, "h": 36, "dir": "up" }, { "x": 400, "y": 558, "w": 40, "h": 36, "dir": "up" }, { "x": 500, "y": 558, "w": 40, "h": 36, "dir": "up" }],
           "portals": [{ "a": { "x": 200, "y": 560 }, "b": { "x": 650, "y": 560 } }],
           "solution": ["right"]
         },
         {
-          "id": "10-14", "par": 2, "maxShifts": 2, "gravity": "down",
+          "id": "10-13", "par": 2, "maxShifts": 2, "gravity": "down",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 650, "y": 40 },
+          "sticky": [{ "x": 650, "y": 564, "w": 44, "h": 24 }],
           "weights": [{ "x": 170, "y": 300, "w": 300, "h": 552, "kind": "heavy" }],
           "breakables": [{ "x": 400, "y": 300, "w": 24, "h": 552 }],
-          "sticky": [{ "x": 650, "y": 564, "w": 44, "h": 24 }],
+          "solution": ["right", "up"]
+        },
+        {
+          "id": "10-14", "par": 2, "maxShifts": 2, "gravity": "down", "activeColor": "red",
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 700, "y": 40 },
+          "sticky": [{ "x": 700, "y": 564, "w": 44, "h": 24 }],
+          "cblocks": [{ "x": 300, "y": 300, "w": 24, "h": 552, "color": "red" }, { "x": 550, "y": 300, "w": 24, "h": 552, "color": "blue" }],
+          "switches": [{ "x": 200, "y": 560 }, { "x": 420, "y": 560 }],
           "solution": ["right", "up"]
         },
         {
           "id": "10-15", "par": 2, "maxShifts": 2, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 700, "y": 40 }, "activeColor": "red",
-          "cblocks": [
-            { "x": 300, "y": 300, "w": 24, "h": 552, "color": "red" },
-            { "x": 550, "y": 300, "w": 24, "h": 552, "color": "blue" }
-          ],
-          "switches": [{ "x": 200, "y": 560 }, { "x": 420, "y": 560 }],
-          "sticky": [{ "x": 700, "y": 564, "w": 44, "h": 24 }],
+          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 600, "y": 40 },
+          "sticky": [{ "x": 600, "y": 564, "w": 44, "h": 24 }],
+          "lasers": [{ "x": 350, "y": 300, "w": 12, "h": 552, "on": 700, "off": 1800 }],
           "solution": ["right", "up"]
         },
         {
           "id": "10-16", "par": 2, "maxShifts": 2, "gravity": "down",
-          "spawn": { "x": 120, "y": 120 }, "goal": { "x": 600, "y": 40 },
-          "lasers": [{ "x": 350, "y": 300, "w": 12, "h": 552, "on": 700, "off": 1800 }],
-          "sticky": [{ "x": 600, "y": 564, "w": 44, "h": 24 }],
-          "solution": ["right", "up"]
-        },
-        {
-          "id": "10-17", "par": 2, "maxShifts": 2, "gravity": "down",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
           "blackholes": [{ "x": 400, "y": 410, "radius": 160 }],
           "solution": ["up", "right"]
         },
         {
-          "id": "10-18", "par": 2, "maxShifts": 2, "gravity": "down",
+          "id": "10-17", "par": 2, "maxShifts": 2, "gravity": "down",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40 },
-          "walls": [
-            { "x": 300, "y": 300, "w": 24, "h": 552 },
-            { "x": 600, "y": 300, "w": 24, "h": 552 }
-          ],
+          "walls": [{ "x": 300, "y": 300, "w": 24, "h": 552 }, { "x": 600, "y": 300, "w": 24, "h": 552 }],
           "hazards": [{ "x": 380, "y": 558, "w": 40, "h": 36, "dir": "up" }],
-          "portals": [
-            { "a": { "x": 200, "y": 560 }, "b": { "x": 450, "y": 560 } },
-            { "a": { "x": 520, "y": 560 }, "b": { "x": 720, "y": 560 } }
-          ],
+          "portals": [{ "a": { "x": 200, "y": 560 }, "b": { "x": 450, "y": 560 } }, { "a": { "x": 520, "y": 560 }, "b": { "x": 720, "y": 560 } }],
           "solution": ["right", "up"]
         },
         {
-          "id": "10-19", "hint": "The floor is a trap — take the high road. The key won't survive a death.", "par": 3, "maxShifts": 3, "gravity": "down", "resetGravityOnDeath": true,
+          "id": "10-18", "par": 3, "maxShifts": 3, "gravity": "down", "resetGravityOnDeath": true, "hint": "The floor is a trap — take the high road. The key won't survive a death.",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 560 },
-          "doors": [{ "x": 500, "y": 300, "w": 24, "h": 552, "color": "gold" }],
+          "hazards": [{ "x": 400, "y": 558, "w": 40, "h": 36, "dir": "up" }, { "x": 650, "y": 558, "w": 40, "h": 36, "dir": "up" }],
           "keys": [{ "x": 200, "y": 40, "color": "gold", "volatile": true }],
-          "hazards": [
-            { "x": 400, "y": 558, "w": 40, "h": 36, "dir": "up" },
-            { "x": 650, "y": 558, "w": 40, "h": 36, "dir": "up" }
-          ],
+          "doors": [{ "x": 500, "y": 300, "w": 24, "h": 552, "color": "gold" }],
           "solution": ["up", "right", "down"]
         },
         {
-          "id": "10-20", "hint": "The event horizon. Weight up, smash through, take the key, rise.", "par": 3, "maxShifts": 3, "gravity": "down", "resetGravityOnDeath": true,
+          "id": "10-19", "par": 3, "maxShifts": 3, "gravity": "down", "resetGravityOnDeath": true, "hint": "The event horizon. Weight up, smash through, take the key, rise.",
           "spawn": { "x": 120, "y": 120 }, "goal": { "x": 760, "y": 40, "requires": "gold" },
+          "hazards": [{ "x": 300, "y": 42, "w": 40, "h": 36, "dir": "down" }],
+          "sticky": [{ "x": 650, "y": 564, "w": 44, "h": 24 }],
+          "keys": [{ "x": 500, "y": 560, "color": "gold" }],
           "weights": [{ "x": 170, "y": 300, "w": 300, "h": 552, "kind": "heavy" }],
           "breakables": [{ "x": 350, "y": 300, "w": 24, "h": 552 }],
-          "keys": [{ "x": 500, "y": 560, "color": "gold" }],
-          "sticky": [{ "x": 650, "y": 564, "w": 44, "h": 24 }],
-          "hazards": [{ "x": 300, "y": 42, "w": 40, "h": 36, "dir": "down" }],
           "solution": ["right", "up", "right"]
         }
       ]
