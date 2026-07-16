@@ -107,6 +107,41 @@ export function initPanel(root) {
   const status = el('div', { class: 'status' });
   const flash = (msg) => { status.textContent = msg; setTimeout(() => (status.textContent = ''), 1800); };
 
+  // --- Campaign loader: pick any shipped level and load it for editing ------
+  let campaignData = {};
+  const campaignSelect = el('select', { id: 'campaign-level' });
+  const placeholderOpt = el('option', { value: '' });
+  placeholderOpt.textContent = '— pick a level —';
+  campaignSelect.append(placeholderOpt);
+
+  async function populateCampaign() {
+    try {
+      const res = await fetch('src/data/levels.json');
+      const data = await res.json();
+      data.chapters.forEach((ch) => {
+        if (!ch.levels?.length) return;
+        const grp = el('optgroup', { label: `Ch ${ch.id} — ${ch.name}` });
+        ch.levels.forEach((l) => {
+          campaignData[l.id] = l;
+          const o = el('option', { value: l.id });
+          o.textContent = l.id;
+          grp.append(o);
+        });
+        campaignSelect.append(grp);
+      });
+    } catch {
+      flash('Campaign data unavailable');
+    }
+  }
+
+  function loadCampaign() {
+    const id = campaignSelect.value;
+    if (!id || !campaignData[id]) { flash('Pick a level first'); return; }
+    model.fromLevel(campaignData[id]);
+    syncInputs();
+    flash(`Loaded ${id}`);
+  }
+
   function syncInputs() {
     inputs.dir.value = model.dir;
     inputs.color.value = model.color;
@@ -155,6 +190,10 @@ export function initPanel(root) {
       labeled('Goal needs key', inputs.requires),
       labeled('Hint', inputs.hint),
     ]),
+    section('Campaign', [
+      labeled('Open a shipped level to edit or replace', campaignSelect),
+      el('button', { onclick: loadCampaign }, document.createTextNode('Load level')),
+    ]),
     section('', [
       el('button', { class: 'primary', onclick: playtest }, document.createTextNode('▶ Playtest')),
       el('button', { onclick: () => { if (confirm('Clear the level?')) { model.reset(); syncInputs(); } } }, document.createTextNode('Clear')),
@@ -178,6 +217,7 @@ export function initPanel(root) {
 
   setActiveTool(model.tool);
   syncInputs();
+  populateCampaign();
 
   function section(title, kids) {
     const s = el('div', { class: 'section' });
