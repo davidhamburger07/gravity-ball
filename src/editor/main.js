@@ -25,6 +25,7 @@ new Phaser.Game({
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
+    autoRound: true, // integer CSS size — fractional scaling made 1px grid lines render unevenly
     width: 800,
     height: 600,
   },

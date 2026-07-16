@@ -51,9 +51,14 @@ export default class EditorScene extends Phaser.Scene {
   }
 
   // --- helpers -------------------------------------------------------------
+  // With snapping on, positions clamp to LATTICE points inside the playfield (never the raw
+  // border edge), so a piece can never sit off-grid — what you place is always on a drawn line.
   _snap(v, max) {
-    const s = model.snapEnabled ? Math.round(v / model.snapSize) * model.snapSize : Math.round(v);
-    return Phaser.Math.Clamp(s, MIN, max);
+    if (!model.snapEnabled) return Phaser.Math.Clamp(Math.round(v), MIN, max);
+    const s = model.snapSize;
+    const lo = Math.ceil(MIN / s) * s;
+    const hi = Math.floor(max / s) * s;
+    return Phaser.Math.Clamp(Math.round(v / s) * s, lo, hi);
   }
 
   _snapped(p) {
@@ -77,15 +82,26 @@ export default class EditorScene extends Phaser.Scene {
     g.fillRect(ARENA.w - t, 0, t, ARENA.h);
   }
 
+  // Lines are drawn ONLY at snappable lattice positions, and only across the playfield
+  // interior — every drawn line is a real place a piece can land. Every 5th lattice line is
+  // slightly brighter to give the grid a steady rhythm.
   _drawGrid() {
     const g = this.gridGfx;
     g.clear();
     const step = model.snapEnabled ? model.snapSize : 40;
     // Fine grids get lighter lines so a 5-10px snap doesn't wall the canvas in.
-    const alpha = !model.snapEnabled ? 0.35 : step >= 20 ? 1 : step >= 10 ? 0.55 : 0.4;
-    g.lineStyle(1, 0x232840, alpha);
-    for (let x = 0; x <= ARENA.w; x += step) g.lineBetween(x, 0, x, ARENA.h);
-    for (let y = 0; y <= ARENA.h; y += step) g.lineBetween(0, y, ARENA.w, y);
+    const alpha = !model.snapEnabled ? 0.3 : step >= 20 ? 0.9 : step >= 10 ? 0.5 : 0.35;
+    const start = Math.ceil(MIN / step) * step;
+    for (let x = start; x <= MAXX; x += step) {
+      const major = x % (step * 5) === 0;
+      g.lineStyle(1, major ? 0x323a5e : 0x232840, major ? Math.min(1, alpha + 0.2) : alpha);
+      g.lineBetween(x, MIN, x, MAXY);
+    }
+    for (let y = start; y <= MAXY; y += step) {
+      const major = y % (step * 5) === 0;
+      g.lineStyle(1, major ? 0x323a5e : 0x232840, major ? Math.min(1, alpha + 0.2) : alpha);
+      g.lineBetween(MIN, y, MAXX, y);
+    }
   }
 
   // --- render model --------------------------------------------------------
