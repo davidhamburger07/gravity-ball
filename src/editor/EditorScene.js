@@ -51,14 +51,12 @@ export default class EditorScene extends Phaser.Scene {
   }
 
   // --- helpers -------------------------------------------------------------
-  // With snapping on, positions clamp to LATTICE points inside the playfield (never the raw
-  // border edge), so a piece can never sit off-grid — what you place is always on a drawn line.
+  // With snapping on, positions clamp to LATTICE points. If a lattice point falls outside
+  // the border, it clamps to the border edge so pieces can sit flush against the walls.
   _snap(v, max) {
     if (!model.snapEnabled) return Phaser.Math.Clamp(Math.round(v), MIN, max);
     const s = model.snapSize;
-    const lo = Math.ceil(MIN / s) * s;
-    const hi = Math.floor(max / s) * s;
-    return Phaser.Math.Clamp(Math.round(v / s) * s, lo, hi);
+    return Phaser.Math.Clamp(Math.round(v / s) * s, MIN, max);
   }
 
   _snapped(p) {
