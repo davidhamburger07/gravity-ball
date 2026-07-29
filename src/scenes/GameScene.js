@@ -13,6 +13,12 @@ import { VIEW, PHYSICS, FEEL } from '../config/GameConfig.js';
 
 const BORDER = 24; // auto border-wall thickness
 
+// Physics runs on a fixed 60Hz step driven by real elapsed time (see update()).
+const PHYSICS_STEP_MS = 1000 / 60;
+// Most steps we'll run in one frame while catching up. Past this the game slows down instead of
+// fast-forwarding, which keeps a fast-moving ball from tunnelling through thin walls.
+const MAX_CATCHUP_STEPS = 5;
+
 // Key/door colors (Ch.4). A key opens every door of the same color.
 const KEY_COLORS = { gold: 0xffd23f, blue: 0x38a1ff, pink: 0xff5c8a };
 
@@ -42,6 +48,8 @@ export default class GameScene extends Phaser.Scene {
     this._portalCooldownUntil = 0; // Ch.6 anti re-trigger
     this._active = 'red'; // Ch.7 active (solid) color
     this._switchCooldownUntil = 0;
+    this._accum = 0;      // physics-step carry-over, reset so a restart never fast-forwards
+    this._lastTime = 0;
     this.shiftCount = 0;
   }
 
@@ -334,7 +342,24 @@ export default class GameScene extends Phaser.Scene {
     this.tweens.add({ targets: v, scaleX: 1, scaleY: 1, duration: dur, ease: 'Back.easeOut' });
   }
 
-  update() {
+  update(time, delta) {
+    // --- Fixed-timestep physics -------------------------------------------------------------
+    // Physics advances in whole 1/60s steps driven by REAL elapsed time, so the ball moves at the
+    // same speed on a 60Hz phone, a 144Hz monitor, or a struggling low-end device. Leftover time
+    // carries to the next frame; the backlog is capped so a stall (backgrounded tab, breakpoint)
+    // makes the game briefly slow down rather than teleporting the ball through walls.
+    // Phaser smooths the `delta` it hands us, which under-reports real time during a stall, so
+    // measure the frame gap from the raw loop timestamp instead.
+    const rawDelta = this._lastTime ? time - this._lastTime : (delta || PHYSICS_STEP_MS);
+    this._lastTime = time;
+    this._accum = Math.min((this._accum ?? 0) + rawDelta, PHYSICS_STEP_MS * MAX_CATCHUP_STEPS);
+    let steps = 0;
+    while (this._accum >= PHYSICS_STEP_MS) {
+      this.matter.world.step(PHYSICS_STEP_MS);
+      this._accum -= PHYSICS_STEP_MS;
+      steps++;
+    }
+
     if (this.ball) this.ball.sync();
     if (!this.ball) return;
 
@@ -373,8 +398,11 @@ export default class GameScene extends Phaser.Scene {
         const dist = Math.hypot(dx, dy) || 1;
         if (dist < H.radius) {
           if (dist < 22) { this._die(); break; }
+          // Scaled by steps taken this frame so the pull is per physics step, not per rendered
+          // frame — otherwise a high-refresh display would suck the ball in far harder.
+          const pull = H.strength * steps;
           const v = this.ball.body.velocity;
-          this.ball.setVelocity(v.x + (dx / dist) * H.strength, v.y + (dy / dist) * H.strength);
+          this.ball.setVelocity(v.x + (dx / dist) * pull, v.y + (dy / dist) * pull);
         }
       }
     }
@@ -384,8 +412,9 @@ export default class GameScene extends Phaser.Scene {
     const max = this.level.maxShifts;
     if (max && !this._solved && !this._dying && this.shiftCount >= max) {
       const v = this.ball.body.velocity;
-      this._restFrames = Math.hypot(v.x, v.y) < 0.2 ? (this._restFrames ?? 0) + 1 : 0;
-      if (this._restFrames > 75) { this._restFrames = 0; this._die(); } // ~1.25s at rest
+      // Measured in milliseconds, not frames, so the grace period is the same on every device.
+      this._restMs = Math.hypot(v.x, v.y) < 0.2 ? (this._restMs ?? 0) + rawDelta : 0;
+      if (this._restMs > 1250) { this._restMs = 0; this._die(); }
     }
 
     // Slow-motion zones: cap speed while inside.
@@ -751,7 +780,7 @@ export default class GameScene extends Phaser.Scene {
     // Budget levels: death is a fresh attempt — restore the full shift budget.
     if (this.level.maxShifts) {
       this.shiftCount = 0;
-      this._restFrames = 0;
+      this._restMs = 0;
       this._updateHud();
     }
 

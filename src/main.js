@@ -22,6 +22,10 @@ const config = {
     matter: {
       gravity: { x: 0, y: PHYSICS.GRAVITY_STRENGTH }, // starts "down"; GravityController owns it after boot
       debug: false, // flip to true to inspect colliders vs sprites
+      // Phaser's auto-update advances physics once per rendered frame, which makes the ball's
+      // real-world speed depend on frame rate (a 144Hz monitor ran the game ~2.4x faster than
+      // 60Hz, and a heavy canvas crawled). GameScene drives the world on a fixed timestep instead.
+      autoUpdate: false,
     },
   },
   scene: [BootScene, PreloadScene, MenuScene, LevelSelectScene, GameScene],
