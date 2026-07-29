@@ -121,6 +121,10 @@ export default class GameScene extends Phaser.Scene {
 
     (level.walls ?? []).forEach((wl) => this._wall(wl.x, wl.y, wl.w, wl.h));
 
+    // Ramps: right-triangle solids the ball rolls along instead of stopping dead.
+    // `dir` names the corner holding the right angle, so the slope faces the opposite way.
+    (level.ramps ?? []).forEach((r) => this._ramp(r.x, r.y, r.w, r.h, r.dir ?? 'bl'));
+
     (level.hazards ?? []).forEach((hz) => {
       const w = hz.w ?? 32;
       const h = hz.h ?? 32;
@@ -265,6 +269,37 @@ export default class GameScene extends Phaser.Scene {
   _wall(x, y, w, h) {
     this.matter.add.rectangle(x, y, w, h, { isStatic: true, label: 'wall' });
     this.add.rectangle(x, y, w, h, 0x3a3f5c).setStrokeStyle(2, 0x4c5378);
+  }
+
+  // Right-triangle ramp. `dir` = which corner is square ('bl','br','tl','tr'); the hypotenuse
+  // runs from the other two corners. Matter needs vertices relative to the body centroid, so we
+  // hand it the raw corner list and let fromVertices recentre — then place it by the shape's
+  // bounding-box centre so editor coordinates line up with what's drawn.
+  _ramp(x, y, w, h, dir) {
+    const corners = GameScene.rampCorners(w, h, dir); // origin at the rect's top-left
+    const verts = corners.map((p) => ({ x: p.x, y: p.y }));
+    const body = this.matter.add.fromVertices(x, y, [verts], { isStatic: true, label: 'wall' }, true);
+    if (body) {
+      // fromVertices centres on the centroid; nudge so the bounding box matches the editor rect.
+      const bb = body.bounds;
+      const cx = (bb.min.x + bb.max.x) / 2;
+      const cy = (bb.min.y + bb.max.y) / 2;
+      this.matter.body.setPosition(body, { x: body.position.x + (x - cx), y: body.position.y + (y - cy) });
+    }
+
+    const poly = this.add.polygon(x, y, corners.map((p) => ({ x: p.x - w / 2, y: p.y - h / 2 })), 0x3a3f5c);
+    poly.setStrokeStyle(2, 0x4c5378).setDepth(3);
+  }
+
+  /** Corner list (top-left origin) for a right triangle whose square corner is `dir`. */
+  static rampCorners(w, h, dir) {
+    switch (dir) {
+      case 'br': return [{ x: w, y: 0 }, { x: w, y: h }, { x: 0, y: h }]; // slope down-left
+      case 'tl': return [{ x: 0, y: 0 }, { x: w, y: 0 }, { x: 0, y: h }]; // slope up-right
+      case 'tr': return [{ x: 0, y: 0 }, { x: w, y: 0 }, { x: w, y: h }]; // slope up-left
+      case 'bl':
+      default: return [{ x: 0, y: 0 }, { x: w, y: h }, { x: 0, y: h }];   // slope down-right
+    }
   }
 
   // Layered dot field behind the playfield; low scroll factors give parallax depth.
