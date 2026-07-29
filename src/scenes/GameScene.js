@@ -13,11 +13,18 @@ import { VIEW, PHYSICS, FEEL } from '../config/GameConfig.js';
 
 const BORDER = 24; // auto border-wall thickness
 
-// Physics runs on a fixed 60Hz step driven by real elapsed time (see update()).
-const PHYSICS_STEP_MS = 1000 / 60;
-// Most steps we'll run in one frame while catching up. Past this the game slows down instead of
-// fast-forwarding, which keeps a fast-moving ball from tunnelling through thin walls.
-const MAX_CATCHUP_STEPS = 5;
+// --- Physics pacing ---------------------------------------------------------------------------
+// The world advances in discrete steps of SIM_STEP_MS, and we run one every STEP_INTERVAL_MS of
+// real time. Because we fire 144 steps per second but each advances 1/60s of simulated time, the
+// world deliberately runs ~2.4x faster than wall-clock: that is exactly the pace the game had when
+// physics was tied to a 144Hz display, which is what every level and tuning constant was authored
+// against. Keeping the step size at Matter's calibrated 1/60 means per-step travel — and therefore
+// tunnelling risk — is unchanged from that original build.
+const SIM_STEP_MS = 1000 / 60;       // simulated time advanced per step (Matter's tuned delta)
+const STEP_INTERVAL_MS = 1000 / 144; // real time consumed per step
+// Most steps we'll run in one frame while catching up (~83ms of real time). Past this the game
+// slows down instead of fast-forwarding, so a stalled tab can't hurl the ball through a wall.
+const MAX_CATCHUP_STEPS = 12;
 
 // Key/door colors (Ch.4). A key opens every door of the same color.
 const KEY_COLORS = { gold: 0xffd23f, blue: 0x38a1ff, pink: 0xff5c8a };
@@ -350,13 +357,13 @@ export default class GameScene extends Phaser.Scene {
     // makes the game briefly slow down rather than teleporting the ball through walls.
     // Phaser smooths the `delta` it hands us, which under-reports real time during a stall, so
     // measure the frame gap from the raw loop timestamp instead.
-    const rawDelta = this._lastTime ? time - this._lastTime : (delta || PHYSICS_STEP_MS);
+    const rawDelta = this._lastTime ? time - this._lastTime : (delta || STEP_INTERVAL_MS);
     this._lastTime = time;
-    this._accum = Math.min((this._accum ?? 0) + rawDelta, PHYSICS_STEP_MS * MAX_CATCHUP_STEPS);
+    this._accum = Math.min((this._accum ?? 0) + rawDelta, STEP_INTERVAL_MS * MAX_CATCHUP_STEPS);
     let steps = 0;
-    while (this._accum >= PHYSICS_STEP_MS) {
-      this.matter.world.step(PHYSICS_STEP_MS);
-      this._accum -= PHYSICS_STEP_MS;
+    while (this._accum >= STEP_INTERVAL_MS) {
+      this.matter.world.step(SIM_STEP_MS);
+      this._accum -= STEP_INTERVAL_MS;
       steps++;
     }
 
