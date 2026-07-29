@@ -8,6 +8,7 @@ export const ARENA = { w: 800, h: 600, border: 24 };
 // Rect tools get a sensible default size when clicked (vs. click-dragged for a custom size).
 export const DEFAULT_SIZE = {
   wall: { w: 40, h: 120 },
+  ramp: { w: 120, h: 120 },
   spike: { w: 40, h: 36 },
   sticky: { w: 44, h: 24 },
   bouncer: { w: 48, h: 20 },
@@ -20,16 +21,21 @@ export const DEFAULT_SIZE = {
   gravzone: { w: 240, h: 552 },
 };
 
-export const RECT_TOOLS = ['wall', 'spike', 'sticky', 'bouncer', 'door', 'breakable', 'cblock', 'weight', 'slowzone', 'laser', 'gravzone'];
+export const RECT_TOOLS = ['wall', 'ramp', 'spike', 'sticky', 'bouncer', 'door', 'breakable', 'cblock', 'weight', 'slowzone', 'laser', 'gravzone'];
 export const POINT_TOOLS = ['spawn', 'goal', 'key', 'switch', 'portal', 'blackhole'];
 // Tools the line tool can stamp in a row (portal pairs and singletons excluded).
 export const LINE_TOOLS = [...RECT_TOOLS, 'key', 'switch', 'blackhole'];
+
+// Q/E cycle these. Ramps use corner names; everything else uses compass directions.
+export const DIR_CYCLE = ['up', 'right', 'down', 'left'];
+export const RAMP_CYCLE = ['bl', 'br', 'tr', 'tl'];
 
 class EditorModel {
   constructor() {
     // Current tool + piece options.
     this.tool = 'wall';
     this.dir = 'up';           // spike / trampoline / gravity zone
+    this.rampDir = 'bl';       // which corner of a ramp is the square one
     this.color = 'gold';       // key / door
     this.volatileKey = false;  // key: lost on death
     this.cblockColor = 'red';  // color block
@@ -56,6 +62,7 @@ class EditorModel {
     this.spawn = { x: 120, y: 120 };
     this.goal = { x: 680, y: 500, requires: null };
     this.walls = [];
+    this.ramps = [];
     this.hazards = [];
     this.sticky = [];
     this.bouncers = [];
@@ -88,7 +95,7 @@ class EditorModel {
     if (this.resetGravityOnDeath) lvl.resetGravityOnDeath = true;
     if (Number(this.maxShifts) > 0) lvl.maxShifts = Number(this.maxShifts);
     if (this.cblocks.length) lvl.activeColor = this.activeColor;
-    const arrays = ['walls', 'hazards', 'sticky', 'bouncers', 'keys', 'doors', 'portals', 'weights', 'breakables', 'cblocks', 'switches', 'slowzones', 'lasers', 'gravzones', 'blackholes'];
+    const arrays = ['walls', 'ramps', 'hazards', 'sticky', 'bouncers', 'keys', 'doors', 'portals', 'weights', 'breakables', 'cblocks', 'switches', 'slowzones', 'lasers', 'gravzones', 'blackholes'];
     for (const key of arrays) {
       if (this[key].length) lvl[key] = this[key].map((o) => JSON.parse(JSON.stringify(o)));
     }
@@ -106,7 +113,7 @@ class EditorModel {
     this.maxShifts = l.maxShifts ?? 0;
     if (l.spawn) this.spawn = { x: l.spawn.x, y: l.spawn.y };
     if (l.goal) this.goal = { x: l.goal.x, y: l.goal.y, requires: l.goal.requires ?? null };
-    const arrays = ['walls', 'hazards', 'sticky', 'bouncers', 'keys', 'doors', 'portals', 'weights', 'breakables', 'cblocks', 'switches', 'slowzones', 'lasers', 'gravzones', 'blackholes'];
+    const arrays = ['walls', 'ramps', 'hazards', 'sticky', 'bouncers', 'keys', 'doors', 'portals', 'weights', 'breakables', 'cblocks', 'switches', 'slowzones', 'lasers', 'gravzones', 'blackholes'];
     for (const key of arrays) {
       this[key] = (l[key] ?? []).map((o) => JSON.parse(JSON.stringify(o)));
     }

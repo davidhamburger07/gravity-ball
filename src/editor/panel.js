@@ -7,7 +7,7 @@ const PLAYTEST_KEY = 'gravityball:playtest';
 
 const TOOLS = [
   ['spawn', 'Spawn'], ['goal', 'Goal'], ['wall', 'Wall'],
-  ['spike', 'Spike'], ['sticky', 'Sticky'], ['bouncer', 'Bounce'],
+  ['ramp', 'Ramp'], ['spike', 'Spike'], ['sticky', 'Sticky'], ['bouncer', 'Bounce'],
   ['key', 'Key'], ['door', 'Door'], ['portal', 'Portal'],
   ['weight', 'Weight'], ['breakable', 'Break'], ['cblock', 'ColorBlk'],
   ['switch', 'Switch'], ['slowzone', 'SlowZone'], ['laser', 'Laser'],
@@ -66,6 +66,13 @@ export function initPanel(root) {
   // --- Piece options --------------------------------------------------------
   inputs.dir = select('prop-dir', ['up', 'down', 'left', 'right'], model.dir);
   inputs.dir.onchange = () => { model.dir = inputs.dir.value; };
+  inputs.rampDir = select('prop-ramp-dir', [
+    ['bl', 'slope ⟋ (square: bottom-left)'],
+    ['br', 'slope ⟍ (square: bottom-right)'],
+    ['tl', 'slope ⟍ (square: top-left)'],
+    ['tr', 'slope ⟋ (square: top-right)'],
+  ], model.rampDir);
+  inputs.rampDir.onchange = () => { model.rampDir = inputs.rampDir.value; };
   inputs.color = select('prop-color', ['gold', 'blue', 'pink'], model.color);
   inputs.color.onchange = () => { model.color = inputs.color.value; };
   inputs.volatileKey = checkbox('prop-volatile', model.volatileKey);
@@ -111,6 +118,31 @@ export function initPanel(root) {
   const status = el('div', { class: 'status' });
   const flash = (msg) => { status.textContent = msg; setTimeout(() => (status.textContent = ''), 1800); };
 
+  // Open a level straight from disk. Accepts a single level object, or a whole levels.json /
+  // chapter file — in which case the first level is loaded so the file is never a dead end.
+  const fileInput = el('input', { id: 'file-open', type: 'file', accept: '.json,application/json', style: 'display:none' });
+  fileInput.onchange = async () => {
+    const file = fileInput.files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      const lvl = Array.isArray(data?.chapters)
+        ? data.chapters.flatMap((c) => c.levels ?? [])[0]
+        : Array.isArray(data?.levels) ? data.levels[0]
+          : Array.isArray(data) ? data[0] : data;
+      if (!lvl || !lvl.spawn || !lvl.goal) { flash('No level found in file'); return; }
+      model.fromLevel(lvl);
+      syncInputs();
+      jsonArea.value = JSON.stringify(model.toLevel(), null, 2);
+      flash(`Opened ${lvl.id ?? file.name}`);
+    } catch {
+      flash('Could not read that file');
+    } finally {
+      fileInput.value = ''; // allow re-opening the same file
+    }
+  };
+
   // --- Campaign loader: pick any shipped level and load it for editing ------
   let campaignData = {};
   const campaignSelect = el('select', { id: 'campaign-level' });
@@ -148,6 +180,7 @@ export function initPanel(root) {
 
   function syncInputs() {
     inputs.dir.value = model.dir;
+    inputs.rampDir.value = model.rampDir;
     inputs.color.value = model.color;
     inputs.volatileKey.checked = model.volatileKey;
     inputs.cblockColor.value = model.cblockColor;
@@ -178,7 +211,8 @@ export function initPanel(root) {
       labeled('Snap size', inputs.snapSize),
     ]),
     section('Piece options', [
-      labeled('Direction (spike / bounce / grav zone)', inputs.dir),
+      labeled('Direction (spike / bounce / grav zone) — Q/E', inputs.dir),
+      labeled('Ramp orientation — Q/E', inputs.rampDir),
       labeled('Key / door color', inputs.color),
       row(inputs.volatileKey, 'Volatile key — lost on death'),
       labeled('Color block', inputs.cblockColor),
@@ -213,13 +247,15 @@ export function initPanel(root) {
         el('button', { onclick: () => { navigator.clipboard?.writeText(jsonArea.value); flash('Copied'); } }, document.createTextNode('Copy')),
         el('button', { onclick: download }, document.createTextNode('Download')),
       ]),
+      el('button', { class: 'wide', onclick: () => fileInput.click() }, document.createTextNode('📂 Open .json file…')),
+      fileInput,
       jsonArea,
       status,
     ]),
     el('p', { class: 'help' }, document.createTextNode(
       'Click to place (default size) or drag to draw a box. Portal takes two clicks (a linked pair). ' +
       'Line tool stamps a row of the selected piece along a drag. Erase removes the piece under the cursor. ' +
-      'Grid snapping and snap size are set under Placement.'
+      'Press Q / E to rotate the piece you are placing. Grid snapping and snap size are set under Placement.'
     )),
     el('a', { href: './', class: 'back' }, document.createTextNode('← Back to game')),
   );
@@ -227,6 +263,12 @@ export function initPanel(root) {
   setActiveTool(model.tool);
   syncInputs();
   populateCampaign();
+
+  // Q/E rotation happens in the canvas scene; mirror it back into the dropdowns.
+  window.addEventListener('editor:rotated', () => {
+    inputs.dir.value = model.dir;
+    inputs.rampDir.value = model.rampDir;
+  });
 
   function section(title, kids) {
     const s = el('div', { class: 'section' });

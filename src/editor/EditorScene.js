@@ -8,7 +8,7 @@
 //   - line tool ON: click-drag stamps a row of default-size pieces along the drag
 // A translucent ghost of the current piece follows the cursor.
 import { generatePlaceholderTextures } from '../systems/Textures.js';
-import { model, GRID, ARENA, DEFAULT_SIZE, RECT_TOOLS, LINE_TOOLS } from './model.js';
+import { model, GRID, ARENA, DEFAULT_SIZE, RECT_TOOLS, LINE_TOOLS, DIR_CYCLE, RAMP_CYCLE } from './model.js';
 
 const KEY_COLORS = { gold: 0xffd23f, blue: 0x38a1ff, pink: 0xff5c8a };
 const CBLOCK_COLORS = { red: 0xe0574f, blue: 0x4f8fe0 };
@@ -18,6 +18,33 @@ const MAXX = ARENA.w - ARENA.border;
 const MAXY = ARENA.h - ARENA.border;
 const DIR_ANGLE = { up: 0, right: 90, down: 180, left: 270 };
 const DIR_GLYPH = { up: '↑', down: '↓', left: '←', right: '→' };
+
+/** Corner list (top-left origin) for a right triangle whose square corner is `dir`. */
+export function rampCorners(w, h, dir) {
+  switch (dir) {
+    case 'br': return [{ x: w, y: 0 }, { x: w, y: h }, { x: 0, y: h }];
+    case 'tl': return [{ x: 0, y: 0 }, { x: w, y: 0 }, { x: 0, y: h }];
+    case 'tr': return [{ x: 0, y: 0 }, { x: w, y: 0 }, { x: w, y: h }];
+    case 'bl':
+    default: return [{ x: 0, y: 0 }, { x: w, y: h }, { x: 0, y: h }];
+  }
+}
+
+// Point-in-right-triangle test in the ramp's local space (used for erase). In normalized
+// (u,v) coords the hypotenuse is either the u=v diagonal or the u+v=1 anti-diagonal, and the
+// solid half is the one containing the square corner.
+export function pointInRamp(px, py, r) {
+  const u = (px - (r.x - r.w / 2)) / r.w;
+  const v = (py - (r.y - r.h / 2)) / r.h;
+  if (u < 0 || v < 0 || u > 1 || v > 1) return false;
+  switch (r.dir ?? 'bl') {
+    case 'br': return u + v >= 1; // square corner (1,1)
+    case 'tl': return u + v <= 1; // square corner (0,0)
+    case 'tr': return u >= v;     // square corner (1,0)
+    case 'bl':
+    default: return v >= u;       // square corner (0,1)
+  }
+}
 
 export default class EditorScene extends Phaser.Scene {
   constructor() {
@@ -38,6 +65,20 @@ export default class EditorScene extends Phaser.Scene {
     this.input.on('pointermove', (p) => this._onMove(p));
     this.input.on('pointerup', (p) => this._onUp(p));
 
+    // Q / E rotate the current piece's orientation (ramp corners, or compass direction).
+    // Listens on document so it works whether or not the canvas has focus, but ignores
+    // keystrokes typed into the panel's inputs.
+    this._onKey = (e) => {
+      const k = e.key?.toLowerCase();
+      if (k !== 'q' && k !== 'e') return;
+      const el = document.activeElement;
+      if (el && ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName)) return;
+      this.rotateTool(k === 'e' ? 1 : -1);
+      e.preventDefault();
+    };
+    document.addEventListener('keydown', this._onKey);
+    this.events.once('shutdown', () => document.removeEventListener('keydown', this._onKey));
+
     this._drag = null;
     this._redraw();
   }
@@ -48,6 +89,22 @@ export default class EditorScene extends Phaser.Scene {
     if (sig !== this._ghostSig) { this._ghostSig = sig; this._buildGhost(); }
     const gridSig = `${model.snapEnabled}|${model.snapSize}`;
     if (gridSig !== this._gridSig) { this._gridSig = gridSig; this._drawGrid(); }
+  }
+
+  /**
+   * Rotate the active piece's orientation by `step` (+1 = clockwise / E, -1 = Q).
+   * Ramps cycle their square corner; other directional pieces cycle up→right→down→left.
+   * Returns the new value so the panel can resync its dropdowns.
+   */
+  rotateTool(step) {
+    const ramp = model.tool === 'ramp';
+    const cycle = ramp ? RAMP_CYCLE : DIR_CYCLE;
+    const cur = ramp ? model.rampDir : model.dir;
+    const next = cycle[(cycle.indexOf(cur) + step + cycle.length) % cycle.length];
+    if (ramp) model.rampDir = next; else model.dir = next;
+    this._ghostSig = ''; // force the ghost to rebuild with the new orientation
+    window.dispatchEvent(new CustomEvent('editor:rotated'));
+    return next;
   }
 
   // --- helpers -------------------------------------------------------------
@@ -124,6 +181,10 @@ export default class EditorScene extends Phaser.Scene {
 
     // ...then solids and interactives.
     model.walls.forEach((w) => this._rect(w, 0x3a3f5c, 0x4c5378));
+    model.ramps.forEach((r) => {
+      const pts = rampCorners(r.w, r.h, r.dir ?? 'bl').map((p) => ({ x: p.x - r.w / 2, y: p.y - r.h / 2 }));
+      this.layer.add(this.add.polygon(r.x, r.y, pts, 0x3a3f5c).setStrokeStyle(2, 0x4c5378, 0.9));
+    });
     model.breakables.forEach((b) => this._rect(b, 0xc8763a, 0xf0a86a, 0.9));
     model.cblocks.forEach((c) => {
       const tint = CBLOCK_COLORS[c.color ?? 'red'];
@@ -212,6 +273,9 @@ export default class EditorScene extends Phaser.Scene {
       this.ghost.add(this.add.circle(0, 0, 16, 0x1a0f34, 1).setStrokeStyle(3, 0xc79aff, 0.9));
     } else if (t === 'spike') {
       this.ghost.add(this.add.image(0, 0, 'spike').setDisplaySize(size.w, size.h).setAngle(DIR_ANGLE[model.dir]));
+    } else if (t === 'ramp') {
+      const pts = rampCorners(size.w, size.h, model.rampDir).map((p) => ({ x: p.x - size.w / 2, y: p.y - size.h / 2 }));
+      this.ghost.add(this.add.polygon(0, 0, pts, 0x3a3f5c, 0.6).setStrokeStyle(2, 0x4c5378, 0.9));
     } else if (size) {
       const tint = {
         wall: 0x3a3f5c, sticky: 0x9b6dff, bouncer: 0x2bd67b,
@@ -342,6 +406,7 @@ export default class EditorScene extends Phaser.Scene {
   _placeRect(tool, r) {
     const base = { x: r.x, y: r.y, w: r.w, h: r.h };
     if (tool === 'wall') model.walls.push(base);
+    else if (tool === 'ramp') model.ramps.push({ ...base, dir: model.rampDir });
     else if (tool === 'spike') model.hazards.push({ ...base, dir: model.dir });
     else if (tool === 'sticky') model.sticky.push(base);
     else if (tool === 'bouncer') model.bouncers.push({ ...base, dir: model.dir, power: Number(model.power) || 20 });
@@ -368,6 +433,7 @@ export default class EditorScene extends Phaser.Scene {
       [model.keys, (o) => near(o, 30)],
       [model.switches, (o) => near(o, 26)],
       [model.blackholes, (o) => near(o, 26)],
+      [model.ramps, (o) => pointInRamp(p.x, p.y, o)],
       [model.hazards, inRect],
       [model.bouncers, inRect],
       [model.sticky, inRect],
