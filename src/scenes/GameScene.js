@@ -831,6 +831,7 @@ export default class GameScene extends Phaser.Scene {
 
     // Playtest → Retry / Editor. Normal → Retry / Levels / (Next if another level exists).
     let actions;
+    let goNext = null; // bound to Enter below
     if (this._playtest) {
       actions = [
         ['Retry', () => this.scene.restart({ playtest: true }), 0x2a2f45, '#ffffff'],
@@ -842,7 +843,10 @@ export default class GameScene extends Phaser.Scene {
         ['Retry', () => this.scene.restart(), 0x2a2f45, '#ffffff'],
         ['Levels', () => this._toLevelSelect(), 0x2a2f45, '#ffffff'],
       ];
-      if (nextId) actions.push(['Next', () => this.scene.restart({ levelId: nextId }), 0x38e1ff, '#0b1020']);
+      if (nextId) {
+        goNext = () => this.scene.restart({ levelId: nextId });
+        actions.push(['Next', goNext, 0x38e1ff, '#0b1020']);
+      }
     }
 
     const spacing = 116;
@@ -853,6 +857,19 @@ export default class GameScene extends Phaser.Scene {
       });
       panel.add(b);
     });
+
+    // Enter advances to the next level. `once` so it can't fire twice mid-transition, and it is
+    // registered with the panel (not in create) so it only ever listens while the panel is up.
+    if (goNext) {
+      panel.add(
+        this.add
+          .text(0, 136, 'press ⏎ for next level', {
+            fontFamily: 'monospace', fontSize: '11px', color: '#5a6089',
+          })
+          .setOrigin(0.5)
+      );
+      this.input.keyboard?.once('keydown-ENTER', goNext);
+    }
 
     panel.setScale(0.7).setAlpha(0);
     this.tweens.add({ targets: panel, scale: 1, alpha: 1, ease: 'Back.easeOut', duration: 380 });
