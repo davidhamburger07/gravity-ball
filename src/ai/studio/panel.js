@@ -230,7 +230,11 @@ export function initStudio({ game, panel, results }) {
       el('td', {}, verdictTag(record.verdict)),
       el('td', {}, [
         el('div', { text: record.solved ? `${record.attempts} attempts` : `never solved (${record.attempts})` }),
-        el('div', { class: 'rooms', text: record.rooms.join(' › ') }),
+        // The teaching band is the visible face of the chapter ladder — without it a run just
+        // looks like N levels rather than a tutorial→challenge sequence.
+        record.band
+          ? el('div', { class: 'rooms', text: `${record.band} · ${record.rooms.join(' › ')}` })
+          : el('div', { class: 'rooms', text: record.rooms.join(' › ') }),
         record.featuredMissing
           ? el('div', { class: 'rooms warn', text: '⚠ could not feature this chapter\'s object' })
           : el('span'),
