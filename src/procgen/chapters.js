@@ -49,6 +49,34 @@ export function chapterById(id) {
   return CHAPTERS.find((c) => c.id === id) ?? null;
 }
 
+/**
+ * Mechanics that count as background rather than a lesson. Spikes are the universal hazard
+ * taught in chapter 2, so a room combining spikes with the chapter's new object is still
+ * teaching one thing — combining the new object with sticky pads AND portals is not.
+ */
+export const FOUNDATION = Object.freeze(['spike']);
+
+/**
+ * Where a level sits in its chapter's teaching arc, from `progress` in [0, 1].
+ *
+ * The point is that a chapter should introduce its object in isolation before combining it
+ * with anything: the first levels are a small, safe space containing the new mechanic and
+ * nothing else, and only the last ones stitch several mechanics together.
+ *
+ *   tutorial  — the new object plus the foundation, nothing else; short and easy rooms
+ *   practice  — adds ONE other previously-taught mechanic
+ *   challenge — the full set the chapter has unlocked, longest and hardest rooms
+ */
+export function teachingBand(progress) {
+  if (progress < 0.34) {
+    return { name: 'tutorial', minRooms: 2, maxRooms: 3, difficultyBias: 0.5, maxChunkDifficulty: 2, extraMechanics: 0 };
+  }
+  if (progress < 0.67) {
+    return { name: 'practice', minRooms: 3, maxRooms: 3, difficultyBias: 1.0, maxChunkDifficulty: 4, extraMechanics: 1 };
+  }
+  return { name: 'challenge', minRooms: 3, maxRooms: 4, difficultyBias: 1.6, maxChunkDifficulty: 5, extraMechanics: Infinity };
+}
+
 /** Next free level id in a chapter, e.g. "6-17", given the existing levels.json. */
 export function nextLevelId(levelsData, chapterId) {
   const ch = levelsData?.chapters?.find((c) => c.id === chapterId);

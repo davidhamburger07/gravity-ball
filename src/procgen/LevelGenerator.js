@@ -13,7 +13,7 @@ import {
   CHUNKS, SOLID_ROOM, ROOM_COLS, ROOM_ROWS, CELL,
   DOOR_BAND_ROWS, DOOR_BAND_COLS, DOOR_DEPTH, DOOR_APRON,
 } from './chunks.js';
-import { allowedMechanics, featuredMechanics, chapterById } from './chapters.js';
+import { allowedMechanics, featuredMechanics, chapterById, teachingBand, FOUNDATION } from './chapters.js';
 import { mulberry32, randomSeed, randInt, shuffled, pickWeighted } from './rng.js';
 
 const OPPOSITE = { left: 'right', right: 'left', top: 'bottom', bottom: 'top' };
@@ -44,6 +44,11 @@ const WEIGHT_KIND = { h: 'heavy', n: 'normal' };
  * @param {number}  [opts.chapter]     Campaign chapter. Restricts rooms to mechanics that
  *                                     chapter has taught, and biases toward the one it
  *                                     introduces. Omit for an unrestricted level.
+ * @param {number}  [opts.progress]    Position within the chapter, 0 (first level) to 1 (last).
+ *                                     Drives the teaching band: early levels are a small safe
+ *                                     space showing the new object alone, later ones combine
+ *                                     mechanics. When given, it OVERRIDES minRooms / maxRooms /
+ *                                     difficultyBias — the ladder owns level shape.
  * @returns {object} A levels.json-shaped level, plus a `meta` block describing how it was built.
  */
 export function generateLevel(opts = {}) {
@@ -55,13 +60,43 @@ export function generateLevel(opts = {}) {
   // so a chapter-3 level can never contain a portal the player has not seen.
   let chunks = opts.chunks ?? CHUNKS;
   let featured = [];
+  let band = null;
+
   if (opts.chapter) {
     const allowed = allowedMechanics(opts.chapter);
     chunks = chunks.filter((c) => (c.uses ?? []).every((m) => allowed.has(m)));
     featured = featuredMechanics(opts.chapter);
+
+    // Teaching ladder: narrow the pool further for early levels in the chapter, so the new
+    // object is met on its own before it is ever combined with anything else.
+    if (opts.progress !== undefined) {
+      band = teachingBand(clamp(opts.progress, 0, 1));
+      const teachable = new Set([...featured, ...FOUNDATION]);
+
+      if (band.extraMechanics !== Infinity) {
+        // Deterministically pick which previously-taught mechanics may also appear.
+        const rand = mulberry32(seed ^ 0x5bf03635);
+        const others = shuffled(rand, [...allowed].filter((m) => !teachable.has(m)));
+        others.slice(0, band.extraMechanics).forEach((m) => teachable.add(m));
+        chunks = chunks.filter((c) => (c.uses ?? []).every((m) => teachable.has(m)));
+      }
+      chunks = chunks.filter((c) => (c.difficulty ?? 1) <= band.maxChunkDifficulty);
+
+      // Never narrow so far that the chapter's own object drops out of reach.
+      const stillTeaches = chunks.some((c) => (c.uses ?? []).some((m) => featured.includes(m)));
+      if (featured.length && !stillTeaches) {
+        chunks = (opts.chunks ?? CHUNKS).filter((c) => (c.uses ?? []).every((m) => allowed.has(m)));
+      }
+    }
+
     if (!chunks.some((c) => (c.role ?? 'any') === 'entry') || !chunks.some((c) => (c.role ?? 'any') === 'exit')) {
       throw new Error(`No entry/exit rooms are legal for chapter ${opts.chapter} — add a chunk with uses: []`);
     }
+  }
+
+  // The band owns level shape when a ladder position was given.
+  if (band) {
+    opts = { ...opts, minRooms: band.minRooms, maxRooms: band.maxRooms, difficultyBias: band.difficultyBias };
   }
 
   // Layout can fail (a path may demand a side-pair no chunk offers), so retry with a derived
@@ -110,6 +145,13 @@ export function generateLevel(opts = {}) {
     const ch = chapterById(opts.chapter);
     if (ch) level.meta.chapterName = ch.name;
     if (featuredMissing) level.meta.featuredMissing = true;
+    if (band) {
+      level.meta.band = band.name;
+      level.meta.progress = Math.round(clamp(opts.progress, 0, 1) * 100) / 100;
+      // Par tracks the ladder: a tutorial room should be beatable in a couple of shifts, a
+      // challenge room is allowed to demand more before it stops being a 3-star clear.
+      level.par = { tutorial: 3, practice: 5, challenge: 7 }[band.name] ?? 4;
+    }
     // Chapter 10 introduces no new object — its identity is the shift budget, so generated
     // finale levels get one. Generous, since the AI's win is not a tuned solution.
     if (opts.chapter >= 10) level.maxShifts = 12;

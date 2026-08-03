@@ -29,6 +29,7 @@ export const PIPELINE_DEFAULTS = Object.freeze({
   difficultyBias: 1.4,
   sharedBrain: false, // false = fresh Q-table per level, so "attempts" measures THAT level
   hud: true,          // draw a progress overlay when running in a visible browser
+  ladder: true,      // with a chapter set, ramp tutorial → practice → challenge across the run
   ai: {},             // overrides forwarded to AIPlaytester
 });
 
@@ -67,6 +68,14 @@ export default class ContentPipeline {
     if (this.index >= this.opts.levels) return this._finish();
 
     const seed = Math.floor(this._rand() * 4294967296) >>> 0;
+    // Generating for a chapter produces a ladder rather than a flat batch: level 1 is the
+    // tutorial for that chapter's new object and the last is the combined challenge, so a run
+    // yields a teachable sequence instead of N interchangeable levels.
+    const ladder = this.opts.chapter && this.opts.ladder !== false;
+    const progress = ladder
+      ? (this.opts.levels > 1 ? this.index / (this.opts.levels - 1) : 0)
+      : undefined;
+
     this.currentLevel = generateLevel({
       seed,
       cols: this.opts.cols,
@@ -75,6 +84,7 @@ export default class ContentPipeline {
       maxRooms: this.opts.maxRooms,
       difficultyBias: this.opts.difficultyBias,
       chapter: this.opts.chapter ?? undefined,
+      progress,
       includeGrid: true,
       id: `gen-${seed}`,
     });
@@ -130,6 +140,7 @@ export default class ContentPipeline {
       rooms: this.currentLevel.meta.rooms.map((x) => x.chunk),
       difficultyHint: this.currentLevel.meta.difficultyHint,
       chapter: this.currentLevel.meta.chapter ?? null,
+      band: this.currentLevel.meta.band ?? null,
       featuredMissing: !!this.currentLevel.meta.featuredMissing,
       log: r.log,
     };
