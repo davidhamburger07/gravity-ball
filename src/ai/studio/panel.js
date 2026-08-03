@@ -267,6 +267,7 @@ export function initStudio({ game, panel, results }) {
         `level ${Math.min(p.index + 1, p.opts.levels)}/${p.opts.levels}`,
         t ? `attempt ${t.episode}/${t.cfg.maxEpisodes}` : 'building…',
         t ? `score ${Math.round(t.score)}` : '',
+        t?.agent.exploring ? 'exploring' : (t ? `eps ${t.agent.epsilon.toFixed(2)}` : ''),
       ].filter(Boolean).join('   ');
 
     runBtn.style.display = p.done ? '' : 'none';

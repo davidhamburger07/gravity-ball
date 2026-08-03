@@ -23,7 +23,10 @@
 //   --max-steps=<n>      physics steps per attempt (default 3000)
 //   --action-set=<s>     quad | cycle | binary (default quad — the action set a real player
 //                        has; see docs/PROCGEN-AI.md for why that matters)
-//   --shaping=<f>        distance-to-goal shaping weight; 0 = pure sparse rewards
+//   --shaping-step=<n>   points per grid cell of progress toward the target (0 = sparse)
+//   --pos-cell=<n>       px per position bucket in the state encoding
+//   --flip-cooldown=<n>  ms before an airborne flip is allowed (0 = ungated)
+//   --warmup=<n>         episodes of pure random play before the Q-table is trusted
 //   --shared-brain       carry one Q-table across levels instead of a fresh one per level
 //                        (faster, but "attempts" stops measuring the level in isolation)
 //   --out=<dir>          output directory (default ./generated)
@@ -52,7 +55,12 @@ const runOpts = clean({
     actionSet: args['action-set'],
     maxEpisodes: args['max-episodes'],
     maxSteps: args['max-steps'],
-    shaping: args.shaping,
+    shapingStep: args['shaping-step'],
+    posCell: args['pos-cell'],
+    flipCooldownMs: args['flip-cooldown'],
+    explorationWarmup: args.warmup,
+    epsilon: args.epsilon,
+    epsilonDecay: args['epsilon-decay'],
   }),
 });
 
