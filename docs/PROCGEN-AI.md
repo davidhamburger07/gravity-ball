@@ -141,15 +141,21 @@ GravityBallAI.playSeed(12345)     // play one yourself
 knowledge, just `(state key) → action` and `(s, a, r, s') → update`. Everything game-specific
 is in [`AIPlaytester.js`](../src/ai/AIPlaytester.js).
 
-**State.** Discretised from a live `GameScene.getAgentObservation()`: ball X/Y (60px buckets),
-per-axis velocity (5 signed buckets each — direction *and* magnitude, so a resting ball is
-distinguishable from a slow drift), gravity direction, and bucketed distances to the goal, the
-nearest spike, and the nearest uncollected key, plus keys held.
+**State.** Discretised from a live `GameScene.getAgentObservation()`: ball X/Y bucketed onto a
+32px grid (one ball-width), per-axis velocity (5 signed buckets each — direction *and*
+magnitude, so a resting ball is distinguishable from a slow drift), gravity direction, whether
+the ball is touching a surface, bucketed distance to the current target and to the nearest
+spike, and keys held.
+
+The target is the nearest uncollected key while any remain, and the goal only once they are all
+held — a locked level is two problems in sequence, and rewarding goal-proximity throughout
+makes the agent hug a door it cannot open.
 
 **Action.** The agent emits the same `'gravity:request'` event an arrow key produces, so it is
 subject to every rule a player is — shift cooldown, shift budgets, sticky-pad release. There is
 no privileged path into the physics. A decision is made every 20 physics steps (~139ms, just
-past the 120ms shift cooldown).
+past the 120ms shift cooldown), and a flip is only offered when the ball is grounded or the
+flip cooldown has elapsed (see the tuning section).
 
 Three action sets, via `--action-set`:
 
