@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Gravity Ball — AI Level Studio</title>
+    <link rel="icon" href="data:," />
+    <style>
+      * { box-sizing: border-box; }
+      html, body { margin: 0; height: 100%; background: #0d1020; font-family: system-ui, sans-serif; }
+      #ai-root { display: flex; height: 100vh; }
+
+      /* The game canvas lives here so you can watch the AI play; it is deliberately the
+         smaller half — the results table is what you actually act on. */
+      #ai-stage { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+      /* Explicit height: Phaser's FIT mode measures the parent, and a flex child with no
+         height of its own measures zero. */
+      #ai-game { flex: none; height: 46vh; min-height: 240px; display: flex;
+        align-items: center; justify-content: center;
+        background: #0b0e1a; border-bottom: 1px solid #232840; padding: 8px; }
+      #ai-game canvas { display: block; max-width: 100%; height: auto; }
+      #ai-results { flex: 1; overflow-y: auto; padding: 12px 16px; }
+
+      #ai-panel { width: 320px; flex: none; background: #161a2b; color: #c9cde8;
+        padding: 16px; overflow-y: auto; border-left: 1px solid #232840; }
+      #ai-panel h1 { margin: 0 0 4px; font-size: 18px; color: #38e1ff; }
+      .sub { margin: 0 0 12px; font-size: 11px; color: #6a708f; line-height: 1.5; }
+      .section { margin-bottom: 14px; padding-top: 12px; border-top: 1px solid #232840; }
+      .section:first-of-type { border-top: none; padding-top: 0; }
+      .section-title { display: block; margin-bottom: 8px; font-size: 11px; letter-spacing: .08em;
+        text-transform: uppercase; color: #7a80a8; }
+      .field { display: flex; flex-direction: column; gap: 3px; margin-bottom: 8px; }
+      .field label { font-size: 11px; color: #9aa0c3; }
+      .two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+      .field-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+        font-size: 12px; color: #c9cde8; cursor: pointer; }
+      .field-row input[type="checkbox"] { width: auto; margin: 0; accent-color: #38e1ff; }
+
+      button { padding: 8px 6px; background: #2a2f45; color: #dfe3f5; border: none; border-radius: 6px;
+        cursor: pointer; font-size: 13px; }
+      button:hover { background: #343a57; }
+      button:disabled { opacity: .45; cursor: default; }
+      button.wide { width: 100%; margin-top: 6px; }
+      button.primary { background: #2bd67b; color: #07130c; font-weight: 700; }
+      button.primary:hover { background: #48e08e; }
+      button.stop { background: #e0574f; color: #fff; font-weight: 700; }
+      button.tiny { padding: 4px 8px; font-size: 11px; }
+
+      input, select { width: 100%; background: #0d1020; color: #dfe3f5;
+        border: 1px solid #2a3050; border-radius: 5px; padding: 6px; font-size: 13px; }
+      .status { min-height: 16px; margin-top: 8px; font-size: 12px; color: #2bd67b; }
+      .help { font-size: 11px; color: #6a708f; line-height: 1.5; }
+      a.back { display: inline-block; margin-top: 10px; color: #38e1ff; text-decoration: none; font-size: 13px; }
+      a.back:hover { text-decoration: underline; }
+
+      /* --- Progress + results --- */
+      .progress { height: 6px; background: #1d2236; border-radius: 3px; overflow: hidden; margin: 10px 0 6px; }
+      .progress > i { display: block; height: 100%; width: 0; background: #38e1ff; transition: width .2s; }
+      .runline { font: 12px/1.7 ui-monospace, monospace; color: #9aa0c3; white-space: pre-wrap; }
+
+      #ai-results h2 { margin: 0 0 2px; font-size: 15px; color: #dfe3f5; font-weight: 600; }
+      #ai-results .tally { margin: 0 0 12px; font-size: 12px; color: #7a80a8; }
+      table { width: 100%; border-collapse: collapse; font-size: 12px; color: #c9cde8; }
+      th { text-align: left; padding: 6px 8px; font-size: 10px; letter-spacing: .07em;
+        text-transform: uppercase; color: #6a708f; border-bottom: 1px solid #232840; font-weight: 600; }
+      td { padding: 7px 8px; border-bottom: 1px solid #1b2034; vertical-align: middle; }
+      tr.keep td { background: rgba(43, 214, 123, .06); }
+      .tag { display: inline-block; padding: 2px 7px; border-radius: 999px; font-size: 10px;
+        font-weight: 700; letter-spacing: .04em; }
+      .tag.keep { background: #2bd67b; color: #07130c; }
+      .tag.discard { background: #3a3f5c; color: #9aa0c3; }
+      .tag.borderline { background: #ffd23f; color: #2a1e00; }
+      .tag.unsolved { background: #e0574f; color: #fff; }
+      .rooms { color: #6a708f; font: 11px ui-monospace, monospace; }
+      .acts { display: flex; gap: 5px; justify-content: flex-end; }
+      .empty { color: #6a708f; font-size: 13px; padding: 24px 0; line-height: 1.6; }
+      .warn { color: #ffd23f; }
+    </style>
+
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+  </head>
+  <body>
+    <div id="ai-root">
+      <div id="ai-stage">
+        <div id="ai-game"></div>
+        <div id="ai-results"></div>
+      </div>
+      <div id="ai-panel"></div>
+    </div>
+    <script type="module" src="/src/ai/studio/main.js"></script>
+  </body>
+</html>
