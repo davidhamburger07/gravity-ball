@@ -47,6 +47,22 @@ generator also *biases toward* rooms featuring the chapter's new object (weight 
 rejects any layout that fails to include one, because a chapter-6 level with no portal in it
 has failed at its job.
 
+### The teaching ladder
+
+Gating controls *what* a chapter may use; the ladder controls the order things arrive within
+it. Generating a chapter run assigns level i of n a `progress` of i/(n-1), which resolves to
+a band:
+
+| Band | Mechanics | Rooms | Par |
+|---|---|---|---|
+| tutorial | the new object + spikes, nothing else | 2-3 | 3 |
+| practice | adds exactly **one** other taught mechanic | 3 | 5 |
+| challenge | the full unlocked set | 3-4 | 7 |
+
+So a chapter-6 run opens with portals alone against a plain backdrop and only combines them
+with trampolines and breakables by the last level. The band owns level shape, overriding
+`minRooms` / `maxRooms` / `difficultyBias`. Pass `ladder: false` for a flat batch.
+
 `validateChunks()` cross-checks `uses` against the characters a room actually draws, in both
 directions — so you cannot leak an untaught object into an early chapter by forgetting a tag,
 or lock a room out of chapters for a mechanic it does not really use.
@@ -203,6 +219,44 @@ All 136 hand-authored levels in chapters 2-10 still pass `npm run verify` after 
 
 ---
 
+## Tuning the agent
+
+Every default below was measured, not guessed. Reproduce any row with the flags in the
+reference table; the metric is levels solved out of 24 on one seed, chapter 2.
+
+**Flip gating** — a flip is offered only when the ball is on a surface, or after
+`flipCooldownMs`. Ungated, the agent flips on nearly every airborne decision and each flip
+cancels the momentum the last one built, so it hovers instead of travelling.
+
+| `--flip-cooldown` | solved |
+|---|---|
+| 0 (ungated) | 11 |
+| 150ms | 14 |
+| **250ms (default)** | **14** |
+| 500ms | 10 |
+
+500ms withheld 66% of all decisions. In a game where the ball is airborne most of the time,
+redirecting mid-flight is the mechanic, not vibration — the gate has to stop oscillation
+without removing air control.
+
+**State grid** — position was always bucketed rather than tracked as raw pixel floats. At
+`--pos-cell` 32 vs 60 the solve counts are identical (16 each, 24 levels); 32 is one
+ball-width, so it is the more meaningful unit, not the faster one.
+
+**Exploration** — slower annealing helps; a pure-random warmup helps only if it is not
+competing with learning for the same episode budget.
+
+| config | 120 episodes | 200 episodes |
+|---|---|---|
+| no warmup | 17 | 16 |
+| 25-episode warmup | 12 | 17 |
+
+Hence `maxEpisodes: 200` alongside `explorationWarmup: 25`.
+
+**Net effect** across three seed/chapter combinations, 72 levels: 38 solved before these
+changes, 43 after. Single seeds vary by ±3, so treat any one row as indicative rather than
+precise — the flip gate is the change carrying most of the difference.
+
 ## Calibration
 
 The agent is a difficulty oracle, so it defaults to `quad` — the action set a real player has.
@@ -238,10 +292,14 @@ npm run ai -- --seed=2024 --cols=4 --rows=2 --headful
 | `--seed` | random | master seed; reproduces a whole run |
 | `--keep-min` | 3 | attempts required before a level is kept |
 | `--cols` / `--rows` | 2 / 2 | room-slot grid (3-4 rooms) |
-| `--max-episodes` | 120 | attempts before giving up on a level |
+| `--max-episodes` | 200 | attempts before giving up on a level |
 | `--max-steps` | 3000 | physics steps per attempt |
 | `--action-set` | quad | `quad` / `cycle` / `binary` |
-| `--shaping` | 0.4 | distance shaping; 0 = raw sparse rewards |
+| `--shaping-step` | 10 | points per grid cell of progress; 0 = raw sparse rewards |
+| `--pos-cell` | 32 | px per position bucket in the state |
+| `--flip-cooldown` | 250 | ms before an airborne flip is allowed; 0 = ungated |
+| `--warmup` | 25 | episodes of pure random play before the Q-table is trusted |
+| `--chapter` | none | build for a campaign chapter (1-10), with the teaching ladder |
 | `--out` | `generated` | output directory |
 | `--headful` | off | show the browser |
 
