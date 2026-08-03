@@ -2,6 +2,7 @@
 // the main menu. Real art/audio loads will also live here once assets exist in /assets.
 import { CrazyGamesSDK } from '../sdk/CrazyGamesSDK.js';
 import SaveManager from '../systems/SaveManager.js';
+import { autoStartFromUrl } from '../ai/bootstrap.js';
 
 export default class PreloadScene extends Phaser.Scene {
   constructor() {
@@ -25,6 +26,9 @@ export default class PreloadScene extends Phaser.Scene {
 
     // Everything's ready — dismiss the HTML loading overlay.
     if (typeof document !== 'undefined') document.getElementById('loading')?.remove();
+
+    // Automated content run (./?ai=1) — generate levels and let the AI playtest them.
+    if (autoStartFromUrl(this.game)) return;
 
     // Playtest hand-off from the level editor (editor.html → ./?playtest=1).
     if (new URLSearchParams(location.search).has('playtest')) {

@@ -50,7 +50,7 @@ export default class GravityController {
    * of the current direction. Returns true only if the shift actually happened.
    * @param {string} direction  A GravityDirection value.
    */
-  request(direction, time = this.scene.time.now) {
+  request(direction, time = this.scene.now()) {
     if (!GRAVITY_VECTORS[direction]) return false; // invalid input
     if (direction === this.direction) return false; // no-op
     if (time < this._lockedUntil) return false; // still cooling down

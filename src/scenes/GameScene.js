@@ -42,6 +42,13 @@ export default class GameScene extends Phaser.Scene {
 
   init(data = {}) {
     this._playtest = data.playtest ?? false;
+    // Agent mode (AI playtester): the level comes from the procedural generator, the world is
+    // stepped as fast as the frame budget allows, and all juice is suppressed.
+    this._agentMode = data.agent ?? false;
+    // A human playing a procedurally generated level: same level source, full juice, but kept
+    // out of the save file since generated ids aren't part of the campaign.
+    this._generated = this._agentMode || (data.generated ?? false);
+    this._fx = !this._agentMode; // gate for particles / shake / tweens / audio
     this.levelId = data.levelId ?? this.levelId ?? '1-1';
     this.chapterId = data.chapterId ?? this.chapterId ?? 1;
     this._solved = false;
@@ -57,14 +64,31 @@ export default class GameScene extends Phaser.Scene {
     this._switchCooldownUntil = 0;
     this._accum = 0;      // physics-step carry-over, reset so a restart never fast-forwards
     this._lastTime = 0;
+    this._clockMs = 0;    // gameplay clock — see now()
     this.shiftCount = 0;
+  }
+
+  /**
+   * The clock every gameplay rule reads: cooldowns, laser phases, impact debounces.
+   *
+   * It advances by STEP_INTERVAL_MS per physics step rather than tracking wall time, which
+   * makes it identical to real elapsed milliseconds during normal play (steps are driven by
+   * real time) while staying correct when the AI playtester runs the world hundreds of times
+   * faster than the clock on the wall. Reading Date/time.now here instead would mean a 120ms
+   * shift cooldown swallowing hundreds of simulated frames under acceleration.
+   */
+  now() {
+    return this._clockMs;
   }
 
   create() {
     this.save = this.registry.get('save');
     this.levelsData = this.registry.get('levels');
     let level;
-    if (this._playtest) {
+    if (this._generated) {
+      level = this.registry.get('generatedLevel');
+      this.chapterId = 0;
+    } else if (this._playtest) {
       level = this.registry.get('playtestLevel');
       this.chapterId = 0;
       if (!level.id) level.id = 'test';
@@ -74,11 +98,17 @@ export default class GameScene extends Phaser.Scene {
     this.level = level;
     const bounds = level.bounds ?? { w: VIEW.WIDTH, h: VIEW.HEIGHT };
 
+    // Silence the juice systems for the whole run rather than at a dozen call sites. Restored
+    // on shutdown so returning to normal play brings the game feel back.
+    Effects.enabled = this._fx;
+    AudioManager.silent = this._agentMode;
+    this.events.once('shutdown', () => { Effects.enabled = true; AudioManager.silent = false; });
+
     this.matter.world.setBounds(0, 0, bounds.w, bounds.h);
     this.cameras.main.setBounds(0, 0, bounds.w, bounds.h);
 
     this._active = level.activeColor ?? 'red';
-    this._buildParallax(bounds);
+    if (this._fx) this._buildParallax(bounds);
     this._buildStatic(level, bounds);
     this.ball = new Ball(this, level.spawn.x, level.spawn.y);
     this.cameras.main.startFollow(this.ball, true, FEEL.CAMERA_LERP, FEEL.CAMERA_LERP);
@@ -108,6 +138,14 @@ export default class GameScene extends Phaser.Scene {
     this._buildHud(level);
     this.input.keyboard.on('keydown-R', () => this.scene.restart(this._playtest ? { playtest: true } : undefined));
     this.input.keyboard.on('keydown-ESC', () => this._toLevelSelect());
+
+    if (this._agentMode) {
+      // The pipeline outlives scene restarts (it lives in the registry), so it re-attaches to
+      // each new scene instance and keeps driving.
+      this._agentDriver = this.registry.get('aiPipeline') ?? null;
+      this._agentDriver?.attach(this);
+      return;
+    }
 
     CrazyGamesSDK.gameplayStart();
   }
@@ -140,9 +178,13 @@ export default class GameScene extends Phaser.Scene {
     // `dir` names the corner holding the right angle, so the slope faces the opposite way.
     (level.ramps ?? []).forEach((r) => this._ramp(r.x, r.y, r.w, r.h, r.dir ?? 'bl'));
 
+    // Positions are kept alongside the bodies so the AI's observation can answer
+    // "how far is the nearest spike" without walking the Matter world every step.
+    this._hazardPts = [];
     (level.hazards ?? []).forEach((hz) => {
       const w = hz.w ?? 32;
       const h = hz.h ?? 32;
+      this._hazardPts.push({ x: hz.x, y: hz.y });
       this.matter.add.rectangle(hz.x, hz.y, w, h, { isStatic: true, isSensor: true, label: 'hazard' });
       // Orient the spike sprite toward the surface it sits on (texture points up by default).
       const angle = { up: 0, right: 90, down: 180, left: 270 }[hz.dir ?? 'up'];
@@ -266,7 +308,7 @@ export default class GameScene extends Phaser.Scene {
       const body = this.matter.add.rectangle(k.x, k.y, 24, 26, { isStatic: true, isSensor: true, label: 'key' });
       const visual = this.add.image(k.x, k.y, 'key').setTint(KEY_COLORS[colorKey]).setDepth(6);
       if (volatile) visual.setAlpha(0.7); // reads as fragile
-      this.tweens.add({ targets: visual, y: k.y - 6, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+      if (this._fx) this.tweens.add({ targets: visual, y: k.y - 6, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
       const item = { body, visual, color: colorKey, volatile, collected: false };
       body.gbItem = item;
       return item;
@@ -278,7 +320,7 @@ export default class GameScene extends Phaser.Scene {
     this.matter.add.rectangle(g.x, g.y, 40, 40, { isStatic: true, isSensor: true, label: 'goal' });
     this.goalIcon = this.add.image(g.x, g.y, 'goal').setDepth(5);
     if (this.goalRequires) this.goalIcon.setTint(0x555b7a);
-    this.tweens.add({ targets: this.goalIcon, scale: 1.15, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    if (this._fx) this.tweens.add({ targets: this.goalIcon, scale: 1.15, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
   }
 
   _wall(x, y, w, h) {
@@ -342,7 +384,7 @@ export default class GameScene extends Phaser.Scene {
   // Squash-and-stretch: snap the ball's visual proxy to a scale, then spring back to 1.
   // Targets ball.visual (never the physics body), so collisions stay exact.
   _squash(sx, sy, dur = 220) {
-    if (!this.ball) return;
+    if (!this.ball || !this._fx) return;
     const v = this.ball.visual;
     this.tweens.killTweensOf(v);
     v.setScale(sx, sy);
@@ -350,6 +392,8 @@ export default class GameScene extends Phaser.Scene {
   }
 
   update(time, delta) {
+    if (this._agentMode) return this._agentFrame();
+
     // --- Fixed-timestep physics -------------------------------------------------------------
     // Physics advances in whole 1/60s steps driven by REAL elapsed time, so the ball moves at the
     // same speed on a 60Hz phone, a 144Hz monitor, or a struggling low-end device. Leftover time
@@ -360,17 +404,45 @@ export default class GameScene extends Phaser.Scene {
     const rawDelta = this._lastTime ? time - this._lastTime : (delta || STEP_INTERVAL_MS);
     this._lastTime = time;
     this._accum = Math.min((this._accum ?? 0) + rawDelta, STEP_INTERVAL_MS * MAX_CATCHUP_STEPS);
-    let steps = 0;
     while (this._accum >= STEP_INTERVAL_MS) {
-      this.matter.world.step(SIM_STEP_MS);
+      this._stepWorld();
       this._accum -= STEP_INTERVAL_MS;
-      steps++;
     }
 
     if (this.ball) this.ball.sync();
+  }
+
+  /**
+   * The AI playtester's replacement for the real-time loop: burn as many physics steps per
+   * rendered frame as the budget allows, giving the agent a decision point before each one.
+   * A wall-clock budget (rather than a fixed step count) keeps the page responsive on any
+   * machine, and the hard step cap stops a fast machine from running away with the frame.
+   */
+  _agentFrame() {
+    const budgetMs = this._agentBudgetMs ?? 12;
+    const cap = this._agentMaxSteps ?? 4000;
+    const until = performance.now() + budgetMs;
+    for (let i = 0; i < cap; i++) {
+      if (this._agentDriver?.tick() !== 'run') break;
+      this._stepWorld();
+      if ((i & 31) === 31 && performance.now() >= until) break;
+    }
+    if (this.ball) this.ball.sync();
+  }
+
+  /**
+   * One fixed physics step plus every per-step world rule. Shared by normal play and the AI
+   * loop, so an accelerated playtest exercises exactly the rules a human plays against.
+   * Rules live here rather than in update() because lasers and black holes have to be
+   * evaluated per step — at turbo speed, a once-per-frame check would step straight over
+   * a laser's whole ON window.
+   */
+  _stepWorld() {
+    this.matter.world.step(SIM_STEP_MS);
+    this._clockMs += STEP_INTERVAL_MS;
     if (!this.ball) return;
 
-    const now = this.time.now;
+    const now = this.now();
     const r = PHYSICS.BALL_RADIUS;
 
     // Lasers: toggle on/off, restyle, and kill on overlap while on.
@@ -405,9 +477,7 @@ export default class GameScene extends Phaser.Scene {
         const dist = Math.hypot(dx, dy) || 1;
         if (dist < H.radius) {
           if (dist < 22) { this._die(); break; }
-          // Scaled by steps taken this frame so the pull is per physics step, not per rendered
-          // frame — otherwise a high-refresh display would suck the ball in far harder.
-          const pull = H.strength * steps;
+          const pull = H.strength;
           const v = this.ball.body.velocity;
           this.ball.setVelocity(v.x + (dx / dist) * pull, v.y + (dy / dist) * pull);
         }
@@ -420,7 +490,7 @@ export default class GameScene extends Phaser.Scene {
     if (max && !this._solved && !this._dying && this.shiftCount >= max) {
       const v = this.ball.body.velocity;
       // Measured in milliseconds, not frames, so the grace period is the same on every device.
-      this._restMs = Math.hypot(v.x, v.y) < 0.2 ? (this._restMs ?? 0) + rawDelta : 0;
+      this._restMs = Math.hypot(v.x, v.y) < 0.2 ? (this._restMs ?? 0) + STEP_INTERVAL_MS : 0;
       if (this._restMs > 1250) { this._restMs = 0; this._die(); }
     }
 
@@ -499,6 +569,7 @@ export default class GameScene extends Phaser.Scene {
   // Out of shifts: buzz + red HUD pulse so the denial reads clearly.
   _denyShift() {
     AudioManager.deny();
+    if (!this._fx) return;
     this.cameras.main.shake(80, 0.002);
     this.hud.setColor('#ff4d5e');
     this.tweens.add({ targets: this.hud, alpha: 0.3, duration: 90, yoyo: true, repeat: 1 });
@@ -508,13 +579,15 @@ export default class GameScene extends Phaser.Scene {
   _onGravityShift(vector) {
     this.shiftCount += 1;
     this._updateHud();
-    this.cameras.main.shake(120, FEEL.SHIFT_SHAKE);
-    this.cameras.main.setFollowOffset(-vector.x * FEEL.CAMERA_LEAD_PX, -vector.y * FEEL.CAMERA_LEAD_PX);
+    if (this._fx) {
+      this.cameras.main.shake(120, FEEL.SHIFT_SHAKE);
+      this.cameras.main.setFollowOffset(-vector.x * FEEL.CAMERA_LEAD_PX, -vector.y * FEEL.CAMERA_LEAD_PX);
+    }
 
     // Release from a sticky pad when the player flips gravity.
     if (this._stuck) {
       this._stuck = false;
-      this._stickCooldownUntil = this.time.now + 300;
+      this._stickCooldownUntil = this.now() + 300;
       this.ball.setStatic(false);
     }
 
@@ -563,8 +636,8 @@ export default class GameScene extends Phaser.Scene {
     if (this._solved || this._dying) return;
     // Per-switch cooldown: debounces one switch's repeated contacts without blocking others,
     // so several switches hit in quick succession each fire.
-    if (this.time.now < (sw._cooldownUntil ?? 0)) return;
-    sw._cooldownUntil = this.time.now + 150;
+    if (this.now() < (sw._cooldownUntil ?? 0)) return;
+    sw._cooldownUntil = this.now() + 150;
     this._active = this._active === 'red' ? 'blue' : 'red';
     this._cblocks.forEach((e) => this._applyBlockState(e));
     if (this._activeDot) this._activeDot.setFillStyle(SWITCH_COLORS[this._active]);
@@ -576,7 +649,7 @@ export default class GameScene extends Phaser.Scene {
   // cooldown (to stop an instant warp-back) — other pairs stay live, so warps can be chained.
   _onPortal(body) {
     if (this._solved || this._dying) return;
-    if (this.time.now < (body._cooldownUntil ?? 0)) return;
+    if (this.now() < (body._cooldownUntil ?? 0)) return;
     const v = this.ball.body.velocity;
     const speed = Math.hypot(v.x, v.y);
     const off = 40;
@@ -585,7 +658,7 @@ export default class GameScene extends Phaser.Scene {
     Effects.burst(this, this.ball.x, this.ball.y, { color: 0x9a7bff, count: 8, speed: 120, lifespan: 300, scale: 0.4 });
     this.ball.setPosition(body.gbExit.x + ox, body.gbExit.y + oy);
     this.ball.setVelocity(v.x, v.y); // preserve momentum through the warp
-    if (body.gbPartner) body.gbPartner._cooldownUntil = this.time.now + 220;
+    if (body.gbPartner) body.gbPartner._cooldownUntil = this.now() + 220;
     AudioManager.portal();
     Effects.burst(this, body.gbExit.x, body.gbExit.y, { color: 0x9a7bff, count: 10, speed: 160, lifespan: 350, scale: 0.5 });
   }
@@ -612,10 +685,13 @@ export default class GameScene extends Phaser.Scene {
     const b = this._breakables.find((x) => x.body === body);
     if (b) {
       Effects.burst(this, b.visual.x, b.visual.y, { color: 0xf0a86a, count: 16, speed: 220, lifespan: 500, scale: 0.7 });
-      b.visual.destroy();
+      // Agent mode replays the same level hundreds of times, so a smashed block has to be
+      // restorable — hide it instead of destroying the game object.
+      if (this._agentMode) b.visual.setVisible(false);
+      else b.visual.destroy();
     }
     AudioManager.smash();
-    this.cameras.main.shake(120, 0.006);
+    if (this._fx) this.cameras.main.shake(120, 0.006);
   }
 
   // Collect a key: remember its color, open matching doors, unlock the goal if it required it.
@@ -691,7 +767,7 @@ export default class GameScene extends Phaser.Scene {
   // Trampoline: overwrite velocity with a fixed launch perpendicular to the pad.
   _onBounce(body) {
     if (this._solved || this._dying) return;
-    const now = this.time.now;
+    const now = this.now();
     if (now - this._lastTrampoline < 150) return;
     this._lastTrampoline = now;
     const dir = { up: { x: 0, y: -1 }, down: { x: 0, y: 1 }, left: { x: -1, y: 0 }, right: { x: 1, y: 0 } }[body.gbDir];
@@ -705,7 +781,7 @@ export default class GameScene extends Phaser.Scene {
   // Sticky pad: pin the ball, snapped to the pad's anchor along its surface axis.
   _onSticky(body) {
     if (this._solved || this._dying || this._stuck) return;
-    if (this.time.now < this._stickCooldownUntil) return;
+    if (this.now() < this._stickCooldownUntil) return;
     this._stuck = true;
     this.ball.setVelocity(0, 0);
     this.ball.setAngularVelocity(0);
@@ -721,7 +797,7 @@ export default class GameScene extends Phaser.Scene {
     if (this._solved || this._dying) return;
     const speed = this.ball.body.speed;
     if (speed < 4) return;
-    const now = this.time.now;
+    const now = this.now();
     if (now - this._lastBounce < 90) return;
     this._lastBounce = now;
 
@@ -744,7 +820,10 @@ export default class GameScene extends Phaser.Scene {
     if (this._solved) return;
     this._solved = true;
     const stars = this._computeStars();
-    if (!this._playtest) this.save.recordResult(this.level.id, { stars, shifts: this.shiftCount });
+    // Agent runs never touch the save file or the platform SDK — they are not a player's
+    // progress, and the AI would otherwise star-rate its way through the whole game.
+    if (this._agentMode) return;
+    if (!this._playtest && !this._generated) this.save.recordResult(this.level.id, { stars, shifts: this.shiftCount });
     CrazyGamesSDK.happytime();
     CrazyGamesSDK.gameplayStop();
 
@@ -769,8 +848,10 @@ export default class GameScene extends Phaser.Scene {
     if (this.ball.body.isStatic) this.ball.setStatic(false);
     AudioManager.death();
     Effects.burst(this, this.ball.x, this.ball.y, { color: 0xff4d5e, count: 18, speed: 220, lifespan: 500, scale: 0.7 });
-    this.cameras.main.shake(220, 0.014);
-    this.cameras.main.flash(150, 255, 77, 94);
+    if (this._fx) {
+      this.cameras.main.shake(220, 0.014);
+      this.cameras.main.flash(150, 255, 77, 94);
+    }
 
     // Snap out of the hazard immediately, hide briefly, then pop back in at spawn.
     this.ball.respawn();
@@ -793,11 +874,102 @@ export default class GameScene extends Phaser.Scene {
 
     this.ball.visual.setTexture('ball');
     this.ball.visual.setVisible(false);
+    // Agent mode ends the episode on death, so `_dying` stays set until resetForAgent() clears
+    // it — a real-time delayedCall would fire thousands of simulated frames later anyway.
+    if (this._agentMode) return;
     this.time.delayedCall(170, () => {
       this.ball.visual.setVisible(true);
       this._squash(0.2, 0.2, 320);
       this._dying = false;
     });
+  }
+
+  // --- AI playtester interface ---------------------------------------------
+  // Everything below exists so an automated agent can observe and restart the level without
+  // reaching into scene internals, and without a scene rebuild between attempts.
+
+  /** How many keys are currently held — the AI's cue for the +200 collection reward. */
+  countCollectedKeys() {
+    return (this._keyItems ?? []).reduce((n, k) => n + (k.collected ? 1 : 0), 0);
+  }
+
+  /**
+   * A raw snapshot of everything the agent is allowed to "see": position, velocity, gravity
+   * state, and distances to the goal, the nearest spike and the nearest uncollected key.
+   * Discretisation happens in AIPlaytester — this stays continuous so the encoding can change
+   * without touching the scene.
+   */
+  getAgentObservation() {
+    const b = this.ball;
+    const v = b.body.velocity;
+    const g = this.level.goal;
+    const nearest = (pts) => {
+      let best = null;
+      let bestSq = Infinity;
+      for (const p of pts) {
+        const dx = p.x - b.x;
+        const dy = p.y - b.y;
+        const sq = dx * dx + dy * dy;
+        if (sq < bestSq) { bestSq = sq; best = { dx, dy, dist: Math.sqrt(sq) }; }
+      }
+      return best;
+    };
+
+    const openKeys = (this._keyItems ?? []).filter((k) => !k.collected).map((k) => k.body.position);
+    return {
+      x: b.x,
+      y: b.y,
+      vx: v.x,
+      vy: v.y,
+      speed: Math.hypot(v.x, v.y),
+      gravity: this.gravity.direction,
+      goal: { x: g.x, y: g.y, dx: g.x - b.x, dy: g.y - b.y, dist: Math.hypot(g.x - b.x, g.y - b.y) },
+      spike: nearest(this._hazardPts ?? []) ?? { dx: 0, dy: 0, dist: Infinity },
+      key: openKeys.length ? nearest(openKeys) : null,
+      keysHeld: this.countCollectedKeys(),
+      shifts: this.shiftCount,
+      stuck: this._stuck,
+      solved: this._solved,
+      dying: this._dying,
+    };
+  }
+
+  /**
+   * Return the level to its opening state for the next attempt — ball, gravity, keys, doors,
+   * breakables and color blocks. Deliberately NOT scene.restart(): rebuilding several hundred
+   * static bodies between every attempt would dominate the run time, and the AI plays a level
+   * dozens of times. The gameplay clock keeps running rather than resetting, so cooldowns left
+   * over from the previous attempt are always safely in the past.
+   */
+  resetForAgent() {
+    this._solved = false;
+    this._dying = false;
+    this._stuck = false;
+    this._heavy = false;
+    this._restMs = 0;
+    this.shiftCount = 0;
+    this._keys.clear();
+
+    this.gravity.setStrengthMultiplier(1);
+    this.gravity.apply(this.level.gravity ?? GravityDirection.DOWN, { silent: true });
+
+    if (this.ball.body.isStatic) this.ball.setStatic(false);
+    this.ball.respawn();
+    this.ball.visual.setTexture('ball').setScale(1).setVisible(true);
+
+    (this._keyItems ?? []).forEach((k) => { k.collected = false; k.visual.setVisible(true); });
+    (this._breakables ?? []).forEach((br) => {
+      br.body.isSensor = false;
+      br.body.gbOpen = false;
+      br.visual.setVisible(true);
+    });
+    this._active = this.level.activeColor ?? 'red';
+    (this._cblocks ?? []).forEach((e) => this._applyBlockState(e));
+
+    this._syncDoors();
+    this._syncGoalLock();
+    this._updateKeyHud();
+    this._updateHud();
   }
 
   _showCompletePanel(stars) {

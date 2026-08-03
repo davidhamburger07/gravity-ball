@@ -2,8 +2,13 @@
 // on the 'spark' texture and self-destructs after the particles fade. Additive blending makes
 // the sparks pop against the dark playfield.
 export const Effects = {
+  // Master switch. The AI playtester turns this off: at hundreds of simulated seconds per real
+  // second, emitters would be created faster than their delayedCall cleanups could fire.
+  enabled: true,
+
   // Radial burst (death, goal, small bounce puffs).
   burst(scene, x, y, { color = 0xffffff, count = 14, speed = 200, lifespan = 500, scale = 0.7 } = {}) {
+    if (!Effects.enabled) return;
     const em = scene.add.particles(x, y, 'spark', {
       speed: { min: speed * 0.35, max: speed },
       lifespan,
@@ -20,6 +25,7 @@ export const Effects = {
 
   // Directional streak biased along a unit vector (gravity shift).
   directional(scene, x, y, vector, { color = 0x38e1ff, count = 16, speed = 280, lifespan = 420, scale = 0.7, spreadDeg = 42 } = {}) {
+    if (!Effects.enabled) return;
     const base = Phaser.Math.RadToDeg(Math.atan2(vector.y, vector.x));
     const em = scene.add.particles(x, y, 'spark', {
       speed: { min: speed * 0.5, max: speed },

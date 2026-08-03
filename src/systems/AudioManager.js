@@ -8,6 +8,9 @@ class AudioManagerImpl {
   constructor() {
     this.ctx = null;
     this.muted = typeof localStorage !== 'undefined' && localStorage.getItem(MUTE_KEY) === '1';
+    // Transient silence for automated runs. Separate from `muted` so an AI playtest never
+    // overwrites the player's own mute preference in localStorage.
+    this.silent = false;
   }
 
   _ctxOrNull() {
@@ -27,7 +30,7 @@ class AudioManagerImpl {
 
   // One enveloped oscillator "blip". freqTo (optional) sweeps the pitch for whooshes/thuds.
   _tone({ freq = 440, type = 'sine', dur = 0.12, gain = 0.16, freqTo = null, delay = 0 }) {
-    if (this.muted) return;
+    if (this.muted || this.silent) return;
     const ctx = this._ctxOrNull();
     if (!ctx) return;
     const t0 = ctx.currentTime + delay;

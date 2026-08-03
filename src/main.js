@@ -5,6 +5,7 @@ import PreloadScene from './scenes/PreloadScene.js';
 import MenuScene from './scenes/MenuScene.js';
 import LevelSelectScene from './scenes/LevelSelectScene.js';
 import GameScene from './scenes/GameScene.js';
+import { installAI } from './ai/bootstrap.js';
 import { VIEW, PHYSICS } from './config/GameConfig.js';
 
 const config = {
@@ -34,3 +35,7 @@ const config = {
 // Expose the game instance for scripted testing (screenshot.mjs jumps to scenes/levels
 // via `window.game`). Harmless in production.
 window.game = new Phaser.Game(config);
+
+// Procedural generator + AI playtester console (window.GravityBallAI). Installing it is inert
+// — nothing runs until you call it or load the page with ?ai=1.
+installAI(window.game);
