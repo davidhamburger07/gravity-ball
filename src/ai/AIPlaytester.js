@@ -45,30 +45,60 @@ export const DEFAULTS = Object.freeze({
   // --- Episode shape ------------------------------------------------------------------
   decisionSteps: 20,   // physics steps between decisions (~139ms — just past the 120ms cooldown)
   maxSteps: 3000,      // hard episode cap (~21 real-equivalent seconds) before a timeout
-  maxEpisodes: 120,    // give up on a level after this many attempts
+  // Raised from 120 to give `explorationWarmup` room: at 120 the warmup ate a fifth of the
+  // budget and cost ~5 solves out of 24; at 200 it pays for itself.
+  maxEpisodes: 200,
+
+  // --- Flip gating --------------------------------------------------------------------
+  // A gravity flip is only offered when the ball is touching a surface, or when this long has
+  // passed since the last one. Without the gate the agent flips on nearly every decision while
+  // airborne, which reads as vibrating in place: each flip cancels the momentum the last one
+  // built, so the ball hovers instead of travelling. Grounded flips are always free, because
+  // pushing off a surface is the actual mechanic.
+  //
+  // 250ms, not 500. Measured over 24 chapter-2 levels on one seed, solved counts were:
+  // ungated 11, 150ms 14, 250ms 14, 500ms 10. Half a second is long enough to remove air
+  // control altogether — it withheld 66% of all decisions — and in a game where the ball
+  // spends most of its time in flight, redirecting mid-air is not vibration, it is the skill.
+  flipCooldownMs: 250,
 
   // --- Learning -----------------------------------------------------------------------
   alpha: 0.15,
   gamma: 0.985,
-  // Exploration stays broad for the whole run rather than annealing to near-greedy. The goal
-  // reward is sparse enough that an agent which anneals early locks onto whatever it found
-  // first — and on this game what it finds first is that dying quickly beats surviving (see
-  // `shaping` below). Sustained exploration is what makes "attempts to win" a difficulty
-  // signal instead of a measure of how fast the agent gave up.
-  epsilon: 0.5,
-  epsilonMin: 0.1,
-  epsilonDecay: 0.99,
+  // Exploration is deliberately slow to anneal. Spikes make this game's reward landscape full
+  // of local minima — sitting still in a safe corner beats moving and dying — and an agent that
+  // goes greedy early parks in one forever. The first `explorationWarmup` episodes ignore the
+  // Q-table entirely and act at random, so it is seeded with real trajectories before it is
+  // ever trusted; only then does epsilon decay, and slowly, to a floor that never stops
+  // exploring outright.
+  //
+  // The warmup only pays off with episodes to spare — it competes for the same budget as
+  // learning, so it needs maxEpisodes raised alongside it. Set it to 0 to anneal from the
+  // first episode.
+  explorationWarmup: 25,
+  epsilon: 0.6,
+  epsilonMin: 0.15,
+  epsilonDecay: 0.995,
 
-  // Distance-to-goal shaping. This does NOT change the reported score — it only feeds the Q
-  // update — but it is doing real work, because the strict point system on its own has a
-  // perverse optimum: at -1/frame, dying at step 150 (-650) beats surviving to a 3000-step
-  // timeout (-3000), so an agent that cannot yet find the goal learns to kill itself. Rewarding
-  // progress toward the goal makes moving worth more than the clock it costs. Set to 0 to see
-  // the raw sparse behaviour.
-  shaping: 0.4,
+  // Dense distance shaping, worth `shapingStep` points per grid cell of progress toward the
+  // current target. Feeds the Q update ONLY — reported scores stay on the specified scale.
+  //
+  // It is doing real work: the strict point system alone has a perverse optimum, because at
+  // -1/frame dying at step 150 (-650) beats surviving to a 3000-step timeout (-3000), so an
+  // agent that cannot yet reach the goal learns to kill itself. Paying for progress makes
+  // moving worth more than the clock it costs. Set to 0 to see the raw sparse behaviour.
+  shapingStep: 10,
 
   // --- State discretisation -----------------------------------------------------------
-  posCell: 60,         // px per position bucket
+  // Position is bucketed into a coarse grid rather than tracked as raw pixel floats, so the
+  // agent can actually memorise a map: a 2400x1200 level is ~2.9M distinct pixel positions but
+  // only ~2800 grid cells, and every visit to a cell reinforces the same Q row.
+  //
+  // 32 matches the ball's 32px diameter, so one cell is one ball-width — the finest grid where
+  // "the ball is in this cell" still means something physical. Coarser buckets generalise
+  // faster but blur distinct ledges together; see docs/PROCGEN-AI.md for the measured
+  // comparison against 60.
+  posCell: 32,
 });
 
 /**
@@ -82,17 +112,30 @@ export function encodeState(obs, cfg = DEFAULTS) {
   const cx = Math.floor(obs.x / cfg.posCell);
   const cy = Math.floor(obs.y / cfg.posCell);
   const g = CYCLE.indexOf(obs.gravity);
+  const target = currentTarget(obs);
   return [
     cx,
     cy,
     velBucket(obs.vx),
     velBucket(obs.vy),
     g,
-    distBucket(obs.goal.dist, [140, 400, 900]),
+    obs.grounded ? 1 : 0, // whether a flip is even available — see flipCooldownMs
+    distBucket(target.dist, [140, 400, 900]),
     distBucket(obs.spike.dist, [50, 110, 220]),
-    obs.key ? distBucket(obs.key.dist, [60, 200, 600]) : 9,
     obs.keysHeld,
   ].join(',');
+}
+
+/**
+ * What the agent should currently be heading for.
+ *
+ * A locked level is two problems in sequence, and rewarding goal-proximity throughout makes the
+ * agent hug a goal it cannot open while the key sits behind it. So the target snaps to the
+ * nearest uncollected key first and only becomes the goal once every key is taken.
+ */
+export function currentTarget(obs) {
+  if (obs.key) return { kind: 'key', dist: obs.key.dist };
+  return { kind: 'goal', dist: obs.goal.dist };
 }
 
 // Signed speed buckets. The thresholds sit either side of "barely moving" so the agent can
@@ -144,8 +187,25 @@ export default class AIPlaytester {
     this.lastKey = null;
     this.lastAction = 0;
     this.lastPotential = 0;
+    this.lastTargetKind = null; // 'key' | 'goal' — see _decide for why the switch matters
     this.shiftsUsed = 0;
+    this.blockedFlips = 0;      // decisions where the flip gate withheld the action
+    this.lastFlipAt = -Infinity;
     this._primed = false;
+  }
+
+  /**
+   * Which actions the agent may pick right now. A flip is offered when the ball is touching a
+   * surface, or when flipCooldownMs has elapsed since the last one; otherwise only "do nothing"
+   * is legal. Masking at selection (rather than letting the agent pick a flip and silently
+   * dropping it) keeps the recorded transition honest — the agent learns the value of the
+   * action that was actually taken.
+   */
+  _legalActions() {
+    const elapsed = this.scene.now() - this.lastFlipAt;
+    const mayFlip = this.scene.isGrounded() || elapsed >= this.cfg.flipCooldownMs;
+    if (mayFlip) return null; // null = no restriction
+    return [0];
   }
 
   /**
@@ -184,20 +244,34 @@ export default class AIPlaytester {
   _decide() {
     const obs = this.scene.getAgentObservation();
     const key = encodeState(obs, this.cfg);
-    const potential = -obs.goal.dist * this.cfg.shaping;
+    const target = currentTarget(obs);
+    // Points per grid cell of progress, expressed as a per-pixel coefficient.
+    const scale = this.cfg.shapingStep / this.cfg.posCell;
+    const potential = -target.dist * scale;
     if (obs.goal.dist < this.closest) this.closest = obs.goal.dist;
 
     if (this._primed) {
-      const shaped = this.pendingReward + (this.agent.gamma * potential - this.lastPotential);
+      // Taking the last key retargets from key to goal, and the two potentials are measured
+      // against different points. Booking that difference as reward would pay (or fine) the
+      // agent for a bookkeeping change it did not cause, so the switch is absorbed: rebase
+      // onto the new target and let this interval's shaping be zero.
+      const rebased = target.kind === this.lastTargetKind ? this.lastPotential : potential;
+      const shaped = this.pendingReward + (this.agent.gamma * potential - rebased);
       this.agent.learn(this.lastKey, this.lastAction, shaped, key, false);
     }
 
-    const action = this.agent.act(key);
-    if (action !== 0) this._applyAction(action, obs.gravity);
+    const legal = this._legalActions();
+    const action = this.agent.act(key, false, legal);
+    if (legal && action === 0) this.blockedFlips += 1;
+    if (action !== 0) {
+      this._applyAction(action, obs.gravity);
+      this.lastFlipAt = this.scene.now();
+    }
 
     this.lastKey = key;
     this.lastAction = action;
     this.lastPotential = potential;
+    this.lastTargetKind = target.kind;
     this.pendingReward = 0;
     this._primed = true;
   }
@@ -235,8 +309,9 @@ export default class AIPlaytester {
       steps: this.steps,
       keys: this.keysSeen,
       shifts: this.shiftsUsed,
+      blockedFlips: this.blockedFlips,
       closest: Math.round(this.closest),
-      epsilon: Math.round(this.agent.epsilon * 1000) / 1000,
+      epsilon: Math.round(this.agent.effectiveEpsilon * 1000) / 1000,
     });
 
     if (outcome === 'win' && this.attemptsToWin === null) this.attemptsToWin = this.episode;
