@@ -65,7 +65,22 @@ export default class GameScene extends Phaser.Scene {
     this._accum = 0;      // physics-step carry-over, reset so a restart never fast-forwards
     this._lastTime = 0;
     this._clockMs = 0;    // gameplay clock — see now()
+    this._contacts = new Set(); // ids of solid bodies the ball is resting against — see isGrounded()
     this.shiftCount = 0;
+  }
+
+  /**
+   * Is the ball currently resting against something solid?
+   *
+   * Tracked from collision start/end rather than probed, because Matter has no cheap "is this
+   * body supported" query. Sensors are excluded: a trampoline or sticky pad is contact, but it
+   * is not a surface you can push off.
+   *
+   * The AI uses this to decide when a gravity flip is allowed — a ball in free fall flipping
+   * every decision just vibrates in mid-air without going anywhere.
+   */
+  isGrounded() {
+    return this._contacts.size > 0;
   }
 
   /**
@@ -134,6 +149,7 @@ export default class GameScene extends Phaser.Scene {
     this.events.on('gravity:changed', ({ vector }) => this._onGravityShift(vector));
 
     this.matter.world.on('collisionstart', (event) => this._onCollision(event));
+    this.matter.world.on('collisionend', (event) => this._onCollisionEnd(event));
 
     this._buildHud(level);
     this.input.keyboard.on('keydown-R', () => this.scene.restart(this._playtest ? { playtest: true } : undefined));
@@ -603,6 +619,7 @@ export default class GameScene extends Phaser.Scene {
     for (const { bodyA, bodyB } of event.pairs) {
       if (bodyA.label !== 'ball' && bodyB.label !== 'ball') continue;
       const other = bodyA.label === 'ball' ? bodyB : bodyA;
+      if (!other.isSensor) this._contacts.add(other.id);
       if (other.label === 'goal') { this._reachGoal(); continue; }
       if (other.label === 'hazard') return this._die();
       if (other.label === 'bouncer') { this._onBounce(other); continue; }
@@ -620,6 +637,20 @@ export default class GameScene extends Phaser.Scene {
         continue;
       }
       if (other.label === 'wall') this._onWallImpact();
+    }
+  }
+
+  /**
+   * Drop contacts as the ball separates. A body that turns into a sensor underneath the ball
+   * (a door opening, a block smashed) never fires this, so anything reading isGrounded() must
+   * tolerate a briefly stale `true` — the AI pairs it with a time-based fallback for exactly
+   * that reason.
+   */
+  _onCollisionEnd(event) {
+    for (const { bodyA, bodyB } of event.pairs) {
+      if (bodyA.label !== 'ball' && bodyB.label !== 'ball') continue;
+      const other = bodyA.label === 'ball' ? bodyB : bodyA;
+      this._contacts.delete(other.id);
     }
   }
 
@@ -927,6 +958,8 @@ export default class GameScene extends Phaser.Scene {
       spike: nearest(this._hazardPts ?? []) ?? { dx: 0, dy: 0, dist: Infinity },
       key: openKeys.length ? nearest(openKeys) : null,
       keysHeld: this.countCollectedKeys(),
+      keysLeft: openKeys.length,
+      grounded: this.isGrounded(),
       shifts: this.shiftCount,
       stuck: this._stuck,
       solved: this._solved,
@@ -949,6 +982,9 @@ export default class GameScene extends Phaser.Scene {
     this._restMs = 0;
     this.shiftCount = 0;
     this._keys.clear();
+    // The ball is about to be teleported to spawn, so no collisionend will fire for whatever
+    // it was resting on. Clearing by hand keeps isGrounded() honest across attempts.
+    this._contacts.clear();
 
     this.gravity.setStrengthMultiplier(1);
     this.gravity.apply(this.level.gravity ?? GravityDirection.DOWN, { silent: true });
