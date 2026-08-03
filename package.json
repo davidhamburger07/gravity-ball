@@ -8,7 +8,9 @@
     "start": "node serve.mjs",
     "build": "node build.mjs",
     "preview": "node preview.mjs",
-    "shot": "node screenshot.mjs"
+    "shot": "node screenshot.mjs",
+    "ai": "node playtest-ai.mjs",
+    "verify": "node verify-levels.mjs"
   },
   "keywords": [
     "html5-game",

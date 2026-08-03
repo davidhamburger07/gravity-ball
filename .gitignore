@@ -19,5 +19,13 @@ Thumbs.db
 *.log
 .cache/
 
+# AI playtest run reports. The kept LEVELS in generated/ are deliberately tracked — they are
+# the output worth keeping — but a timestamped report per run would just be noise.
+generated/report-*.json
+generated/unsolved/
+
+# Safety copy the studio writes before appending a generated level to the campaign.
+src/data/levels.json.bak
+
 # Stray scratch files
 3.11
