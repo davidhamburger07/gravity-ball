@@ -20,6 +20,12 @@ const BORDER = 24; // auto border-wall thickness
 // physics was tied to a 144Hz display, which is what every level and tuning constant was authored
 // against. Keeping the step size at Matter's calibrated 1/60 means per-step travel — and therefore
 // tunnelling risk — is unchanged from that original build.
+// HUD banding: a translucent strip keeps readouts legible over whatever geometry is beneath.
+const HUD_BAR_H = 44;        // top row height (sized around the 44px touch targets)
+const HUD_ROW_Y = HUD_BAR_H / 2;
+const HUD_ROW2_H = 20;       // extra row, only when the death-rule indicator is shown
+const HUD_BAND_DEPTH = 95;   // above gameplay, below HUD text (100) and the win panel (200)
+
 const SIM_STEP_MS = 1000 / 60;       // simulated time advanced per step (Matter's tuned delta)
 const STEP_INTERVAL_MS = 1000 / 144; // real time consumed per step
 // Most steps we'll run in one frame while catching up (~83ms of real time). Past this the game
@@ -152,6 +158,7 @@ export default class GameScene extends Phaser.Scene {
     this.matter.world.on('collisionend', (event) => this._onCollisionEnd(event));
 
     this._buildHud(level);
+    this._splitCameras();
     this.input.keyboard.on('keydown-R', () => this.scene.restart(this._playtest ? { playtest: true } : undefined));
     this.input.keyboard.on('keydown-ESC', () => this._toLevelSelect());
 
@@ -526,49 +533,134 @@ export default class GameScene extends Phaser.Scene {
   }
 
   _buildHud(level) {
-    this.hud = this.add
-      .text(12, 10, '', { fontFamily: 'monospace', fontSize: '16px', color: '#9aa0c3' })
+    // The playfield fills the whole canvas, so HUD text used to sit directly on top of walls and
+    // pieces and became unreadable. Everything now lives in dedicated translucent bands: one row
+    // across the top, one along the bottom for the hint. Bands sit above gameplay but below the
+    // HUD text itself, and below the level-complete panel.
+    const secondRow = !!level.resetGravityOnDeath;
+    const topBarH = HUD_BAR_H + (secondRow ? HUD_ROW2_H : 0);
+    this._addHud(this.add
+      .rectangle(VIEW.WIDTH / 2, topBarH / 2, VIEW.WIDTH, topBarH, 0x0d1018, 0.62)
+      .setScrollFactor(0).setDepth(HUD_BAND_DEPTH));
+
+    this.hud = this._addHud(this.add
+      .text(12, HUD_ROW_Y, '', { fontFamily: 'monospace', fontSize: '16px', color: '#9aa0c3' })
+      .setOrigin(0, 0.5)
       .setScrollFactor(0)
-      .setDepth(100);
+      .setDepth(100));
     this._updateHud();
 
-    // Back button — sized as a comfortable touch target (>=44px).
-    new Button(this, VIEW.WIDTH - 44, 28, '‹', () => this._toLevelSelect(), {
+    // Right-hand controls, laid out from the right edge so they never collide.
+    this._addHud(new Button(this, VIEW.WIDTH - 44, HUD_ROW_Y, '‹', () => this._toLevelSelect(), {
       width: 48, height: 44, fontSize: '22px', color: 0x2a2f45, textColor: '#ffffff',
-    }).setScrollFactor(0).setDepth(100);
+    }).setScrollFactor(0).setDepth(100));
 
     // Mute toggle (persists via AudioManager/localStorage). Padding enlarges the tap area.
-    const mute = this.add
-      .text(VIEW.WIDTH - 98, 28, AudioManager.muted ? '\u{1F507}' : '\u{1F50A}', { fontSize: '24px', padding: { x: 8, y: 8 } })
+    const mute = this._addHud(this.add
+      .text(VIEW.WIDTH - 98, HUD_ROW_Y, AudioManager.muted ? '\u{1F507}' : '\u{1F50A}', { fontSize: '24px', padding: { x: 8, y: 8 } })
       .setOrigin(0.5).setScrollFactor(0).setDepth(100)
-      .setInteractive({ useHandCursor: true });
+      .setInteractive({ useHandCursor: true }));
     mute.on('pointerdown', () => mute.setText(AudioManager.toggleMute() ? '\u{1F507}' : '\u{1F50A}'));
 
-    // Held-keys inventory (populated by _updateKeyHud as keys are collected/lost).
-    this._keyHud = this.add.container(VIEW.WIDTH / 2, 26).setScrollFactor(0).setDepth(100);
-
-    // Death-rule indicator: only shown when the level resets gravity on death.
-    if (level.resetGravityOnDeath) {
-      this.add
-        .text(12, 32, '⟲ gravity resets on death', { fontFamily: 'monospace', fontSize: '12px', color: '#7a80a8' })
-        .setScrollFactor(0).setDepth(100);
-    }
+    // Zoom-to-fit, only for levels larger than the viewport (see _toggleZoom).
+    this._buildZoomButton(level);
 
     // Ch.7: show which color is currently solid.
     if ((level.cblocks ?? []).length) {
-      this._activeDot = this.add
-        .rectangle(VIEW.WIDTH - 150, 28, 20, 20, SWITCH_COLORS[this._active])
+      this._activeDot = this._addHud(this.add
+        .rectangle(VIEW.WIDTH - 206, HUD_ROW_Y, 20, 20, SWITCH_COLORS[this._active])
         .setStrokeStyle(2, 0xffffff, 0.4)
-        .setScrollFactor(0).setDepth(100);
+        .setScrollFactor(0).setDepth(100));
+    }
+
+    // Held-keys inventory, centred between the level readout and the right-hand controls.
+    this._keyHud = this._addHud(this.add.container(VIEW.WIDTH / 2, HUD_ROW_Y).setScrollFactor(0).setDepth(100));
+
+    // Death-rule indicator gets its own row so it never sits on the playfield.
+    if (secondRow) {
+      this._addHud(this.add
+        .text(12, HUD_BAR_H + HUD_ROW2_H / 2, '⟲ gravity resets on death', {
+          fontFamily: 'monospace', fontSize: '12px', color: '#7a80a8',
+        })
+        .setOrigin(0, 0.5).setScrollFactor(0).setDepth(100));
     }
 
     if (level.hint) {
-      this.add
-        .text(VIEW.WIDTH / 2, VIEW.HEIGHT - 24, level.hint, {
-          fontFamily: 'monospace', fontSize: '13px', color: '#5a6089',
+      const hintY = VIEW.HEIGHT - 16;
+      this._addHud(this.add
+        .rectangle(VIEW.WIDTH / 2, hintY, VIEW.WIDTH, 32, 0x0d1018, 0.62)
+        .setScrollFactor(0).setDepth(HUD_BAND_DEPTH));
+      this._addHud(this.add
+        .text(VIEW.WIDTH / 2, hintY, level.hint, {
+          fontFamily: 'monospace', fontSize: '13px', color: '#8990b8',
         })
-        .setOrigin(0.5).setScrollFactor(0).setDepth(100);
+        .setOrigin(0.5).setScrollFactor(0).setDepth(100));
     }
+  }
+
+  /**
+   * Give the HUD its own camera. `setScrollFactor(0)` pins an object against scrolling but does
+   * NOT exempt it from zoom, so without this the whole HUD shrank when the player zoomed out.
+   * The world camera ignores HUD objects and vice versa; anything created later routes through
+   * _addHud / _addWorld so the split keeps holding.
+   */
+  _splitCameras() {
+    this.uiCam = this.cameras.add(0, 0, VIEW.WIDTH, VIEW.HEIGHT);
+    this.uiCam.setName('ui');
+    const hud = new Set(this._hudObjects ?? []);
+    this.uiCam.ignore(this.children.list.filter((o) => !hud.has(o)));
+    if (hud.size) this.cameras.main.ignore([...hud]);
+    // Particle bursts are world-space and are spawned long after create().
+    Effects.onCreate = (obj) => this._addWorld(obj);
+  }
+
+  /** Register an object as HUD (drawn only by the UI camera). */
+  _addHud(obj) {
+    (this._hudObjects ??= []).push(obj);
+    this.cameras.main?.ignore(obj);
+    return obj;
+  }
+
+  /** Register an object as world-space (drawn only by the main camera). */
+  _addWorld(obj) {
+    this.uiCam?.ignore(obj);
+    return obj;
+  }
+
+  // Zoom-to-fit for levels bigger than one screen. Only built when it would do something, so
+  // ordinary 800x600 levels keep an uncluttered HUD.
+  _buildZoomButton(level) {
+    const bounds = level.bounds ?? { w: VIEW.WIDTH, h: VIEW.HEIGHT };
+    this._fitZoom = Math.min(VIEW.WIDTH / bounds.w, VIEW.HEIGHT / bounds.h);
+    if (this._fitZoom >= 0.999) return; // level already fits — no button needed
+
+    this._zoomedOut = false;
+    this._zoomBtn = this._addHud(this.add
+      .text(VIEW.WIDTH - 152, HUD_ROW_Y, '⤢', { fontSize: '22px', padding: { x: 10, y: 8 }, color: '#c9cde8' })
+      .setOrigin(0.5).setScrollFactor(0).setDepth(100)
+      .setInteractive({ useHandCursor: true }));
+    this._zoomBtn.on('pointerdown', () => this._toggleZoom());
+    this.input.keyboard?.on('keydown-Z', () => this._toggleZoom());
+  }
+
+  /** Swap between following the ball at 1:1 and showing the whole level at once. */
+  _toggleZoom() {
+    if (!this._zoomBtn) return;
+    const cam = this.cameras.main;
+    this._zoomedOut = !this._zoomedOut;
+    const bounds = this.level.bounds ?? { w: VIEW.WIDTH, h: VIEW.HEIGHT };
+
+    if (this._zoomedOut) {
+      cam.stopFollow();
+      cam.pan(bounds.w / 2, bounds.h / 2, 260, 'Sine.easeInOut');
+      cam.zoomTo(this._fitZoom, 260);
+      this._zoomBtn.setText('⤡').setColor('#38e1ff');
+    } else {
+      cam.zoomTo(1, 260);
+      cam.startFollow(this.ball, true, FEEL.CAMERA_LERP, FEEL.CAMERA_LERP);
+      this._zoomBtn.setText('⤢').setColor('#c9cde8');
+    }
+    AudioManager.ui();
   }
 
   _updateHud() {
@@ -1009,10 +1101,10 @@ export default class GameScene extends Phaser.Scene {
   }
 
   _showCompletePanel(stars) {
-    const panel = this.add
+    const panel = this._addHud(this.add
       .container(VIEW.WIDTH / 2, VIEW.HEIGHT / 2)
       .setScrollFactor(0)
-      .setDepth(200);
+      .setDepth(200));
 
     const bg = this.add.rectangle(0, 0, 380, 300, 0x1a1e30, 0.98).setStrokeStyle(3, 0x38e1ff, 0.5);
     const title = this.add

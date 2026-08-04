@@ -6,6 +6,10 @@ export const Effects = {
   // second, emitters would be created faster than their delayedCall cleanups could fire.
   enabled: true,
 
+  // Optional hook fired with every emitter created. GameScene uses it to keep bursts out of the
+  // HUD camera; without it, particles would be drawn twice once the cameras are split.
+  onCreate: null,
+
   // Radial burst (death, goal, small bounce puffs).
   burst(scene, x, y, { color = 0xffffff, count = 14, speed = 200, lifespan = 500, scale = 0.7 } = {}) {
     if (!Effects.enabled) return;
@@ -19,6 +23,7 @@ export const Effects = {
       emitting: false,
     });
     em.setDepth(20);
+    Effects.onCreate?.(em);
     em.explode(count);
     scene.time.delayedCall(lifespan + 80, () => em.destroy());
   },
@@ -38,6 +43,7 @@ export const Effects = {
       emitting: false,
     });
     em.setDepth(20);
+    Effects.onCreate?.(em);
     em.explode(count);
     scene.time.delayedCall(lifespan + 80, () => em.destroy());
   },

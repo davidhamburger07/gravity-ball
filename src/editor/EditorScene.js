@@ -85,7 +85,12 @@ export default class EditorScene extends Phaser.Scene {
 
   update() {
     if (model.dirty) this._redraw();
-    const sig = [model.tool, model.dir, model.color, model.cblockColor, model.weightKind, model.bhRadius, model.activeColor].join('|');
+    // Every option the ghost's appearance depends on must be here, or changing it from the panel
+    // leaves a stale preview (Q/E rotation clears the signature itself, dropdowns do not).
+    const sig = [
+      model.tool, model.dir, model.rampDir, model.color, model.volatileKey,
+      model.cblockColor, model.weightKind, model.bhRadius, model.activeColor,
+    ].join('|');
     if (sig !== this._ghostSig) { this._ghostSig = sig; this._buildGhost(); }
     const gridSig = `${model.snapEnabled}|${model.snapSize}`;
     if (gridSig !== this._gridSig) { this._gridSig = gridSig; this._drawGrid(); }
