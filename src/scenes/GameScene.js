@@ -10,6 +10,7 @@ import { AudioManager } from '../systems/AudioManager.js';
 import { Effects } from '../systems/Effects.js';
 import { CrazyGamesSDK } from '../sdk/CrazyGamesSDK.js';
 import { VIEW, PHYSICS, FEEL } from '../config/GameConfig.js';
+import { skinById, skinTextureKey, isSkinUnlocked } from '../systems/Skins.js';
 
 const BORDER = 24; // auto border-wall thickness
 
@@ -25,6 +26,7 @@ const HUD_BAR_H = 44;        // top row height (sized around the 44px touch targ
 const HUD_ROW_Y = HUD_BAR_H / 2;
 const HUD_ROW2_H = 20;       // extra row, only when the death-rule indicator is shown
 const HUD_BAND_DEPTH = 95;   // above gameplay, below HUD text (100) and the win panel (200)
+const FOG_DEPTH = 60;        // over the playfield, under every HUD layer
 
 const SIM_STEP_MS = 1000 / 60;       // simulated time advanced per step (Matter's tuned delta)
 const STEP_INTERVAL_MS = 1000 / 144; // real time consumed per step
@@ -157,6 +159,7 @@ export default class GameScene extends Phaser.Scene {
     this.matter.world.on('collisionstart', (event) => this._onCollision(event));
     this.matter.world.on('collisionend', (event) => this._onCollisionEnd(event));
 
+    this._buildFog(level, bounds);
     this._buildHud(level);
     this._splitCameras();
     this.input.keyboard.on('keydown-R', () => this.scene.restart(this._playtest ? { playtest: true } : undefined));
@@ -433,6 +436,7 @@ export default class GameScene extends Phaser.Scene {
     }
 
     if (this.ball) this.ball.sync();
+    if (this._fogHole) this._drawFogHole();
   }
 
   /**
@@ -451,6 +455,7 @@ export default class GameScene extends Phaser.Scene {
       if ((i & 31) === 31 && performance.now() >= until) break;
     }
     if (this.ball) this.ball.sync();
+    if (this._fogHole) this._drawFogHole();
   }
 
   /**
@@ -627,6 +632,48 @@ export default class GameScene extends Phaser.Scene {
     return obj;
   }
 
+  /**
+   * Fog of war: a dark sheet over the level with a hole cut around the ball, so only nearby
+   * geometry is visible. Driven by `fog` on the level (vision radius in pixels, 0/absent = off).
+   *
+   * The hole is a geometry mask with inverted alpha — cheaper and sharper than redrawing a
+   * radial gradient every frame, and it keeps working when the camera zooms out.
+   */
+  _buildFog(level, bounds) {
+    const radius = Number(level.fog) || 0;
+    if (!radius || !this._fx) return;
+    this._fogRadius = radius;
+
+    this._fogHole = this.make.graphics({ x: 0, y: 0, add: false });
+    const sheet = this.add
+      .rectangle(bounds.w / 2, bounds.h / 2, bounds.w * 2, bounds.h * 2, 0x05070e, 0.97)
+      .setDepth(FOG_DEPTH);
+    const mask = this._fogHole.createGeometryMask();
+    mask.invertAlpha = true; // punch the circle OUT of the sheet
+    sheet.setMask(mask);
+    this._fogSheet = sheet;
+    this._drawFogHole();
+  }
+
+  _drawFogHole() {
+    if (!this._fogHole || !this.ball) return;
+    this._fogHole.clear();
+    this._fogHole.fillStyle(0xffffff, 1);
+    this._fogHole.fillCircle(this.ball.x, this.ball.y, this._fogRadius);
+  }
+
+  /**
+   * Texture key for the ball's normal state, honouring the equipped skin. Falls back to the
+   * default if the stored skin is missing or no longer unlocked, so tampered or stale save data
+   * can never hand out a cosmetic that hasn't been earned.
+   */
+  _ballTexture() {
+    const skin = skinById(this.save?.equippedSkin ?? 'classic');
+    const allowed = this.save ? isSkinUnlocked(skin, this.save, this.levelsData) : false;
+    const key = skinTextureKey(allowed ? skin.id : 'classic');
+    return this.textures.exists(key) ? key : 'ball';
+  }
+
   // Zoom-to-fit for levels bigger than one screen. Only built when it would do something, so
   // ordinary 800x600 levels keep an uncluttered HUD.
   _buildZoomButton(level) {
@@ -793,7 +840,7 @@ export default class GameScene extends Phaser.Scene {
     this.gravity.setStrengthMultiplier(heavy ? 1.4 : 1);
     const v = this.ball.visual;
     if (heavy) { v.setTexture('ball-heavy'); v.setScale(1.18); AudioManager.stick(); }
-    else { v.setTexture('ball'); v.setScale(1); }
+    else { v.setTexture(this._ballTexture()); v.setScale(1); }
   }
 
   // Smash a breakable: make it non-blocking (like an opened door) + feedback. Momentum is
@@ -995,7 +1042,7 @@ export default class GameScene extends Phaser.Scene {
       this._updateHud();
     }
 
-    this.ball.visual.setTexture('ball');
+    this.ball.visual.setTexture(this._ballTexture());
     this.ball.visual.setVisible(false);
     // Agent mode ends the episode on death, so `_dying` stays set until resetForAgent() clears
     // it — a real-time delayedCall would fire thousands of simulated frames later anyway.

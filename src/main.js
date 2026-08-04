@@ -5,6 +5,7 @@ import PreloadScene from './scenes/PreloadScene.js';
 import MenuScene from './scenes/MenuScene.js';
 import LevelSelectScene from './scenes/LevelSelectScene.js';
 import GameScene from './scenes/GameScene.js';
+import SkinsScene from './scenes/SkinsScene.js';
 import { installAI } from './ai/bootstrap.js';
 import { VIEW, PHYSICS } from './config/GameConfig.js';
 
@@ -29,7 +30,7 @@ const config = {
       autoUpdate: false,
     },
   },
-  scene: [BootScene, PreloadScene, MenuScene, LevelSelectScene, GameScene],
+  scene: [BootScene, PreloadScene, MenuScene, LevelSelectScene, GameScene, SkinsScene],
 };
 
 // Expose the game instance for scripted testing (screenshot.mjs jumps to scenes/levels

@@ -36,6 +36,22 @@ export default class LevelSelectScene extends Phaser.Scene {
       })
       .setOrigin(1, 0.5);
 
+    // Unlock-everything switch so progression can be tested without replaying the campaign.
+    const testLabel = () => (this.save.testMode ? 'TEST MODE: ON' : 'test mode: off');
+    const testBtn = this.add
+      .text(width / 2, 68, testLabel(), {
+        fontFamily: 'monospace', fontSize: '12px',
+        color: this.save.testMode ? '#ffd23f' : '#5a6089',
+      })
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true });
+    testBtn.on('pointerdown', () => {
+      this.save.setTestMode(!this.save.testMode);
+      testBtn.setText(testLabel()).setColor(this.save.testMode ? '#ffd23f' : '#5a6089');
+      this._buildTabs();
+      this._buildGrid();
+    });
+
     this._tabs = this.add.container(0, 92);
     this._grid = this.add.container(0, 0);
     this._buildTabs();

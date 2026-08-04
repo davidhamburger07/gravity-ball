@@ -2,6 +2,7 @@
 // the main menu. Real art/audio loads will also live here once assets exist in /assets.
 import { CrazyGamesSDK } from '../sdk/CrazyGamesSDK.js';
 import SaveManager from '../systems/SaveManager.js';
+import { decodeLevel } from '../systems/ShareCode.js';
 import { autoStartFromUrl } from '../ai/bootstrap.js';
 
 export default class PreloadScene extends Phaser.Scene {
@@ -29,6 +30,17 @@ export default class PreloadScene extends Phaser.Scene {
 
     // Automated content run (./?ai=1) — generate levels and let the AI playtest them.
     if (autoStartFromUrl(this.game)) return;
+
+    // Shared-map link: ?code=… plays someone else's level straight from the URL.
+    const codeParam = new URLSearchParams(location.search).get('code');
+    if (codeParam) {
+      const shared = decodeLevel(codeParam);
+      if (shared) {
+        this.registry.set('playtestLevel', shared);
+        this.scene.start('GameScene', { playtest: true });
+        return;
+      }
+    }
 
     // Playtest hand-off from the level editor (editor.html → ./?playtest=1).
     if (new URLSearchParams(location.search).has('playtest')) {

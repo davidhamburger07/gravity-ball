@@ -1,6 +1,7 @@
 // MenuScene.js — title screen. Springy title, tagline, PLAY button, and a parallax dot
 // backdrop for depth. PLAY leads into level select.
 import Button from '../ui/Button.js';
+import { decodeLevel } from '../systems/ShareCode.js';
 
 export default class MenuScene extends Phaser.Scene {
   constructor() {
@@ -37,21 +38,45 @@ export default class MenuScene extends Phaser.Scene {
       delay: 350,
     });
 
-    this.add
-      .text(width / 2, height * 0.72, 'Level Editor', {
-        fontFamily: 'system-ui, sans-serif', fontSize: '16px', color: '#7a80a8',
-      })
-      .setOrigin(0.5)
-      .setInteractive({ useHandCursor: true })
-      .on('pointerover', function () { this.setColor('#38e1ff'); })
-      .on('pointerout', function () { this.setColor('#7a80a8'); })
-      .on('pointerdown', () => { window.location.href = 'editor.html'; });
+    // Secondary entries, spaced evenly so they never crowd the PLAY button.
+    const links = [
+      ['Ball Skins', () => this.scene.start('SkinsScene')],
+      ['Play a Shared Map', () => this._promptForCode()],
+      ['Level Editor', () => { window.location.href = 'editor.html'; }],
+    ];
+    links.forEach(([label, onClick], i) => {
+      this.add
+        .text(width / 2, height * 0.70 + i * 26, label, {
+          fontFamily: 'system-ui, sans-serif', fontSize: '16px', color: '#7a80a8',
+        })
+        .setOrigin(0.5)
+        .setInteractive({ useHandCursor: true })
+        .on('pointerover', function () { this.setColor('#38e1ff'); })
+        .on('pointerout', function () { this.setColor('#7a80a8'); })
+        .on('pointerdown', onClick);
+    });
 
     this.add
       .text(width / 2, height * 0.82, 'Arrow Keys / WASD or Swipe to shift gravity', {
         fontFamily: 'monospace', fontSize: '14px', color: '#5a6089',
       })
       .setOrigin(0.5);
+  }
+
+  /**
+   * Ask for a share code and play it. Uses a plain prompt so it works identically on desktop and
+   * mobile without building a virtual keyboard; the code itself is validated by decodeLevel.
+   */
+  _promptForCode() {
+    const input = window.prompt('Paste a Gravity Ball share code or link:');
+    if (input === null) return;
+    const level = decodeLevel(input);
+    if (!level) {
+      window.alert('That does not look like a valid share code.');
+      return;
+    }
+    this.registry.set('playtestLevel', level);
+    this.scene.start('GameScene', { playtest: true });
   }
 
   _backdrop(width, height) {

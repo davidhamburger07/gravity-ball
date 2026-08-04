@@ -17,7 +17,8 @@ export default class Ball extends Phaser.Physics.Matter.Sprite {
     this.body.label = 'ball'; // Matter body label (collision routing); no setLabel() on sprites
     this.setVisible(false); // physics body is invisible; the visual proxy renders instead
 
-    this.visual = scene.add.image(x, y, 'ball').setDepth(10);
+    // Normal-state art follows the equipped skin; the heavy state (Ch.5) overrides it in play.
+    this.visual = scene.add.image(x, y, scene._ballTexture ? scene._ballTexture() : 'ball').setDepth(10);
     this.spawn = { x, y };
   }
 

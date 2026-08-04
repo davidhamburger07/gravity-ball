@@ -1,6 +1,7 @@
 // Textures.js — generates the placeholder shape textures shared by the game and the editor,
 // so an element looks the same wherever it is drawn.
 import { PHYSICS } from '../config/GameConfig.js';
+import { SKINS, skinTextureKey } from './Skins.js';
 
 export function generatePlaceholderTextures(scene) {
   const g = scene.add.graphics();
@@ -11,6 +12,16 @@ export function generatePlaceholderTextures(scene) {
   g.fillStyle(0xffffff, 0.6).fillCircle(r * 0.65, r * 0.65, r * 0.28);
   g.generateTexture('ball', r * 2, r * 2);
   g.clear();
+
+  // One ball texture per skin. Generated rather than tinted so a dark skin stays dark instead of
+  // multiplying against the cyan base.
+  SKINS.forEach((skin) => {
+    g.fillStyle(skin.color, 1).fillCircle(r, r, r);
+    g.fillStyle(skin.accent, 0.55).fillCircle(r * 0.65, r * 0.65, r * 0.28);
+    g.lineStyle(2, skin.accent, 0.35).strokeCircle(r, r, r - 1);
+    g.generateTexture(skinTextureKey(skin.id), r * 2, r * 2);
+    g.clear();
+  });
 
   // Heavy ball (Ch.5) — amber. Swapped in (not tinted) since tint multiplies with the cyan.
   g.fillStyle(0xffa53a, 1).fillCircle(r, r, r);

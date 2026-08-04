@@ -39,12 +39,20 @@ export default class SaveManager {
   isCompleted(id) { return !!this.data.levels[id]?.completed; }
   stars(id) { return this.data.levels[id]?.stars ?? 0; }
 
-  /** A level opens once the previous level in global order is complete. First level is always open. */
+  /**
+   * A level opens once the previous level in global order is complete. First level is always open.
+   * Test mode opens everything, so progression can be checked without replaying the campaign.
+   */
   isLevelUnlocked(id) {
+    if (this.testMode) return true;
     const idx = this._order.indexOf(id);
     if (idx <= 0) return true;
     return this.isCompleted(this._order[idx - 1]);
   }
+
+  /** Unlock-everything switch for testing. Persisted so it survives a reload. */
+  get testMode() { return !!this.data.testMode; }
+  setTestMode(on) { this.data.testMode = !!on; this._persist(); }
 
   /** A chapter is playable if it has levels and its first level is unlocked. */
   isChapterUnlocked(chapterId) {
@@ -52,6 +60,11 @@ export default class SaveManager {
     if (!chapter || !(chapter.levels?.length)) return false;
     return this.isLevelUnlocked(chapter.levels[0].id);
   }
+
+  // --- Skins ---------------------------------------------------------------
+  /** Currently equipped skin id (always falls back to the free default). */
+  get equippedSkin() { return this.data.skin ?? 'classic'; }
+  equipSkin(id) { this.data.skin = id; this._persist(); }
 
   /** The next level id in global order, or null if this is the last built level. */
   nextLevelId(id) {
