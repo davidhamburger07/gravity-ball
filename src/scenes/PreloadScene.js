@@ -31,6 +31,20 @@ export default class PreloadScene extends Phaser.Scene {
     // Automated content run (./?ai=1) — generate levels and let the AI playtest them.
     if (autoStartFromUrl(this.game)) return;
 
+    // Editor playlist run: ?playlist=1&i=N plays the designer's own levels in order.
+    const params = new URLSearchParams(location.search);
+    if (params.has('playlist')) {
+      try {
+        const list = JSON.parse(localStorage.getItem('gravityball:playlist'));
+        if (Array.isArray(list) && list.length) {
+          this.registry.set('playlist', list);
+          const i = Math.min(Math.max(parseInt(params.get('i'), 10) || 0, 0), list.length - 1);
+          this.scene.start('GameScene', { playlist: true, playlistIndex: i });
+          return;
+        }
+      } catch { /* fall through to the menu */ }
+    }
+
     // Shared-map link: ?code=… plays someone else's level straight from the URL.
     const codeParam = new URLSearchParams(location.search).get('code');
     if (codeParam) {

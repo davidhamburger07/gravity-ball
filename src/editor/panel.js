@@ -3,6 +3,7 @@
 // canvas scene renders. Playtest hands the level to the real game via localStorage.
 import { model } from './model.js';
 import { encodeLevel, shareUrl } from '../systems/ShareCode.js';
+import { loadPlaylist, addToPlaylist, removeAt, moveEntry, replaceAt, clearPlaylist } from './playlist.js';
 
 const PLAYTEST_KEY = 'gravityball:playtest';
 
@@ -146,6 +147,50 @@ export function initPanel(root) {
     }
   };
 
+  // --- Playlist: an ordered set of your own levels, for rehearsing progression ---------------
+  // Starts empty. Add levels as you build them, drag the order around with the arrows, then play
+  // the whole run in sequence to judge pacing the way a player actually meets it.
+  let selected = -1;
+  const grid = el('div', { class: 'pl-grid' });
+  const meta = el('div', { class: 'pl-meta' });
+
+  function renderPlaylist() {
+    const list = loadPlaylist();
+    grid.replaceChildren();
+    if (!list.length) {
+      grid.append(el('div', { class: 'pl-empty' }, document.createTextNode('empty — add a level below')));
+    }
+    list.forEach((lvl, i) => {
+      const tile = el('button', {
+        class: 'pl-tile' + (i === selected ? ' selected' : ''),
+        title: lvl.id ?? `level ${i + 1}`,
+        onclick: () => { selected = i; renderPlaylist(); },
+      }, document.createTextNode(String(i + 1)));
+      grid.append(tile);
+    });
+
+    if (selected >= list.length) selected = list.length - 1;
+    const cur = selected >= 0 ? list[selected] : null;
+    meta.textContent = cur ? `#${selected + 1} · ${cur.id ?? 'untitled'}` : `${list.length} level${list.length === 1 ? '' : 's'}`;
+    playFrom.disabled = !list.length;
+    playAll.disabled = !list.length;
+  }
+
+  const withSelection = (fn) => () => {
+    const list = loadPlaylist();
+    if (selected < 0 || selected >= list.length) { flash('Select a slot first'); return; }
+    fn(list);
+    renderPlaylist();
+  };
+
+  const playAll = el('button', { class: 'primary', onclick: () => startPlaylist(0) }, document.createTextNode('▶ Play in order'));
+  const playFrom = el('button', { onclick: () => startPlaylist(Math.max(0, selected)) }, document.createTextNode('▶ From here'));
+
+  function startPlaylist(index) {
+    if (!loadPlaylist().length) { flash('Playlist is empty'); return; }
+    window.location.href = `./?playlist=1&i=${index}`;
+  }
+
   // --- Campaign loader: pick any shipped level and load it for editing ------
   let campaignData = {};
   const campaignSelect = el('select', { id: 'campaign-level' });
@@ -237,6 +282,23 @@ export function initPanel(root) {
       labeled('Goal needs key', inputs.requires),
       labeled('Hint', inputs.hint),
     ]),
+    section('Playlist — test level order', [
+      grid,
+      meta,
+      el('div', { class: 'grid' }, [
+        el('button', { onclick: () => { addToPlaylist(model.toLevel()); selected = loadPlaylist().length - 1; renderPlaylist(); flash('Added to playlist'); } }, document.createTextNode('+ Add current')),
+        el('button', { onclick: withSelection(() => { moveEntry(selected, -1); selected = Math.max(0, selected - 1); }) }, document.createTextNode('◀ Move')),
+        el('button', { onclick: withSelection((list) => { moveEntry(selected, 1); selected = Math.min(list.length - 1, selected + 1); }) }, document.createTextNode('Move ▶')),
+        el('button', { onclick: withSelection((list) => { model.fromLevel(list[selected]); syncInputs(); flash('Loaded into editor'); }) }, document.createTextNode('Load')),
+        el('button', { onclick: withSelection(() => { replaceAt(selected, model.toLevel()); flash('Slot updated'); }) }, document.createTextNode('Save to slot')),
+        el('button', { onclick: withSelection(() => { removeAt(selected); }) }, document.createTextNode('× Remove')),
+      ]),
+      el('div', { class: 'grid' }, [
+        playAll,
+        playFrom,
+        el('button', { onclick: () => { if (confirm('Clear the whole playlist?')) { clearPlaylist(); selected = -1; renderPlaylist(); } } }, document.createTextNode('Clear all')),
+      ]),
+    ]),
     section('Campaign', [
       labeled('Open a shipped level to edit or replace', campaignSelect),
       el('button', { onclick: loadCampaign }, document.createTextNode('Load level')),
@@ -280,6 +342,7 @@ export function initPanel(root) {
   setActiveTool(model.tool);
   syncInputs();
   populateCampaign();
+  renderPlaylist();
 
   // Q/E rotation happens in the canvas scene; mirror it back into the dropdowns.
   window.addEventListener('editor:rotated', () => {

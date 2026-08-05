@@ -50,6 +50,9 @@ export default class GameScene extends Phaser.Scene {
 
   init(data = {}) {
     this._playtest = data.playtest ?? false;
+    // Playlist mode: the designer's own levels played back-to-back to rehearse progression.
+    this._playlist = data.playlist ? (this.registry.get('playlist') ?? null) : null;
+    this._plIndex = data.playlistIndex ?? 0;
     // Agent mode (AI playtester): the level comes from the procedural generator, the world is
     // stepped as fast as the frame budget allows, and all juice is suppressed.
     this._agentMode = data.agent ?? false;
@@ -108,7 +111,11 @@ export default class GameScene extends Phaser.Scene {
     this.save = this.registry.get('save');
     this.levelsData = this.registry.get('levels');
     let level;
-    if (this._generated) {
+    if (this._playlist) {
+      level = this._playlist[this._plIndex];
+      this.chapterId = 0;
+      if (!level.id) level.id = `slot ${this._plIndex + 1}`;
+    } else if (this._generated) {
       level = this.registry.get('generatedLevel');
       this.chapterId = 0;
     } else if (this._playtest) {
@@ -162,7 +169,10 @@ export default class GameScene extends Phaser.Scene {
     this._buildFog(level, bounds);
     this._buildHud(level);
     this._splitCameras();
-    this.input.keyboard.on('keydown-R', () => this.scene.restart(this._playtest ? { playtest: true } : undefined));
+    this.input.keyboard.on('keydown-R', () => this.scene.restart(
+      this._playlist ? { playlist: true, playlistIndex: this._plIndex }
+        : this._playtest ? { playtest: true } : undefined
+    ));
     this.input.keyboard.on('keydown-ESC', () => this._toLevelSelect());
 
     if (this._agentMode) {
@@ -711,6 +721,10 @@ export default class GameScene extends Phaser.Scene {
   }
 
   _updateHud() {
+    if (this._playlist) {
+      this.hud.setText(`Playlist ${this._plIndex + 1}/${this._playlist.length}    ${this.level.id}    Shifts: ${this.shiftCount}`);
+      return;
+    }
     const max = this.level.maxShifts;
     if (max) {
       const left = max - this.shiftCount;
@@ -993,7 +1007,11 @@ export default class GameScene extends Phaser.Scene {
     // Agent runs never touch the save file or the platform SDK — they are not a player's
     // progress, and the AI would otherwise star-rate its way through the whole game.
     if (this._agentMode) return;
-    if (!this._playtest && !this._generated) this.save.recordResult(this.level.id, { stars, shifts: this.shiftCount });
+    // Only real campaign play writes progress. Playtests, playlist rehearsals and generated
+    // levels use ids that aren't part of the campaign, so recording them would pollute the save.
+    if (!this._playtest && !this._generated && !this._playlist) {
+      this.save.recordResult(this.level.id, { stars, shifts: this.shiftCount });
+    }
     CrazyGamesSDK.happytime();
     CrazyGamesSDK.gameplayStop();
 
@@ -1179,7 +1197,17 @@ export default class GameScene extends Phaser.Scene {
     // Playtest → Retry / Editor. Normal → Retry / Levels / (Next if another level exists).
     let actions;
     let goNext = null; // bound to Enter below
-    if (this._playtest) {
+    if (this._playlist) {
+      const hasNext = this._plIndex + 1 < this._playlist.length;
+      actions = [
+        ['Retry', () => this.scene.restart({ playlist: true, playlistIndex: this._plIndex }), 0x2a2f45, '#ffffff'],
+        ['Editor', () => { window.location.href = 'editor.html'; }, 0x2a2f45, '#ffffff'],
+      ];
+      if (hasNext) {
+        goNext = () => this.scene.restart({ playlist: true, playlistIndex: this._plIndex + 1 });
+        actions.push(['Next', goNext, 0x38e1ff, '#0b1020']);
+      }
+    } else if (this._playtest) {
       actions = [
         ['Retry', () => this.scene.restart({ playtest: true }), 0x2a2f45, '#ffffff'],
         ['Editor', () => { window.location.href = 'editor.html'; }, 0x38e1ff, '#0b1020'],
@@ -1224,7 +1252,7 @@ export default class GameScene extends Phaser.Scene {
 
   _toLevelSelect() {
     CrazyGamesSDK.gameplayStop();
-    if (this._playtest) { window.location.href = 'editor.html'; return; }
+    if (this._playlist || this._playtest) { window.location.href = 'editor.html'; return; }
     this.scene.start('LevelSelectScene', { chapterId: this.chapterId });
   }
 }

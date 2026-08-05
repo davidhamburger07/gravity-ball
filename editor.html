@@ -31,6 +31,16 @@
       button:hover { background: #343a57; }
       button.active { background: #38e1ff; color: #0b1020; font-weight: 600; }
       button.wide { width: 100%; margin-top: 6px; }
+
+      /* Playlist grid — a compact echo of the game's level select. */
+      .pl-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; margin-bottom: 6px; }
+      .pl-tile { padding: 0; height: 34px; background: #2a2f45; color: #dfe3f5;
+        border: 1px solid #3a3f5c; border-radius: 5px; font-size: 12px; cursor: pointer; }
+      .pl-tile:hover { background: #343a57; }
+      .pl-tile.selected { background: #38e1ff; color: #0b1020; border-color: #ffffff; font-weight: 700; }
+      .pl-empty { grid-column: 1 / -1; padding: 10px 0; text-align: center;
+        font-size: 11px; color: #6a708f; border: 1px dashed #2a3050; border-radius: 5px; }
+      .pl-meta { font-size: 11px; color: #9aa0c3; margin-bottom: 6px; min-height: 14px; }
       button.primary { background: #2bd67b; color: #07130c; font-weight: 700; }
       button.primary:hover { background: #48e08e; }
 
