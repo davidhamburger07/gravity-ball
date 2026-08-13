@@ -8,7 +8,7 @@
 //   - line tool ON: click-drag stamps a row of default-size pieces along the drag
 // A translucent ghost of the current piece follows the cursor.
 import { generatePlaceholderTextures } from '../systems/Textures.js';
-import { model, GRID, ARENA, DEFAULT_SIZE, RECT_TOOLS, LINE_TOOLS, DIR_CYCLE, RAMP_CYCLE } from './model.js';
+import { model, GRID, ARENA, DEFAULT_SIZE, RECT_TOOLS, LINE_TOOLS, DIR_CYCLE, RAMP_CYCLE, stickySize } from './model.js';
 
 const KEY_COLORS = { gold: 0xffd23f, blue: 0x38a1ff, pink: 0xff5c8a };
 const CBLOCK_COLORS = { red: 0xe0574f, blue: 0x4f8fe0 };
@@ -215,7 +215,10 @@ export default class EditorScene extends Phaser.Scene {
       const solid = (c.color ?? 'red') === model.activeColor;
       this._rect(c, tint, tint, solid ? 0.85 : 0.15);
     });
-    model.sticky.forEach((s) => this._rect(s, 0x9b6dff, 0xc9a9ff, 0.85));
+    model.sticky.forEach((s) => {
+      this._rect(s, 0x9b6dff, 0xc9a9ff, 0.85);
+      if (s.dir) this._arrow(s.x, s.y, s.dir, 0x2a1a4a);
+    });
     model.bouncers.forEach((b) => {
       this._rect(b, 0x2bd67b, 0x8affc0, 0.95);
       this._arrow(b.x, b.y, b.dir ?? 'up');
@@ -300,6 +303,11 @@ export default class EditorScene extends Phaser.Scene {
     } else if (t === 'ramp') {
       const pts = rampCorners(size.w, size.h, model.rampDir).map((p) => ({ x: p.x - size.w / 2, y: p.y - size.h / 2 }));
       this.ghost.add(this.add.polygon(0, 0, pts, 0x3a3f5c, 0.6).setStrokeStyle(2, 0x4c5378, 0.9));
+    } else if (t === 'sticky') {
+      const sz = stickySize(model.dir);
+      this.ghost.add(this.add.rectangle(0, 0, sz.w, sz.h, 0x9b6dff, 0.6).setStrokeStyle(2, 0xc9a9ff, 0.9));
+      const a = { up: -90, down: 90, left: 180, right: 0 }[model.dir];
+      this.ghost.add(this.add.text(0, 0, '▶', { fontSize: '14px', color: '#2a1a4a' }).setOrigin(0.5).setAngle(a));
     } else if (size) {
       const tint = {
         wall: 0x3a3f5c, sticky: 0x9b6dff, bouncer: 0x2bd67b,
@@ -424,7 +432,8 @@ export default class EditorScene extends Phaser.Scene {
     // step so "one cell" means the same thing the grid is showing.
     const minDrag = model.snapEnabled ? model.snapSize : GRID;
     if (tool && (w < minDrag || h < minDrag)) {
-      const d = DEFAULT_SIZE[tool];
+      // Sticky pads lie flat or stand upright depending on the face they grip.
+      const d = tool === 'sticky' ? stickySize(model.dir) : DEFAULT_SIZE[tool];
       return { x: a.x, y: a.y, w: d.w, h: d.h };
     }
     return { x: x1 + w / 2, y: y1 + h / 2, w, h };
@@ -444,7 +453,7 @@ export default class EditorScene extends Phaser.Scene {
     if (tool === 'wall') model.walls.push(base);
     else if (tool === 'ramp') model.ramps.push({ ...base, dir: model.rampDir });
     else if (tool === 'spike') model.hazards.push({ ...base, dir: model.dir });
-    else if (tool === 'sticky') model.sticky.push(base);
+    else if (tool === 'sticky') model.sticky.push({ ...base, dir: model.dir });
     else if (tool === 'bouncer') model.bouncers.push({ ...base, dir: model.dir, power: Number(model.power) || 20 });
     else if (tool === 'door') model.doors.push({ ...base, color: model.color });
     else if (tool === 'breakable') model.breakables.push(base);

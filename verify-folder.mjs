@@ -31,13 +31,16 @@ async function settle(page, timeout = 4500) {
   while (Date.now() - start < timeout) {
     const st = await page.evaluate(() => {
       const s = window.game.scene.getScene('GameScene');
-      if (!s || !s.ball || !s.ball.body) return { solved: false, speed: 999, dead: false };
-      if (s._solved) return { solved: true, speed: 0, dead: false };
+      if (!s || !s.ball || !s.ball.body) return { solved: false, speed: 999, settled: false, dead: false };
+      if (s._solved) return { solved: true, speed: 0, settled: true, dead: false };
       const v = s.ball.body.velocity;
-      return { solved: false, speed: Math.hypot(v.x, v.y), dead: !!s._dying };
+      // Slow is not the same as stopped: a ball at the top of a climb is briefly near-motionless
+      // in mid-air. Only count it as rest when something is actually holding it.
+      const settled = (s.isGrounded?.() ?? true) || !!s._stuck;
+      return { solved: false, speed: Math.hypot(v.x, v.y), settled, dead: !!s._dying };
     });
     if (st.solved) return 'solved';
-    if (st.speed < 0.5 && !st.dead) { if (++restStreak >= 3) return 'rest'; } else restStreak = 0;
+    if (st.speed < 0.5 && st.settled && !st.dead) { if (++restStreak >= 3) return 'rest'; } else restStreak = 0;
     await new Promise((r) => setTimeout(r, 100));
   }
   return 'timeout';

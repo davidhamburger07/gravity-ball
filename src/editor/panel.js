@@ -260,7 +260,7 @@ export function initPanel(root) {
       labeled('Snap size', inputs.snapSize),
     ]),
     section('Piece options', [
-      labeled('Direction (spike / bounce / grav zone) — Q/E', inputs.dir),
+      labeled('Direction (spike / sticky / bounce / grav zone) — Q/E', inputs.dir),
       labeled('Ramp orientation — Q/E', inputs.rampDir),
       labeled('Key / door color', inputs.color),
       row(inputs.volatileKey, 'Volatile key — lost on death'),

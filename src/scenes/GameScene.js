@@ -263,11 +263,22 @@ export default class GameScene extends Phaser.Scene {
     });
 
     // Sticky pads (Ch.3): sensors that pin the ball until the next gravity flip.
+    // A pad may declare which way it faces; the ball is then held against that face. Pads without
+    // a `dir` keep the original behaviour (snap to the pad's centre along its long axis), so
+    // levels authored before facings existed play exactly as they did.
     (level.sticky ?? []).forEach((s) => {
       const body = this.matter.add.rectangle(s.x, s.y, s.w, s.h, { isStatic: true, isSensor: true, label: 'sticky' });
-      body.gbAxis = s.w >= s.h ? 'x' : 'y'; // snap along the surface it lies on
+      body.gbDir = s.dir ?? null;
+      body.gbAxis = s.w >= s.h ? 'x' : 'y'; // legacy fallback: snap along the surface it lies on
       body.gbAnchor = { x: s.x, y: s.y };
+      body.gbHalf = { w: s.w / 2, h: s.h / 2 };
       this.add.rectangle(s.x, s.y, s.w, s.h, 0x9b6dff, 0.85).setStrokeStyle(2, 0xc9a9ff).setDepth(3);
+      // Mark the gripping face so the facing is readable at a glance.
+      if (body.gbDir) {
+        const a = { up: -90, down: 90, left: 180, right: 0 }[body.gbDir];
+        this.add.text(s.x, s.y, '▶', { fontSize: '14px', color: '#2a1a4a' })
+          .setOrigin(0.5).setAngle(a).setDepth(4);
+      }
     });
 
     // Trampolines (Ch.3): sensors that fling the ball in a fixed direction on contact.
@@ -969,8 +980,25 @@ export default class GameScene extends Phaser.Scene {
     this._stuck = true;
     this.ball.setVelocity(0, 0);
     this.ball.setAngularVelocity(0);
-    if (body.gbAxis === 'x') this.ball.setPosition(body.gbAnchor.x, this.ball.y);
-    else this.ball.setPosition(this.ball.x, body.gbAnchor.y);
+
+    if (body.gbDir) {
+      // Hold the ball against the face the pad points at, centred along the pad so the resting
+      // spot is the same however the ball arrived.
+      const r = PHYSICS.BALL_RADIUS;
+      const { x, y } = body.gbAnchor;
+      const { w, h } = body.gbHalf;
+      const spot = {
+        up: { x, y: y - h - r },
+        down: { x, y: y + h + r },
+        left: { x: x - w - r, y },
+        right: { x: x + w + r, y },
+      }[body.gbDir];
+      if (spot) this.ball.setPosition(spot.x, spot.y);
+    } else if (body.gbAxis === 'x') {
+      this.ball.setPosition(body.gbAnchor.x, this.ball.y);
+    } else {
+      this.ball.setPosition(this.ball.x, body.gbAnchor.y);
+    }
     this.ball.setStatic(true);
     AudioManager.stick();
     this._squash(1.15, 0.85, 200);

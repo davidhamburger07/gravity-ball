@@ -10,7 +10,7 @@ export const DEFAULT_SIZE = {
   wall: { w: 40, h: 120 },
   ramp: { w: 120, h: 120 },
   spike: { w: 40, h: 36 },
-  sticky: { w: 44, h: 24 },
+  sticky: { w: 44, h: 24 },   // swapped for left/right facings — see stickySize()
   bouncer: { w: 48, h: 20 },
   door: { w: 24, h: 252 },
   breakable: { w: 24, h: 252 },
@@ -20,6 +20,15 @@ export const DEFAULT_SIZE = {
   laser: { w: 12, h: 552 },
   gravzone: { w: 240, h: 552 },
 };
+
+/**
+ * Default sticky-pad footprint for a facing. Up/down pads lie flat along a floor or ceiling;
+ * left/right pads stand against a wall, so the dimensions swap.
+ */
+export function stickySize(dir) {
+  const { w, h } = DEFAULT_SIZE.sticky;
+  return dir === 'left' || dir === 'right' ? { w: h, h: w } : { w, h };
+}
 
 export const RECT_TOOLS = ['wall', 'ramp', 'spike', 'sticky', 'bouncer', 'door', 'breakable', 'cblock', 'weight', 'slowzone', 'laser', 'gravzone'];
 export const POINT_TOOLS = ['spawn', 'goal', 'key', 'switch', 'portal', 'blackhole'];
