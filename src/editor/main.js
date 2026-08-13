@@ -17,8 +17,7 @@ initPanel(document.getElementById('editor-panel'));
 // Debug/testing hook (harmless in production), mirrors window.game.
 window.__editorModel = model;
 
-// eslint-disable-next-line no-new
-new Phaser.Game({
+window.__editorGame = new Phaser.Game({
   type: Phaser.AUTO,
   parent: 'editor-stage',
   backgroundColor: '#0d1020',

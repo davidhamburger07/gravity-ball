@@ -52,6 +52,8 @@ export default class EditorScene extends Phaser.Scene {
   }
 
   create() {
+    // Debug/testing hook, mirroring window.game on the play page.
+    window.__editorScene = this;
     generatePlaceholderTextures(this);
     this.cameras.main.setBackgroundColor('#0d1020');
 
@@ -64,6 +66,18 @@ export default class EditorScene extends Phaser.Scene {
     this.input.on('pointerdown', (p) => this._onDown(p));
     this.input.on('pointermove', (p) => this._onMove(p));
     this.input.on('pointerup', (p) => this._onUp(p));
+
+    // A drag released off the canvas (over the side panel, or outside the window) never reached
+    // pointerup, which left the drag "live": the ghost stayed hidden and a stray preview box
+    // followed the cursor until the next click. Cancel the gesture instead — dragging away is
+    // the natural way to back out, so nothing is placed.
+    // Note: only Phaser's off-canvas event and window blur may cancel. A plain window 'pointerup'
+    // listener cannot be used here — it runs before Phaser delivers its own pointerup, so it would
+    // cancel every legitimate drag before the piece is placed.
+    this.input.on('pointerupoutside', () => this._cancelDrag());
+    this._onWindowBlur = () => this._cancelDrag();
+    window.addEventListener('blur', this._onWindowBlur);
+    this.events.once('shutdown', () => window.removeEventListener('blur', this._onWindowBlur));
 
     // Q / E rotate the current piece's orientation (ramp corners, or compass direction).
     // Listens on document so it works whether or not the canvas has focus, but ignores
@@ -152,12 +166,17 @@ export default class EditorScene extends Phaser.Scene {
     // Fine grids get lighter lines so a 5-10px snap doesn't wall the canvas in.
     const alpha = !model.snapEnabled ? 0.3 : step >= 20 ? 0.9 : step >= 10 ? 0.5 : 0.35;
     const start = Math.ceil(MIN / step) * step;
-    for (let x = start; x <= MAXX; x += step) {
+    const xs = [MIN, MAXX];
+    for (let x = start; x <= MAXX; x += step) if (!xs.includes(x)) xs.push(x);
+    const ys = [MIN, MAXY];
+    for (let y = start; y <= MAXY; y += step) if (!ys.includes(y)) ys.push(y);
+
+    for (const x of xs) {
       const major = x % (step * 5) === 0;
       g.lineStyle(1, major ? 0x323a5e : 0x232840, major ? Math.min(1, alpha + 0.2) : alpha);
       g.lineBetween(x, MIN, x, MAXY);
     }
-    for (let y = start; y <= MAXY; y += step) {
+    for (const y of ys) {
       const major = y % (step * 5) === 0;
       g.lineStyle(1, major ? 0x323a5e : 0x232840, major ? Math.min(1, alpha + 0.2) : alpha);
       g.lineBetween(MIN, y, MAXX, y);
@@ -296,9 +315,19 @@ export default class EditorScene extends Phaser.Scene {
   }
 
   // --- input ---------------------------------------------------------------
+  /** Abandon an in-progress drag without placing anything, and restore the ghost. */
+  _cancelDrag() {
+    this._drag = null;
+    this.preview.clear();
+    this.ghost.setVisible(true);
+  }
+
   _onDown(p) {
     const s = this._snapped(p);
     const tool = model.tool;
+    // Tools that act on the click itself never own a drag; clearing here stops a leftover one
+    // from being resurrected by the pointerup that follows.
+    this._drag = null;
 
     if (tool === 'erase') { this._erase(p); return; }
     if (tool === 'spawn') { model.spawn = s; model.dirty = true; return; }
@@ -391,8 +420,10 @@ export default class EditorScene extends Phaser.Scene {
     const y1 = Math.min(a.y, b.y);
     let w = Math.abs(b.x - a.x);
     let h = Math.abs(b.y - a.y);
-    // A click (no real drag) → default size for the tool.
-    if (tool && (w < GRID || h < GRID)) {
+    // A click (no real drag) → default size for the tool. The threshold follows the active snap
+    // step so "one cell" means the same thing the grid is showing.
+    const minDrag = model.snapEnabled ? model.snapSize : GRID;
+    if (tool && (w < minDrag || h < minDrag)) {
       const d = DEFAULT_SIZE[tool];
       return { x: a.x, y: a.y, w: d.w, h: d.h };
     }
