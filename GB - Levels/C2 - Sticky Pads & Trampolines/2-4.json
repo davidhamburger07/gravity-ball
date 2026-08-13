@@ -1,0 +1,36 @@
+{
+  "id": "2-4",
+  "par": 2,
+  "gravity": "down",
+  "spawn": {
+    "x": 400,
+    "y": 200
+  },
+  "goal": {
+    "x": 760,
+    "y": 560
+  },
+  "hint": "Green pads launch you",
+  "sticky": [
+    {
+      "x": 400,
+      "y": 36,
+      "w": 40,
+      "h": 24
+    }
+  ],
+  "bouncers": [
+    {
+      "x": 400,
+      "y": 566,
+      "w": 40,
+      "h": 20,
+      "dir": "up",
+      "power": 20
+    }
+  ],
+  "solution": [
+    "right",
+    "down"
+  ]
+}
