@@ -9,8 +9,12 @@ import Button from '../ui/Button.js';
 import { AudioManager } from '../systems/AudioManager.js';
 import { Effects } from '../systems/Effects.js';
 import { CrazyGamesSDK } from '../sdk/CrazyGamesSDK.js';
+import { AdBreaks } from '../systems/AdBreaks.js';
+import { Banners } from '../systems/Banners.js';
 import { VIEW, PHYSICS, FEEL } from '../config/GameConfig.js';
 import { skinById, skinTextureKey, isSkinUnlocked } from '../systems/Skins.js';
+import { recordSolve } from '../systems/SolveProof.js';
+import * as LevelApi from '../systems/LevelApi.js';
 
 const BORDER = 24; // auto border-wall thickness
 
@@ -56,9 +60,13 @@ export default class GameScene extends Phaser.Scene {
     // Agent mode (AI playtester): the level comes from the procedural generator, the world is
     // stepped as fast as the frame budget allows, and all juice is suppressed.
     this._agentMode = data.agent ?? false;
+    // A player-published level opened from the level browser. Treated like a generated level for
+    // save purposes — its id belongs to another player's level, not to this campaign — but it
+    // returns to the browser rather than to level select.
+    this._custom = data.custom ?? false;
     // A human playing a procedurally generated level: same level source, full juice, but kept
     // out of the save file since generated ids aren't part of the campaign.
-    this._generated = this._agentMode || (data.generated ?? false);
+    this._generated = this._agentMode || (data.generated ?? false) || this._custom;
     this._fx = !this._agentMode; // gate for particles / shake / tweens / audio
     this.levelId = data.levelId ?? this.levelId ?? '1-1';
     this.chapterId = data.chapterId ?? this.chapterId ?? 1;
@@ -78,6 +86,31 @@ export default class GameScene extends Phaser.Scene {
     this._clockMs = 0;    // gameplay clock — see now()
     this._contacts = new Set(); // ids of solid bodies the ball is resting against — see isGrounded()
     this.shiftCount = 0;
+    // init() re-runs on every scene.restart(), which is exactly why this state lives here.
+    this._gpActive = false;     // is a platform gameplay session open? (see _gameplayOn)
+    this._adPaused = false;
+    this._bonusShifts = 0;      // shifts granted by a rewarded ad, this attempt only
+    this._shiftAdOffered = false;
+    // _addHud pushes into this on every build; without a reset it accumulated destroyed objects
+    // across restarts and handed a growing list of dead references to cameras.main.ignore().
+    this._hudObjects = [];
+  }
+
+  // --- Platform gameplay session -------------------------------------------
+  // gameplayStart and gameplayStop must strictly alternate. Routing both through here fixes two
+  // real defects: scene.restart() used to call start again with no stop between (create() ran, but
+  // nothing on the shutdown side stopped), and every exit that was not _toLevelSelect() — the win
+  // panel's Editor button navigates the page away — leaked an open session forever.
+  _gameplayOn() {
+    if (this._gpActive || this._agentMode) return;
+    this._gpActive = true;
+    CrazyGamesSDK.gameplayStart();
+  }
+
+  _gameplayOff() {
+    if (!this._gpActive) return;
+    this._gpActive = false;
+    CrazyGamesSDK.gameplayStop();
   }
 
   /**
@@ -110,11 +143,15 @@ export default class GameScene extends Phaser.Scene {
   create() {
     this.save = this.registry.get('save');
     this.levelsData = this.registry.get('levels');
+    Banners.clear(); // a banner must never share the screen with gameplay
     let level;
     if (this._playlist) {
       level = this._playlist[this._plIndex];
       this.chapterId = 0;
       if (!level.id) level.id = `slot ${this._plIndex + 1}`;
+    } else if (this._custom) {
+      level = this.registry.get('customLevel');
+      this.chapterId = 0;
     } else if (this._generated) {
       level = this.registry.get('generatedLevel');
       this.chapterId = 0;
@@ -124,18 +161,34 @@ export default class GameScene extends Phaser.Scene {
       if (!level.id) level.id = 'test';
     } else {
       level = this._resolveLevel(this.levelId);
+      // Every id from a previous version of the campaign is now an unknown id, and both
+      // screenshot.mjs and verify-levels.mjs start this scene with an arbitrary one. Throwing here
+      // aborts the scene build and leaves a black canvas with no way out, so bail to level select.
+      if (!level) {
+        this.scene.start('LevelSelectScene');
+        return;
+      }
     }
     this.level = level;
-    const bounds = level.bounds ?? { w: VIEW.WIDTH, h: VIEW.HEIGHT };
+    const bounds = level.bounds ?? { w: VIEW.WIDTH, h: VIEW.PLAY_H };
 
     // Silence the juice systems for the whole run rather than at a dozen call sites. Restored
     // on shutdown so returning to normal play brings the game feel back.
     Effects.enabled = this._fx;
     AudioManager.silent = this._agentMode;
-    this.events.once('shutdown', () => { Effects.enabled = true; AudioManager.silent = false; });
+    this.events.once('shutdown', () => {
+      Effects.enabled = true;
+      AudioManager.silent = false;
+      this._gameplayOff(); // covers restart, ESC, and any other way out of this scene
+    });
 
     this.matter.world.setBounds(0, 0, bounds.w, bounds.h);
     this.cameras.main.setBounds(0, 0, bounds.w, bounds.h);
+    // Confine the world to the play box so the HUD bands above and below it are not drawn over
+    // gameplay. Phaser scissors each camera to its viewport, so geometry cannot bleed into them.
+    // This has to live in create(): CameraManager destroys every camera on shutdown and re-adds
+    // `main` at full canvas size, so a restart would silently give the overlap back.
+    this.cameras.main.setViewport(0, VIEW.HUD_TOP, VIEW.WIDTH, VIEW.PLAY_H);
 
     this._active = level.activeColor ?? 'red';
     if (this._fx) this._buildParallax(bounds);
@@ -156,8 +209,8 @@ export default class GameScene extends Phaser.Scene {
     this.events.off('gravity:changed');
     this.events.on('gravity:request', (dir) => {
       if (this._solved) return;
-      // Shift budget (Ch.10): once spent, real shift requests are denied with feedback.
-      const max = this.level.maxShifts;
+      // Shift budget: once spent, real shift requests are denied with feedback.
+      const max = this._shiftBudget();
       if (max && this.shiftCount >= max && dir !== this.gravity.direction) { this._denyShift(); return; }
       this.gravity.request(dir);
     });
@@ -183,16 +236,18 @@ export default class GameScene extends Phaser.Scene {
       return;
     }
 
-    CrazyGamesSDK.gameplayStart();
+    this._gameplayOn();
   }
 
   // --- Level construction --------------------------------------------------
+  /** The campaign level with this id, or null — the caller decides how to recover. */
   _resolveLevel(levelId) {
     for (const c of this.levelsData.chapters) {
       const found = (c.levels ?? []).find((l) => l.id === levelId);
       if (found) { this.chapterId = c.id; return found; }
     }
-    throw new Error(`Level "${levelId}" not found in levels.json`);
+    console.warn(`[GameScene] level "${levelId}" is not in levels.json — returning to level select.`);
+    return null;
   }
 
   _buildStatic(level, bounds) {
@@ -441,6 +496,15 @@ export default class GameScene extends Phaser.Scene {
   update(time, delta) {
     if (this._agentMode) return this._agentFrame();
 
+    // An ad covers the page for up to half a minute. Keeping the clock flush across it matters:
+    // without this, the first frame afterwards sees ~30s of elapsed time and burns the whole
+    // catch-up budget at once, which is enough to hurl the ball through a wall.
+    if (this._adPaused) {
+      this._lastTime = time;
+      this._accum = 0;
+      return;
+    }
+
     // --- Fixed-timestep physics -------------------------------------------------------------
     // Physics advances in whole 1/60s steps driven by REAL elapsed time, so the ball moves at the
     // same speed on a 60Hz phone, a 144Hz monitor, or a struggling low-end device. Leftover time
@@ -533,9 +597,9 @@ export default class GameScene extends Phaser.Scene {
       }
     }
 
-    // Shift budget (Ch.10): if the budget is spent and the ball has settled without reaching the
-    // goal, the attempt failed — auto-fail so the player is never soft-locked waiting on a dead run.
-    const max = this.level.maxShifts;
+    // Shift budget: if the budget is spent and the ball has settled without reaching the goal, the
+    // attempt failed — auto-fail so the player is never soft-locked waiting on a dead run.
+    const max = this._shiftBudget();
     if (max && !this._solved && !this._dying && this.shiftCount >= max) {
       const v = this.ball.body.velocity;
       // Measured in milliseconds, not frames, so the grace period is the same on every device.
@@ -559,14 +623,14 @@ export default class GameScene extends Phaser.Scene {
   }
 
   _buildHud(level) {
-    // The playfield fills the whole canvas, so HUD text used to sit directly on top of walls and
-    // pieces and became unreadable. Everything now lives in dedicated translucent bands: one row
-    // across the top, one along the bottom for the hint. Bands sit above gameplay but below the
-    // HUD text itself, and below the level-complete panel.
+    // The bands are OUTSIDE the playfield now (create() gives the world camera its own viewport),
+    // so nothing here can cover gameplay. Their heights are deliberately constant: sizing them to
+    // whether this particular level has a hint or a death-rule row would shrink the play box by
+    // different amounts level to level, and consecutive levels in a chapter would visibly change
+    // scale — chapter 1 alone flips both flags several times.
     const secondRow = !!level.resetGravityOnDeath;
-    const topBarH = HUD_BAR_H + (secondRow ? HUD_ROW2_H : 0);
     this._addHud(this.add
-      .rectangle(VIEW.WIDTH / 2, topBarH / 2, VIEW.WIDTH, topBarH, 0x0d1018, 0.62)
+      .rectangle(VIEW.WIDTH / 2, VIEW.HUD_TOP / 2, VIEW.WIDTH, VIEW.HUD_TOP, 0x0d1018, 0.92)
       .setScrollFactor(0).setDepth(HUD_BAND_DEPTH));
 
     this.hud = this._addHud(this.add
@@ -599,8 +663,10 @@ export default class GameScene extends Phaser.Scene {
         .setScrollFactor(0).setDepth(100));
     }
 
-    // Held-keys inventory, centred between the level readout and the right-hand controls.
-    this._keyHud = this._addHud(this.add.container(VIEW.WIDTH / 2, HUD_ROW_Y).setScrollFactor(0).setDepth(100));
+    // Held-keys inventory. Anchored to the right cluster and grown leftwards rather than centred:
+    // centred on the canvas it collided with the level readout as soon as the id was long (a
+    // published custom level's id plus a shift budget plus three keys overlapped by ~40px).
+    this._keyHud = this._addHud(this.add.container(VIEW.WIDTH - 240, HUD_ROW_Y).setScrollFactor(0).setDepth(100));
 
     // Death-rule indicator gets its own row so it never sits on the playfield.
     if (secondRow) {
@@ -611,11 +677,13 @@ export default class GameScene extends Phaser.Scene {
         .setOrigin(0, 0.5).setScrollFactor(0).setDepth(100));
     }
 
+    // The hint strip is always drawn, hint or not, for the same reason the top band is a constant:
+    // the play box must not change size between levels.
+    const hintY = VIEW.HEIGHT - VIEW.HUD_BOTTOM / 2;
+    this._addHud(this.add
+      .rectangle(VIEW.WIDTH / 2, hintY, VIEW.WIDTH, VIEW.HUD_BOTTOM, 0x0d1018, 0.92)
+      .setScrollFactor(0).setDepth(HUD_BAND_DEPTH));
     if (level.hint) {
-      const hintY = VIEW.HEIGHT - 16;
-      this._addHud(this.add
-        .rectangle(VIEW.WIDTH / 2, hintY, VIEW.WIDTH, 32, 0x0d1018, 0.62)
-        .setScrollFactor(0).setDepth(HUD_BAND_DEPTH));
       this._addHud(this.add
         .text(VIEW.WIDTH / 2, hintY, level.hint, {
           fontFamily: 'monospace', fontSize: '13px', color: '#8990b8',
@@ -698,8 +766,9 @@ export default class GameScene extends Phaser.Scene {
   // Zoom-to-fit for levels bigger than one screen. Only built when it would do something, so
   // ordinary 800x600 levels keep an uncluttered HUD.
   _buildZoomButton(level) {
-    const bounds = level.bounds ?? { w: VIEW.WIDTH, h: VIEW.HEIGHT };
-    this._fitZoom = Math.min(VIEW.WIDTH / bounds.w, VIEW.HEIGHT / bounds.h);
+    const bounds = level.bounds ?? { w: VIEW.WIDTH, h: VIEW.PLAY_H };
+    // Measured against the play box, not the canvas — the HUD bands are not the world's to use.
+    this._fitZoom = Math.min(VIEW.WIDTH / bounds.w, VIEW.PLAY_H / bounds.h);
     if (this._fitZoom >= 0.999) return; // level already fits — no button needed
 
     this._zoomedOut = false;
@@ -716,7 +785,7 @@ export default class GameScene extends Phaser.Scene {
     if (!this._zoomBtn) return;
     const cam = this.cameras.main;
     this._zoomedOut = !this._zoomedOut;
-    const bounds = this.level.bounds ?? { w: VIEW.WIDTH, h: VIEW.HEIGHT };
+    const bounds = this.level.bounds ?? { w: VIEW.WIDTH, h: VIEW.PLAY_H };
 
     if (this._zoomedOut) {
       cam.stopFollow();
@@ -731,19 +800,61 @@ export default class GameScene extends Phaser.Scene {
     AudioManager.ui();
   }
 
+  /**
+   * Campaign ids are short ("3-10"), but a published community level's id is arbitrary and long
+   * enough to run the readout into the key inventory. Clip it here rather than letting the layout
+   * decide how much of the HUD a stranger's id gets to occupy.
+   */
+  _hudLevelName() {
+    const id = String(this.level.id ?? '');
+    return id.length > 10 ? `${id.slice(0, 9)}…` : id;
+  }
+
   _updateHud() {
+    const name = this._hudLevelName();
     if (this._playlist) {
-      this.hud.setText(`Playlist ${this._plIndex + 1}/${this._playlist.length}    ${this.level.id}    Shifts: ${this.shiftCount}`);
+      this.hud.setText(`Playlist ${this._plIndex + 1}/${this._playlist.length}    ${name}    Shifts: ${this.shiftCount}`);
       return;
     }
-    const max = this.level.maxShifts;
+    const max = this._shiftBudget();
     if (max) {
       const left = max - this.shiftCount;
-      this.hud.setText(`Level ${this.level.id}    Shifts: ${this.shiftCount}/${max}    Par: ${this.level.par ?? '-'}`);
+      this.hud.setText(`Level ${name}    Shifts: ${this.shiftCount}/${max}    Par: ${this.level.par ?? '-'}`);
       this.hud.setColor(left <= 0 ? '#ff4d5e' : left === 1 ? '#ffd23f' : '#9aa0c3');
     } else {
-      this.hud.setText(`Level ${this.level.id}    Shifts: ${this.shiftCount}    Par: ${this.level.par ?? '-'}`);
+      this.hud.setText(`Level ${name}    Shifts: ${this.shiftCount}    Par: ${this.level.par ?? '-'}`);
     }
+  }
+
+  /**
+   * The shift budget for this attempt, including any bonus earned from a rewarded ad.
+   *
+   * The bonus is tracked separately rather than added to `level.maxShifts` because `this.level` is
+   * the shared object out of the levels cache — mutating it would leak the bonus into every later
+   * attempt at that level, and into the shipped campaign data for the rest of the session.
+   */
+  _shiftBudget() {
+    const max = this.level.maxShifts;
+    return max ? max + (this._bonusShifts ?? 0) : 0;
+  }
+
+  // --- Ad breaks -----------------------------------------------------------
+  // An ad is a gameplay break: silence audio, stop taking input, and freeze the physics clock.
+  // AudioManager.silent is the transient flag — deliberately not `muted`, which is the player's
+  // own persisted preference and must survive the ad unchanged.
+  _adPause() {
+    this._adPaused = true;
+    this._wasSilent = AudioManager.silent;
+    AudioManager.silent = true;
+    this.input.enabled = false;
+    if (this.input.keyboard) this.input.keyboard.enabled = false;
+  }
+
+  _adResume() {
+    this._adPaused = false;
+    AudioManager.silent = this._wasSilent ?? false;
+    this.input.enabled = true;
+    if (this.input.keyboard) this.input.keyboard.enabled = true;
   }
 
   // Out of shifts: buzz + red HUD pulse so the denial reads clearly.
@@ -753,6 +864,43 @@ export default class GameScene extends Phaser.Scene {
     this.cameras.main.shake(80, 0.002);
     this.hud.setColor('#ff4d5e');
     this.tweens.add({ targets: this.hud, alpha: 0.3, duration: 90, yoyo: true, repeat: 1 });
+    this._offerShiftAd();
+  }
+
+  /**
+   * A spent shift budget is otherwise a dead end — the level auto-fails a second later and the only
+   * way on is a restart. That makes it the one genuinely user-initiated moment in this game where a
+   * rewarded ad is worth offering. Offered once per attempt, and restarting (R) still restores the
+   * full budget for free, so the ad is never the only route.
+   */
+  _offerShiftAd() {
+    if (this._shiftAdOffered || this._solved || this._dying) return;
+    if (!CrazyGamesSDK.available || CrazyGamesSDK.adblock) return;
+    this._shiftAdOffered = true;
+
+    const btn = this._addHud(this.add
+      .text(VIEW.WIDTH / 2, VIEW.HEIGHT - VIEW.HUD_BOTTOM - 26, '▶  Watch an ad for +3 shifts', {
+        fontFamily: 'system-ui, sans-serif', fontSize: '14px', color: '#ffd23f',
+        backgroundColor: '#1a1e30', padding: { x: 12, y: 7 },
+      })
+      .setOrigin(0.5).setScrollFactor(0).setDepth(150)
+      .setInteractive({ useHandCursor: true }));
+
+    btn.once('pointerdown', async () => {
+      btn.destroy();
+      AudioManager.ui();
+      this._gameplayOff(); // an ad is a break in play — stop the session before requesting
+      this._adPause();
+      const { shown } = await CrazyGamesSDK.rewardedAd();
+      this._adResume();
+      if (shown) { // reward ONLY on a completed ad, never on an error or a block
+        this._bonusShifts = (this._bonusShifts ?? 0) + 3;
+        this._restMs = 0;
+        this.hud.setColor('#9aa0c3');
+        this._updateHud();
+      }
+      this._gameplayOn();
+    });
   }
 
   // --- Feedback / juice ----------------------------------------------------
@@ -934,7 +1082,7 @@ export default class GameScene extends Phaser.Scene {
     const held = (this._keyItems ?? []).filter((k) => k.collected);
     held.forEach((k, i) => {
       const icon = this.add
-        .image((i - (held.length - 1) / 2) * 26, 0, 'key')
+        .image(-(held.length - 1 - i) * 26, 0, 'key')
         .setTint(KEY_COLORS[k.color])
         .setScale(1.1);
       this._keyHud.add(icon);
@@ -1039,9 +1187,15 @@ export default class GameScene extends Phaser.Scene {
     // levels use ids that aren't part of the campaign, so recording them would pollute the save.
     if (!this._playtest && !this._generated && !this._playlist) {
       this.save.recordResult(this.level.id, { stars, shifts: this.shiftCount });
+      // Only campaign ids are in the save order, so this guard already scopes the report correctly.
+      CrazyGamesSDK.reportProgress(this.save.completionPercent());
     }
+
+    // Beating your own level in the editor's playtest is what unlocks Publish, and this run's
+    // shift count feeds the published par — the author's best run becomes the par others chase.
+    if (this._playtest) recordSolve(this.level, this.shiftCount);
     CrazyGamesSDK.happytime();
-    CrazyGamesSDK.gameplayStop();
+    this._gameplayOff();
 
     AudioManager.win();
     this.cameras.main.flash(200, 43, 214, 123);
@@ -1193,6 +1347,22 @@ export default class GameScene extends Phaser.Scene {
     this._updateHud();
   }
 
+  /**
+   * Wrap a level-advance action so an interstitial can run first. The advance happens either way —
+   * an unfilled, blocked or errored ad must never cost the player their progression.
+   */
+  _withAdBreak(advance) {
+    return async () => {
+      this.input.keyboard?.off('keydown-ENTER'); // no double-fire while the ad is up
+      if (!AdBreaks.shouldShowMidgame()) { advance(); return; }
+      this._adPause();
+      const { shown } = await CrazyGamesSDK.midgameAd();
+      this._adResume();
+      if (shown) AdBreaks.markShown();
+      advance();
+    };
+  }
+
   _showCompletePanel(stars) {
     const panel = this._addHud(this.add
       .container(VIEW.WIDTH / 2, VIEW.HEIGHT / 2)
@@ -1240,6 +1410,14 @@ export default class GameScene extends Phaser.Scene {
         ['Retry', () => this.scene.restart({ playtest: true }), 0x2a2f45, '#ffffff'],
         ['Editor', () => { window.location.href = 'editor.html'; }, 0x38e1ff, '#0b1020'],
       ];
+    } else if (this._custom) {
+      // Rating is offered only after finishing the level, so votes come from players who
+      // actually played it — which is what makes the Top tab worth reading.
+      this._addRatingRow(panel);
+      actions = [
+        ['Retry', () => this.scene.restart({ custom: true }), 0x2a2f45, '#ffffff'],
+        ['Browse', () => this._toLevelSelect(), 0x38e1ff, '#0b1020'],
+      ];
     } else {
       const nextId = this.save.nextLevelId(this.level.id);
       actions = [
@@ -1247,8 +1425,21 @@ export default class GameScene extends Phaser.Scene {
         ['Levels', () => this._toLevelSelect(), 0x2a2f45, '#ffffff'],
       ];
       if (nextId) {
-        goNext = () => this.scene.restart({ levelId: nextId });
+        // Advancing to the next level is the one natural break in a puzzle game: play is over, the
+        // player has seen their stars, and they chose to move on. Ads anywhere else here would be a
+        // guideline violation — never on death (the ball respawns in 170ms, that is live play),
+        // never on Retry, and never behind a navigation button.
+        goNext = this._withAdBreak(() => this.scene.restart({ levelId: nextId }));
         actions.push(['Next', goNext, 0x38e1ff, '#0b1020']);
+      } else {
+        panel.add(
+          this.add
+            .text(0, 58, 'That is every level built so far.\nChapter 4 is coming soon.', {
+              fontFamily: 'system-ui, sans-serif', fontSize: '13px', color: '#8990b8',
+              align: 'center', lineSpacing: 3,
+            })
+            .setOrigin(0.5)
+        );
       }
     }
 
@@ -1278,9 +1469,67 @@ export default class GameScene extends Phaser.Scene {
     this.tweens.add({ targets: panel, scale: 1, alpha: 1, ease: 'Back.easeOut', duration: 380 });
   }
 
+  /**
+   * Like / dislike / report for a player-published level, shown on the completion panel.
+   *
+   * Built from plain interactive text rather than Buttons because the row has to fit in the strip
+   * between the score line and the action buttons, where a 46px-tall Button would not.
+   */
+  _addRatingRow(panel) {
+    const meta = this.registry.get('customLevelMeta');
+    if (!meta?.id) return;
+
+    const row = this.add.container(0, 58);
+    panel.add(row);
+
+    const label = this.add
+      .text(-160, 0, 'Rate this level', {
+        fontFamily: 'system-ui, sans-serif', fontSize: '13px', color: '#7a80a8',
+      })
+      .setOrigin(0, 0.5);
+    row.add(label);
+
+    const done = (message, color) => {
+      row.removeAll(true);
+      row.add(this.add
+        .text(0, 0, message, { fontFamily: 'system-ui, sans-serif', fontSize: '13px', color })
+        .setOrigin(0.5));
+    };
+
+    const link = (x, text, color, onClick) => {
+      const t = this.add
+        .text(x, 0, text, { fontFamily: 'system-ui, sans-serif', fontSize: '15px', color })
+        .setOrigin(0.5)
+        .setInteractive({ useHandCursor: true });
+      t.on('pointerover', () => t.setColor('#ffffff'));
+      t.on('pointerout', () => t.setColor(color));
+      t.on('pointerdown', onClick);
+      row.add(t);
+      return t;
+    };
+
+    const send = async (dir) => {
+      done('Sending…', '#7a80a8');
+      const res = await LevelApi.vote(meta.id, dir);
+      if (res.ok) done(dir === 1 ? 'Thanks — liked!' : 'Thanks for the feedback.', '#2bd67b');
+      else done(res.error, '#e0574f');
+    };
+
+    link(30, '♥ Like', '#2bd67b', () => send(1));
+    link(105, '✕ Dislike', '#e0574f', () => send(-1));
+    link(168, '⚑', '#5a6089', async () => {
+      if (!window.confirm('Report this level as inappropriate or broken?')) return;
+      const res = await LevelApi.report(meta.id);
+      done(res.ok ? 'Reported. Thank you.' : res.error, res.ok ? '#9aa0c3' : '#e0574f');
+    });
+  }
+
   _toLevelSelect() {
-    CrazyGamesSDK.gameplayStop();
+    this._gameplayOff();
+    if (this._custom) { this.scene.start('LevelBrowserScene'); return; }
     if (this._playlist || this._playtest) { window.location.href = 'editor.html'; return; }
-    this.scene.start('LevelSelectScene', { chapterId: this.chapterId });
+    // Generated and playtest levels carry chapterId 0, which is not a real chapter — leave it
+    // undefined so level select falls back rather than trying to render a chapter that isn't there.
+    this.scene.start('LevelSelectScene', { chapterId: this.chapterId || undefined });
   }
 }

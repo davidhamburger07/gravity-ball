@@ -1,12 +1,12 @@
 # Gravity Ball — Game Design Document
 
-> **Logline:** You don't move the ball. You move the *world*. Flip gravity Up, Down, Left, or Right to roll a ball through 200+ bite-sized physics puzzles.
+> **Logline:** You don't move the ball. You move the *world*. Flip gravity Up, Down, Left, or Right to roll a ball through bite-sized physics puzzles.
 
 - **Platform:** CrazyGames (HTML5, desktop + mobile web)
 - **Engine:** Phaser 3 + Matter.js physics
 - **Genre:** 2.5D physics puzzle
 - **Session shape:** 30–90 second levels, "one more level" loop
-- **Scope:** 10 chapters × 20–30 levels ≈ **200–300 levels**
+- **Scope (shipping):** 5 chapters declared, **3 built — 28 hand-authored levels, 84 stars**. Chapters 4 and 5 are announced in-game as "coming soon".
 
 ---
 
@@ -37,24 +37,35 @@
 
 Each chapter = a new "toy," a tutorial level that teaches it safely, and a finale that combines it with everything prior.
 
-| Ch | Theme / Name | New mechanic(s) | Teaches the player… |
-|----|--------------|-----------------|---------------------|
-| **1** | **Ground Zero** | 4-way gravity shift + goal portal | The core verb. Fall in every direction. |
-| **2** | **Spike Fields** | Static hazards (spikes) | Route *around* danger; a shift can save or kill you. |
-| **3** | **Bounce House** | Bouncy surfaces (trampolines) **+** sticky walls | Managing momentum: build speed, then cancel it. |
-| **4** | **Locksmith** | Keys & doors | Ordering / detours: grab the key *before* the exit. |
-| **5** | **Fragile Ground** | Breakable/crumbling blocks **+** weight (heavy) zones | Timing & one-shot paths; heavier ball changes routes. |
-| **6** | **Wormholes** | Portals that preserve momentum | Thinking in vectors: you exit going the way you entered. |
-| **7** | **Chromatic** | Color switches & color-coded walls | Boolean logic: toggle which walls are solid. |
-| **8** | **Time Warp** | Slow-motion zones **+** sweeping lasers | Precision timing against moving threats. |
-| **9** | **Singularity** | Black holes (gravity wells) **+** local gravity-reversal zones | The world fights your gravity; plan around competing forces. |
-| **10** | **Event Horizon** | Capstone: **limited gravity shifts** (move budget) | Mastery — solve remix levels with everything, using few shifts. |
+Levels are hand-authored as one JSON file per level under `GB - Levels/C<n> - <Name>/`, and compiled into
+`src/data/levels.json` by `npm run levels:build`. **The chapter list lives in that script**, not in the folder
+listing — git cannot track an empty directory, so an unbuilt chapter would otherwise vanish on a fresh clone.
 
-**Design cadence within a chapter (≈24 levels):**
-- Levels 1–3: safe introduction of the new mechanic in isolation.
-- Levels 4–15: escalating variations, then combine with 1–2 earlier mechanics.
-- Levels 16–22: multi-mechanic pressure.
-- Levels 23–24: "boss" level — the hardest fair combination in the chapter.
+| Ch | Theme / Name | New mechanic(s) | Status |
+|----|--------------|-----------------|--------|
+| **1** | **Intro to Movement & Spikes** | 4-way gravity shift + static hazards | **Built — 10 levels** |
+| **2** | **Sticky Pads & Trampolines** | Sticky pads **+** bouncy surfaces | **Built — 10 levels** |
+| **3** | **Lock & Keys** | Keys & doors | **Built — 8 levels** |
+| **4** | **Breakable Blocks & Weight Zones** | Breakable blocks **+** weight (heavy) zones | Coming soon |
+| **5** | **Portals** | Portals that preserve momentum | Coming soon |
+
+**Design cadence within a chapter:**
+- First levels: safe introduction of the new mechanic in isolation.
+- Middle: escalating variations, then combine with 1–2 earlier mechanics.
+- Last: the hardest fair combination in the chapter.
+
+### Backlog — designed, not yet scheduled
+
+These were part of the original 10-chapter outline. The mechanics are implemented in `GameScene` and usable from
+the level editor; they simply have no authored chapter yet, and `UNSCHEDULED` in `src/procgen/chapters.js` lists
+them so the generator's silence about them reads as a decision.
+
+| Theme | Mechanic(s) | Teaches the player… |
+|-------|-------------|---------------------|
+| **Chromatic** | Color switches & color-coded walls | Boolean logic: toggle which walls are solid. |
+| **Time Warp** | Slow-motion zones **+** sweeping lasers | Precision timing against moving threats. |
+| **Singularity** | Black holes **+** local gravity-reversal zones | The world fights your gravity; plan around competing forces. |
+| **Event Horizon** | Capstone: **limited gravity shifts** (move budget) | Mastery — remix levels solved with few shifts. |
 
 ---
 

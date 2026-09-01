@@ -62,6 +62,7 @@ class EditorModel {
 
   reset() {
     this.id = 'custom-1';
+    this.solution = null;              // recorded key sequence, kept across a save/load round trip
     this.gravity = 'down';
     this.par = 3;
     this.hint = '';
@@ -106,6 +107,9 @@ class EditorModel {
     if (Number(this.maxShifts) > 0) lvl.maxShifts = Number(this.maxShifts);
     if (Number(this.fog) > 0) lvl.fog = Number(this.fog);
     if (this.cblocks.length) lvl.activeColor = this.activeColor;
+    // Carry the recorded solution through. Dropping it on save silently downgraded a verified
+    // level to "skipped" in verify-folder.mjs the first time anyone reopened it in the editor.
+    if (this.solution?.length) lvl.solution = [...this.solution];
     const arrays = ['walls', 'ramps', 'hazards', 'sticky', 'bouncers', 'keys', 'doors', 'portals', 'weights', 'breakables', 'cblocks', 'switches', 'slowzones', 'lasers', 'gravzones', 'blackholes'];
     for (const key of arrays) {
       if (this[key].length) lvl[key] = this[key].map((o) => JSON.parse(JSON.stringify(o)));
@@ -115,7 +119,10 @@ class EditorModel {
 
   fromLevel(l) {
     this.reset();
-    this.id = l.id ?? 'custom-1';
+    // No fake default: 'custom-1' here is how two different chapter-3 levels ended up sharing an
+    // id on disk. An empty id is visibly wrong; a plausible-looking wrong one is not.
+    this.id = l.id ?? '';
+    this.solution = Array.isArray(l.solution) ? [...l.solution] : null;
     this.par = l.par ?? 3;
     this.gravity = l.gravity ?? 'down';
     this.hint = l.hint ?? '';

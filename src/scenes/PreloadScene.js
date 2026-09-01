@@ -11,13 +11,11 @@ export default class PreloadScene extends Phaser.Scene {
   }
 
   preload() {
-    CrazyGamesSDK.loadingStart();
     // Level definitions are data, arrayed by chapter -> level (see src/data/levels.json).
     this.load.json('levels', 'src/data/levels.json');
   }
 
   async create() {
-    CrazyGamesSDK.loadingStop();
     const levels = this.cache.json.get('levels');
     this.registry.set('levels', levels);
 
@@ -28,46 +26,55 @@ export default class PreloadScene extends Phaser.Scene {
     // Everything's ready — dismiss the HTML loading overlay.
     if (typeof document !== 'undefined') document.getElementById('loading')?.remove();
 
+    // Closing the platform's loading window is routed through here because there are five ways out
+    // of this scene. Missing any one of them would leave the loading state open for the whole
+    // session, so every branch below goes through _handOff.
+    const handOff = (scene, data) => {
+      CrazyGamesSDK.loadingStop();
+      this.scene.start(scene, data);
+    };
+
     // Automated content run (./?ai=1) — generate levels and let the AI playtest them.
-    if (autoStartFromUrl(this.game)) return;
+    if (autoStartFromUrl(this.game)) { CrazyGamesSDK.loadingStop(); return; }
+
+    const params = new URLSearchParams(location.search);
 
     // Editor playlist run: ?playlist=1&i=N plays the designer's own levels in order.
-    const params = new URLSearchParams(location.search);
     if (params.has('playlist')) {
       try {
         const list = JSON.parse(localStorage.getItem('gravityball:playlist'));
         if (Array.isArray(list) && list.length) {
           this.registry.set('playlist', list);
           const i = Math.min(Math.max(parseInt(params.get('i'), 10) || 0, 0), list.length - 1);
-          this.scene.start('GameScene', { playlist: true, playlistIndex: i });
+          handOff('GameScene', { playlist: true, playlistIndex: i });
           return;
         }
       } catch { /* fall through to the menu */ }
     }
 
     // Shared-map link: ?code=… plays someone else's level straight from the URL.
-    const codeParam = new URLSearchParams(location.search).get('code');
+    const codeParam = params.get('code');
     if (codeParam) {
       const shared = decodeLevel(codeParam);
       if (shared) {
         this.registry.set('playtestLevel', shared);
-        this.scene.start('GameScene', { playtest: true });
+        handOff('GameScene', { playtest: true });
         return;
       }
     }
 
     // Playtest hand-off from the level editor (editor.html → ./?playtest=1).
-    if (new URLSearchParams(location.search).has('playtest')) {
+    if (params.has('playtest')) {
       try {
         const lvl = JSON.parse(localStorage.getItem('gravityball:playtest'));
         if (lvl && lvl.spawn && lvl.goal) {
           this.registry.set('playtestLevel', lvl);
-          this.scene.start('GameScene', { playtest: true });
+          handOff('GameScene', { playtest: true });
           return;
         }
       } catch { /* fall through to the menu */ }
     }
 
-    this.scene.start('MenuScene');
+    handOff('MenuScene');
   }
 }

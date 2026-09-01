@@ -3,6 +3,7 @@
 import Button from '../ui/Button.js';
 import { SKINS, skinTextureKey, isSkinUnlocked, describeRequirement, requirementProgress } from '../systems/Skins.js';
 import { AudioManager } from '../systems/AudioManager.js';
+import { Banners } from '../systems/Banners.js';
 
 const COLS = 5;
 const TILE = 104;
@@ -17,6 +18,7 @@ export default class SkinsScene extends Phaser.Scene {
     this.save = this.registry.get('save');
     this.levelsData = this.registry.get('levels');
     const { width } = this.scale;
+    Banners.show();
 
     this.add
       .text(width / 2, 40, 'BALL SKINS', {
@@ -24,12 +26,15 @@ export default class SkinsScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
-    new Button(this, 56, 40, '‹', () => this.scene.start('MenuScene'), {
-      width: 48, height: 44, fontSize: '22px', color: 0x2a2f45, textColor: '#ffffff',
+    new Button(this, 78, 40, '‹ MENU', () => this.scene.start('MenuScene'), {
+      width: 108, height: 44, fontSize: '18px', color: 0x2a2f45, textColor: '#ffffff',
     });
+    this.input.keyboard?.on('keydown-ESC', () => this.scene.start('MenuScene'));
 
+    // Against the ceiling, not bare: "42/84" makes the size of the campaign legible, and would
+    // have made the old 420-stars-in-an-84-star-campaign bug obvious at a glance.
     this.add
-      .text(width - 16, 40, `★ ${this.save.totalStars()}`, {
+      .text(width - 16, 40, `★ ${this.save.totalStars()}/${this.save.maxStars()}`, {
         fontFamily: 'monospace', fontSize: '18px', color: '#ffd23f',
       })
       .setOrigin(1, 0.5);

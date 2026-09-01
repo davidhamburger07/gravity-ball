@@ -11,6 +11,9 @@ export default class BootScene extends Phaser.Scene {
 
   async create() {
     await CrazyGamesSDK.init();
+    // Opened as early as the SDK allows and closed by PreloadScene once the save is in and the
+    // HTML overlay is gone, so the platform's loading window matches what the player actually sees.
+    CrazyGamesSDK.loadingStart();
     generatePlaceholderTextures(this);
     this.scene.start('PreloadScene');
   }

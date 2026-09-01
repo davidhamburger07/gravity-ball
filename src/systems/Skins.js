@@ -10,17 +10,30 @@
  *   { type: 'level', id }            a specific level cleared
  *   { type: 'chapter', id }          every built level in a chapter cleared
  */
+/**
+ * The ladder is sized to the shipping campaign: 28 levels across 3 built chapters, so 84 stars is
+ * the ceiling and chapters 1-3 are the only ones that can be cleared. Two rules keep it honest,
+ * both enforced by scripts/check-campaign.mjs:
+ *
+ *   - no star tier may exceed the campaign total (an earlier table asked for 160 of 84);
+ *   - no skin may be gated on a chapter with no levels, because an empty chapter can never be
+ *     cleared — which is why nothing here gates on chapters 4 or 5.
+ *
+ * Star and chapter goals alternate so the ladder never stalls on one kind of objective. Ids are
+ * preserved across the rebalance: dropping one would silently reset the skin of anyone wearing it
+ * (skinById falls back to SKINS[0]).
+ */
 export const SKINS = [
   { id: 'classic', name: 'Classic', color: 0x38e1ff, accent: 0xffffff, req: { type: 'free' } },
-  { id: 'ember', name: 'Ember', color: 0xff7043, accent: 0xffd7c2, req: { type: 'stars', n: 10 } },
-  { id: 'mint', name: 'Mint', color: 0x2bd67b, accent: 0xd7ffe9, req: { type: 'stars', n: 30 } },
-  { id: 'violet', name: 'Violet', color: 0x9b6dff, accent: 0xe8dcff, req: { type: 'stars', n: 60 } },
-  { id: 'rose', name: 'Rose', color: 0xff5c8a, accent: 0xffd9e4, req: { type: 'stars', n: 100 } },
-  { id: 'gold', name: 'Gold', color: 0xffd23f, accent: 0xfff4c2, req: { type: 'stars', n: 160 } },
-  { id: 'spike', name: 'Hazard', color: 0xe0574f, accent: 0xffc9c5, req: { type: 'chapter', id: 2 } },
-  { id: 'wormhole', name: 'Wormhole', color: 0x2bd6c0, accent: 0xd4fff8, req: { type: 'chapter', id: 6 } },
-  { id: 'void', name: 'Singularity', color: 0x2a1a4a, accent: 0xc79aff, req: { type: 'chapter', id: 9 } },
-  { id: 'horizon', name: 'Event Horizon', color: 0x11141f, accent: 0x38e1ff, req: { type: 'chapter', id: 10 } },
+  { id: 'ember', name: 'Ember', color: 0xff7043, accent: 0xffd7c2, req: { type: 'stars', n: 6 } },
+  { id: 'spike', name: 'Hazard', color: 0xe0574f, accent: 0xffc9c5, req: { type: 'chapter', id: 1 } },
+  { id: 'mint', name: 'Mint', color: 0x2bd67b, accent: 0xd7ffe9, req: { type: 'stars', n: 20 } },
+  { id: 'wormhole', name: 'Bounce', color: 0x2bd6c0, accent: 0xd4fff8, req: { type: 'chapter', id: 2 } },
+  { id: 'violet', name: 'Violet', color: 0x9b6dff, accent: 0xe8dcff, req: { type: 'stars', n: 36 } },
+  { id: 'rose', name: 'Rose', color: 0xff5c8a, accent: 0xffd9e4, req: { type: 'stars', n: 52 } },
+  { id: 'void', name: 'Keymaster', color: 0x2a1a4a, accent: 0xc79aff, req: { type: 'chapter', id: 3 } },
+  { id: 'gold', name: 'Gold', color: 0xffd23f, accent: 0xfff4c2, req: { type: 'stars', n: 68 } },
+  { id: 'horizon', name: 'Event Horizon', color: 0x11141f, accent: 0x38e1ff, req: { type: 'stars', n: 80 } },
 ];
 
 export const skinById = (id) => SKINS.find((s) => s.id === id) ?? SKINS[0];
@@ -36,7 +49,10 @@ export function describeRequirement(req, levels) {
     case 'level': return `Clear level ${req.id}`;
     case 'chapter': {
       const ch = levels?.chapters?.find((c) => c.id === req.id);
-      return `Clear ${ch ? `Ch.${req.id} — ${ch.name}` : `Chapter ${req.id}`}`;
+      if (!ch) return `Chapter ${req.id}`;
+      // A declared-but-unbuilt chapter reads as a promise rather than as an unexplained padlock.
+      if (!ch.levels?.length) return `Ch.${req.id} — ${ch.name} (coming soon)`;
+      return `Clear Ch.${req.id} — ${ch.name}`;
     }
     default: return '';
   }
@@ -64,7 +80,8 @@ export function requirementProgress(skin, save, levels) {
   if (req.type === 'stars') return `${save.totalStars()}/${req.n}`;
   if (req.type === 'chapter') {
     const ch = levels?.chapters?.find((c) => c.id === req.id);
-    if (!ch?.levels?.length) return null;
+    // Show why an unbuilt chapter is locked instead of a bare padlock with no explanation.
+    if (!ch?.levels?.length) return ch ? 'soon' : null;
     const done = ch.levels.filter((l) => save.isCompleted(l.id)).length;
     return `${done}/${ch.levels.length}`;
   }

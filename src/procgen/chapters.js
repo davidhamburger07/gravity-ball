@@ -11,18 +11,22 @@ export const MECHANICS = Object.freeze([
   'portal', 'cblock', 'laser', 'slowzone', 'gravzone', 'blackhole',
 ]);
 
+// Names and ids must match src/data/levels.json exactly — scripts/check-campaign.mjs enforces it.
 export const CHAPTERS = Object.freeze([
-  { id: 1, name: 'Ground Zero', introduces: [] },                          // walls and ramps only
-  { id: 2, name: 'Spike Fields', introduces: ['spike'] },
-  { id: 3, name: 'Bounce House', introduces: ['bouncer', 'sticky'] },
-  { id: 4, name: 'Locksmith', introduces: ['key'] },                       // keys + their doors
-  { id: 5, name: 'Fragile Ground', introduces: ['weight', 'breakable'] },
-  { id: 6, name: 'Wormholes', introduces: ['portal'] },
-  { id: 7, name: 'Chromatic', introduces: ['cblock'] },                    // color blocks + switches
-  { id: 8, name: 'Time Warp', introduces: ['laser', 'slowzone'] },
-  { id: 9, name: 'Singularity', introduces: ['gravzone', 'blackhole'] },
-  { id: 10, name: 'Event Horizon', introduces: [] },                       // everything, under a shift budget
+  { id: 1, name: 'Intro to Movement & Spikes', introduces: ['spike'] },
+  { id: 2, name: 'Sticky Pads & Trampolines', introduces: ['sticky', 'bouncer'] },
+  { id: 3, name: 'Lock & Keys', introduces: ['key'] },
+  { id: 4, name: 'Breakable Blocks & Weight Zones', introduces: ['breakable', 'weight'] }, // not built yet
+  { id: 5, name: 'Portals', introduces: ['portal'] },                                      // not built yet
 ]);
+
+/**
+ * Mechanics no chapter teaches yet. They stay in MECHANICS — chunks still declare them and
+ * unrestricted generation (`chapter: null`) still places them — but chapter-gated generation never
+ * will, because no chapter introduces them. Listed explicitly so the gap reads as a decision
+ * rather than as a row somebody forgot.
+ */
+export const UNSCHEDULED = Object.freeze(['cblock', 'laser', 'slowzone', 'gravzone', 'blackhole']);
 
 /** Everything a player has been taught by the end of `chapterId`. */
 export function allowedMechanics(chapterId) {
@@ -30,16 +34,17 @@ export function allowedMechanics(chapterId) {
   for (const ch of CHAPTERS) {
     if (ch.id > chapterId) break;
     ch.introduces.forEach((m) => allowed.add(m));
+    // A capstone chapter reprises every object rather than adding one. No chapter sets `mixer`
+    // today, so this is inert until one is authored — but it is no longer a hardcoded chapter 10.
+    if (ch.mixer) MECHANICS.forEach((m) => allowed.add(m));
   }
-  // The finale is a mixer: it reprises every object rather than adding one.
-  if (chapterId >= 10) MECHANICS.forEach((m) => allowed.add(m));
   return allowed;
 }
 
 /**
  * The mechanic a chapter is *about*. The generator biases toward rooms featuring it so a
- * generated chapter-6 level actually teaches wormholes instead of being a spike level that
- * merely happens to be legal for chapter 6.
+ * generated chapter-3 level actually teaches keys instead of being a spike level that merely
+ * happens to be legal for chapter 3.
  */
 export function featuredMechanics(chapterId) {
   return CHAPTERS.find((c) => c.id === chapterId)?.introduces ?? [];

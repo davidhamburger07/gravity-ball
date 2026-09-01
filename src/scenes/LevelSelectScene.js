@@ -1,10 +1,35 @@
 // LevelSelectScene.js — chapter tabs + a grid of level tiles showing lock state and star
-// ratings pulled from SaveManager. Chapters with no built levels show "Coming soon".
+// ratings pulled from SaveManager. Chapters with no levels yet show a "coming soon" card
+// describing what they will teach, so the campaign reads as unfinished rather than broken.
 import Button from '../ui/Button.js';
+import { AudioManager } from '../systems/AudioManager.js';
+import { Banners } from '../systems/Banners.js';
 
 const COLS = 5;
 const TILE = 90;
 const GAP = 18;
+const GRID_TOP = 250; // centre y of the first grid row
+
+const TAB_W = 144;
+const TAB_H = 52;
+const TAB_GAP = 12;
+const TAB_ROW_Y = 98;
+
+/**
+ * Presentation copy for each chapter. levels.json is the source of truth — this is the fallback
+ * that keeps the screen readable if the campaign data is ever rebuilt without these fields.
+ */
+const CHAPTER_META = {
+  1: { short: 'Spikes', mechanic: '4-way gravity shift + spikes' },
+  2: { short: 'Bounce', mechanic: 'Sticky pads + trampolines' },
+  3: { short: 'Keys', mechanic: 'Keys & doors' },
+  4: { short: 'Fragile', mechanic: 'Breakable blocks + weight zones' },
+  5: { short: 'Portals', mechanic: 'Momentum-preserving portals' },
+};
+
+const shortName = (c) => c.short ?? CHAPTER_META[c.id]?.short ?? `Ch ${c.id}`;
+const mechanicOf = (c) => c.mechanic ?? CHAPTER_META[c.id]?.mechanic ?? '';
+const blurbOf = (c) => c.blurb ?? 'A new object to learn, and a new way to fall.';
 
 export default class LevelSelectScene extends Phaser.Scene {
   constructor() {
@@ -12,13 +37,19 @@ export default class LevelSelectScene extends Phaser.Scene {
   }
 
   init(data = {}) {
-    this.currentChapterId = data.chapterId ?? this.currentChapterId ?? 1;
+    // Clamp to a chapter that actually exists. GameScene hands back chapterId 0 for generated and
+    // playtest levels, and any id left over from an older campaign is now out of range — either
+    // would have thrown a TypeError in _buildGrid and left a dead canvas.
+    const wanted = data.chapterId ?? this.currentChapterId ?? 1;
+    const chapters = this.registry.get('levels')?.chapters ?? [];
+    this.currentChapterId = chapters.some((c) => c.id === wanted) ? wanted : (chapters[0]?.id ?? 1);
   }
 
   create() {
     this.save = this.registry.get('save');
     this.levelsData = this.registry.get('levels');
-    const { width } = this.scale;
+    const { width, height } = this.scale;
+    Banners.show();
 
     this.add
       .text(width / 2, 40, 'SELECT LEVEL', {
@@ -26,24 +57,34 @@ export default class LevelSelectScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
-    new Button(this, 56, 40, '‹', () => this.scene.start('MenuScene'), {
-      width: 48, height: 44, fontSize: '22px', color: 0x2a2f45, textColor: '#ffffff',
+    // Labelled rather than a bare chevron: the glyph-only version was easy to miss even when it
+    // was rendering, and for a while it was not rendering at all (see _buildGrid).
+    new Button(this, 78, 40, '‹ MENU', () => this.scene.start('MenuScene'), {
+      width: 108, height: 44, fontSize: '18px', color: 0x2a2f45, textColor: '#ffffff',
     });
+    this.input.keyboard?.on('keydown-ESC', () => this.scene.start('MenuScene'));
 
     this.add
-      .text(width - 16, 40, `★ ${this.save.totalStars()}`, {
+      .text(width - 16, 40, `★ ${this.save.totalStars()}/${this.save.maxStars()}`, {
         fontFamily: 'monospace', fontSize: '18px', color: '#ffd23f',
       })
       .setOrigin(1, 0.5);
 
+    this.add
+      .text(16, height - 26, 'Esc — back to menu', {
+        fontFamily: 'monospace', fontSize: '11px', color: '#3a3f5c',
+      })
+      .setOrigin(0, 0.5);
+
     // Unlock-everything switch so progression can be tested without replaying the campaign.
+    // Parked in the bottom corner: at the top it was drawn straight through the tab row.
     const testLabel = () => (this.save.testMode ? 'TEST MODE: ON' : 'test mode: off');
     const testBtn = this.add
-      .text(width / 2, 68, testLabel(), {
-        fontFamily: 'monospace', fontSize: '12px',
+      .text(width - 16, height - 26, testLabel(), {
+        fontFamily: 'monospace', fontSize: '11px',
         color: this.save.testMode ? '#ffd23f' : '#5a6089',
       })
-      .setOrigin(0.5)
+      .setOrigin(1, 0.5)
       .setInteractive({ useHandCursor: true });
     testBtn.on('pointerdown', () => {
       this.save.setTestMode(!this.save.testMode);
@@ -52,91 +93,182 @@ export default class LevelSelectScene extends Phaser.Scene {
       this._buildGrid();
     });
 
-    this._tabs = this.add.container(0, 92);
+    this._tabs = this.add.container(0, TAB_ROW_Y);
     this._grid = this.add.container(0, 0);
     this._buildTabs();
     this._buildGrid();
   }
 
+  _selectChapter(id) {
+    if (id === this.currentChapterId) return;
+    AudioManager.ui();
+    this.currentChapterId = id;
+    this._buildTabs();
+    this._buildGrid();
+  }
+
   _buildTabs() {
+    this.tweens.killTweensOf(this._tabs.list);
     this._tabs.removeAll(true);
     const { width } = this.scale;
     const chapters = this.levelsData.chapters;
-    const tabW = 66;
-    const gap = 6;
-    const totalW = chapters.length * (tabW + gap) - gap;
-    let x = (width - totalW) / 2 + tabW / 2;
+    const totalW = chapters.length * (TAB_W + TAB_GAP) - TAB_GAP;
+    let x = (width - totalW) / 2 + TAB_W / 2;
 
     chapters.forEach((c) => {
       const selected = c.id === this.currentChapterId;
+      const built = (c.levels?.length ?? 0) > 0;
       const playable = this.save.isChapterUnlocked(c.id);
-      const fill = selected ? 0x38e1ff : playable ? 0x2a2f45 : 0x1a1e30;
-      const tab = this.add
-        .rectangle(x, 0, tabW, 40, fill)
-        .setStrokeStyle(2, selected ? 0xffffff : 0x3a3f5c, 0.6)
+
+      // Four states: selected, playable, built-but-locked, and not built yet.
+      let fill = 0x171b2b;      // coming soon
+      let stroke = 0x2a2f45;
+      let strokeAlpha = 0.9;
+      let kicker = 'SOON';
+      let kickerColor = '#ffd23f';
+      let nameColor = '#5a6089';
+      if (selected) {
+        fill = 0x38e1ff; stroke = 0xffffff; strokeAlpha = 0.9;
+        kicker = built ? `CH ${c.id}` : 'SOON'; kickerColor = '#0b1020'; nameColor = '#0b1020';
+      } else if (built && playable) {
+        fill = 0x2a2f45; stroke = 0x3a3f5c; strokeAlpha = 0.6;
+        kicker = `CH ${c.id}`; kickerColor = '#8990b8'; nameColor = '#ffffff';
+      } else if (built) {
+        fill = 0x22273c; stroke = 0x3a3f5c; strokeAlpha = 0.45;
+        kicker = `CH ${c.id}`; kickerColor = '#5a6089'; nameColor = '#7a80a8';
+      }
+
+      const tab = this.add.container(x, 0);
+      const bg = this.add
+        .rectangle(0, 0, TAB_W, TAB_H, fill)
+        .setStrokeStyle(2, stroke, strokeAlpha)
         .setInteractive({ useHandCursor: true });
-      const label = this.add
-        .text(x, 0, `${c.id}`, {
-          fontFamily: 'monospace', fontSize: '18px',
-          color: selected ? '#0b1020' : playable ? '#ffffff' : '#5a6089',
-        })
-        .setOrigin(0.5);
+      tab.add([
+        bg,
+        this.add.text(0, -12, kicker, {
+          fontFamily: 'monospace', fontSize: '10px', color: kickerColor,
+        }).setOrigin(0.5).setAlpha(selected ? 0.7 : 1),
+        this.add.text(0, 9, shortName(c), {
+          fontFamily: 'system-ui, sans-serif', fontSize: '15px', fontStyle: 'bold', color: nameColor,
+          align: 'center', wordWrap: { width: TAB_W - 16 },
+        }).setOrigin(0.5),
+      ]);
+      if (built && !playable && !selected) {
+        tab.add(this.add.text(TAB_W / 2 - 14, -14, '🔒', { fontSize: '11px' }).setOrigin(0.5).setAlpha(0.75));
+      }
 
-      // Browsing is always allowed; playability is enforced at the level tiles.
-      tab.on('pointerdown', () => {
-        this.currentChapterId = c.id;
-        this._buildTabs();
-        this._buildGrid();
-      });
+      // Every tab is browsable, including the unbuilt ones — the coming-soon card is the point.
+      bg.on('pointerdown', () => this._selectChapter(c.id));
+      if (!selected) {
+        bg.on('pointerover', () => this.tweens.add({ targets: tab, scale: 1.04, duration: 110, ease: 'Back.easeOut' }));
+        bg.on('pointerout', () => this.tweens.add({ targets: tab, scale: 1, duration: 110, ease: 'Back.easeOut' }));
+      }
 
-      this._tabs.add([tab, label]);
-      x += tabW + gap;
+      this._tabs.add(tab);
+      x += TAB_W + TAB_GAP;
     });
   }
 
   _buildGrid() {
-    this.tweens.killAll(); // clear any in-flight tile pop-ins before rebuilding
+    // Kill only the tweens belonging to the objects about to be destroyed. This used to be
+    // tweens.killAll(), which also destroyed the header button's spring pop-in — create() builds
+    // the grid in the same frame the button is constructed, so it froze at scale 0 and the only
+    // way back to the menu was invisible (though still clickable).
+    this.tweens.killTweensOf(this._grid.list);
     this._grid.removeAll(true);
+
     const { width } = this.scale;
     const chapter = this.levelsData.chapters.find((c) => c.id === this.currentChapterId);
+    if (!chapter) return;
 
     this._grid.add(
       this.add
-        .text(width / 2, 150, `Chapter ${chapter.id} · ${chapter.name}`, {
+        .text(width / 2, 152, `Chapter ${chapter.id} · ${chapter.name}`, {
           fontFamily: 'system-ui, sans-serif', fontSize: '20px', color: '#38e1ff',
-        })
-        .setOrigin(0.5)
-    );
-    this._grid.add(
-      this.add
-        .text(width / 2, 176, chapter.mechanic, {
-          fontFamily: 'monospace', fontSize: '13px', color: '#5a6089',
         })
         .setOrigin(0.5)
     );
 
     const levels = chapter.levels ?? [];
-    if (levels.length === 0) {
+    if (levels.length === 0) { this._comingSoonCard(chapter); return; }
+
+    this._grid.add(
+      this.add
+        .text(width / 2, 178, mechanicOf(chapter), {
+          fontFamily: 'monospace', fontSize: '13px', color: '#5a6089',
+        })
+        .setOrigin(0.5)
+    );
+
+    const rows = Math.ceil(levels.length / COLS);
+    levels.forEach((lvl, i) => {
+      const row = Math.floor(i / COLS);
+      const col = i % COLS;
+      // Centre each row on its own, so a final short row sits under the middle of the one above
+      // instead of hugging the left edge.
+      const inRow = Math.min(COLS, levels.length - row * COLS);
+      const rowW = inRow * TILE + (inRow - 1) * GAP;
+      const tx = (width - rowW) / 2 + TILE / 2 + col * (TILE + GAP);
+      this._grid.add(this._levelTile(lvl, tx, GRID_TOP + row * (TILE + GAP), i));
+    });
+
+    this._chapterProgress(chapter, levels, GRID_TOP + (rows - 1) * (TILE + GAP) + TILE / 2);
+  }
+
+  /** A per-chapter progress bar under the grid — it gives the star-gated skins a visible target. */
+  _chapterProgress(chapter, levels, gridBottom) {
+    const { width } = this.scale;
+    const cleared = levels.filter((l) => this.save.isCompleted(l.id)).length;
+    const stars = levels.reduce((n, l) => n + this.save.stars(l.id), 0);
+    const barY = gridBottom + 48;
+
+    this._grid.add(this.add.rectangle(width / 2, barY, 360, 8, 0x1a1e30).setStrokeStyle(1, 0x3a3f5c, 0.6));
+    if (cleared > 0) {
       this._grid.add(
         this.add
-          .text(width / 2, 330, 'Coming soon', {
-            fontFamily: 'system-ui, sans-serif', fontSize: '28px', color: '#5a6089',
-          })
-          .setOrigin(0.5)
+          .rectangle(width / 2 - 180, barY, 360 * (cleared / levels.length), 8, 0x38e1ff)
+          .setOrigin(0, 0.5)
       );
-      return;
     }
+    this._grid.add(
+      this.add
+        .text(width / 2, barY + 22, `${cleared}/${levels.length} cleared   ·   ★ ${stars}/${levels.length * 3}`, {
+          fontFamily: 'monospace', fontSize: '12px', color: '#8990b8',
+        })
+        .setOrigin(0.5)
+    );
+  }
 
-    const gridW = COLS * TILE + (COLS - 1) * GAP;
-    const startX = (width - gridW) / 2 + TILE / 2;
-    const startY = 250;
-    levels.forEach((lvl, i) => {
-      const col = i % COLS;
-      const row = Math.floor(i / COLS);
-      const tx = startX + col * (TILE + GAP);
-      const ty = startY + row * (TILE + GAP);
-      this._grid.add(this._levelTile(lvl, tx, ty, i));
+  /** Shown for a chapter that is declared but has no levels yet. */
+  _comingSoonCard(chapter) {
+    const { width } = this.scale;
+    const cx = width / 2;
+
+    const card = this.add.rectangle(cx, 304, 522, 200, 0x171b2b).setStrokeStyle(2, 0x3a3f5c, 0.45);
+    const lock = this.add.text(cx, 242, '🔒', { fontSize: '30px' }).setOrigin(0.5).setAlpha(0.5);
+    const head = this.add
+      .text(cx, 288, mechanicOf(chapter), {
+        fontFamily: 'system-ui, sans-serif', fontSize: '20px', fontStyle: 'bold', color: '#38e1ff',
+        align: 'center', wordWrap: { width: 460 },
+      })
+      .setOrigin(0.5).setAlpha(0.85);
+    const blurb = this.add
+      .text(cx, 328, blurbOf(chapter), {
+        fontFamily: 'system-ui, sans-serif', fontSize: '14px', color: '#8990b8',
+        align: 'center', wordWrap: { width: 440 }, lineSpacing: 4,
+      })
+      .setOrigin(0.5);
+    const badgeBg = this.add.rectangle(cx, 376, 156, 28, 0x2a2f45).setStrokeStyle(1, 0x3a3f5c, 0.8);
+    const badge = this.add
+      .text(cx, 376, 'COMING SOON', { fontFamily: 'monospace', fontSize: '11px', color: '#ffd23f' })
+      .setOrigin(0.5);
+
+    this.tweens.add({
+      targets: lock, alpha: { from: 0.35, to: 0.6 },
+      duration: 1800, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
     });
+
+    this._grid.add([card, lock, head, blurb, badgeBg, badge]);
   }
 
   _levelTile(lvl, x, y, index) {
@@ -177,7 +309,10 @@ export default class LevelSelectScene extends Phaser.Scene {
         this.scene.start('GameScene', { levelId: lvl.id, chapterId: this.currentChapterId })
       );
     } else {
-      tile.add(this.add.text(0, 0, '🔒', { fontSize: '28px' }).setOrigin(0.5)); // 🔒
+      tile.add(this.add.text(0, 0, '🔒', { fontSize: '28px' }).setOrigin(0.5));
+      // Say no out loud, the same way SkinsScene does, rather than ignoring the tap.
+      bg.setInteractive();
+      bg.on('pointerdown', () => { AudioManager.deny(); this.cameras.main.shake(90, 0.003); });
     }
 
     tile.setScale(0);

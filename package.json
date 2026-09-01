@@ -10,7 +10,13 @@
     "preview": "node preview.mjs",
     "shot": "node screenshot.mjs",
     "ai": "node playtest-ai.mjs",
-    "verify": "node verify-levels.mjs"
+    "levels:build": "node scripts/build-levels.mjs",
+    "campaign:check": "node scripts/check-campaign.mjs",
+    "verify": "node scripts/check-campaign.mjs && node verify-levels.mjs",
+    "redis:check": "node scripts/check-redis.mjs",
+    "levels:e2e": "node scripts/e2e-levels.mjs",
+    "levels:seed": "node scripts/seed-demo.mjs",
+    "levels:gate": "node scripts/test-publish-gate.mjs"
   },
   "keywords": [
     "html5-game",

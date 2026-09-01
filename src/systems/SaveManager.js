@@ -3,7 +3,12 @@
 // on-platform and localStorage locally (see CrazyGamesSDK wrapper).
 import { CrazyGamesSDK } from '../sdk/CrazyGamesSDK.js';
 
-const STORAGE_KEY = 'gravityball:progress:v1';
+// v2 exists because the campaign was rebuilt from 140 generated levels to 28 hand-authored ones and
+// THE NEW IDS REUSE THE OLD ONES — "3-4" names a different level now. Reading a v1 blob under v2
+// marked 22 of the 28 new levels complete for a player who had never seen them, reported 420 stars
+// against an 84-star campaign, and left chapter 2 locked between two open chapters.
+const STORAGE_KEY = 'gravityball:progress:v2';
+const LEGACY_KEY = 'gravityball:progress:v1';
 
 export default class SaveManager {
   /** @param {object} levels  Parsed levels.json (used to compute level order + unlocks). */
@@ -21,7 +26,8 @@ export default class SaveManager {
 
   async load() {
     try {
-      const raw = await CrazyGamesSDK.getItem(STORAGE_KEY);
+      let raw = await CrazyGamesSDK.getItem(STORAGE_KEY);
+      if (!raw) raw = await this._migrateLegacy();
       if (raw) this.data = JSON.parse(raw);
       if (!this.data.levels) this.data.levels = {};
     } catch {
@@ -30,8 +36,35 @@ export default class SaveManager {
     return this;
   }
 
+  /**
+   * Carry a v1 save forward. Only the cosmetic skin choice survives: the level records cannot,
+   * because there is no honest mapping between a generated "3-4" and the hand-authored "3-4" that
+   * replaced it, and keeping them handed players a campaign that was already three-quarters won.
+   *
+   * The v1 blob is deliberately left in place — it costs nothing and it is the only way back if the
+   * campaign swap is ever reverted.
+   */
+  async _migrateLegacy() {
+    const old = await CrazyGamesSDK.getItem(LEGACY_KEY);
+    if (!old) return null;
+    const fresh = { levels: {} };
+    try {
+      const skin = JSON.parse(old)?.skin;
+      if (skin) fresh.skin = skin;
+    } catch { /* unreadable — start clean rather than guess */ }
+    const raw = JSON.stringify(fresh);
+    CrazyGamesSDK.setItem(STORAGE_KEY, raw);
+    CrazyGamesSDK.mirror(STORAGE_KEY, raw);
+    return raw;
+  }
+
   _persist() {
-    CrazyGamesSDK.setItem(STORAGE_KEY, JSON.stringify(this.data));
+    const json = JSON.stringify(this.data);
+    CrazyGamesSDK.setItem(STORAGE_KEY, json);
+    // The platform's data module debounces writes for about a second, and both the menu and the
+    // win panel can hard-navigate to editor.html inside that window. localStorage is the durable
+    // local copy; the data module is the one that follows the player between devices.
+    CrazyGamesSDK.mirror(STORAGE_KEY, json);
   }
 
   // --- Reads ---------------------------------------------------------------
@@ -46,7 +79,11 @@ export default class SaveManager {
   isLevelUnlocked(id) {
     if (this.testMode) return true;
     const idx = this._order.indexOf(id);
-    if (idx <= 0) return true;
+    // An id outside the campaign is not "unlocked" — it does not exist. Conflating the two used to
+    // report every stale id from the old campaign as playable, which is exactly the failure this
+    // function should surface.
+    if (idx < 0) return false;
+    if (idx === 0) return true; // the first level is always open
     return this.isCompleted(this._order[idx - 1]);
   }
 
@@ -72,8 +109,25 @@ export default class SaveManager {
     return idx >= 0 && idx < this._order.length - 1 ? this._order[idx + 1] : null;
   }
 
+  /**
+   * Stars earned across the CURRENT campaign. Summing the stored records instead would count ids
+   * that are no longer built — a save carried over from the old level set reported 420 stars in an
+   * 84-star campaign, which then handed out every star-gated skin.
+   */
   totalStars() {
-    return Object.values(this.data.levels).reduce((sum, l) => sum + (l.stars || 0), 0);
+    return this._order.reduce((sum, id) => sum + this.stars(id), 0);
+  }
+
+  /** The ceiling `totalStars()` is measured against — 3 per built level. */
+  maxStars() { return this._order.length * 3; }
+
+  completedCount() {
+    return this._order.reduce((n, id) => n + (this.isCompleted(id) ? 1 : 0), 0);
+  }
+
+  /** Campaign completion as a 0-100 percentage; reported to the platform on every clear. */
+  completionPercent() {
+    return this._order.length ? (this.completedCount() / this._order.length) * 100 : 0;
   }
 
   // --- Writes --------------------------------------------------------------

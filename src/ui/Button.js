@@ -45,13 +45,21 @@ export default class Button extends Phaser.GameObjects.Container {
     });
 
     // Spring pop-in.
+    const delay = opts.delay ?? 0;
     this.setScale(0);
     scene.tweens.add({
       targets: this,
       scale: 1,
       duration: 400,
       ease: 'Back.easeOut',
-      delay: opts.delay ?? 0,
+      delay,
     });
+
+    // Self-heal, because a button that starts at scale 0 fails invisibly: anything that kills the
+    // scene's tweens mid-pop leaves it unseeable but still clickable, which is exactly how the
+    // level-select back button went missing. A tween callback cannot cover this — killing a tween
+    // destroys it and nulls its callbacks without firing them — but a timer is not a tween, so it
+    // survives. In the healthy case the tween has already finished and this changes nothing.
+    scene.time.delayedCall(delay + 460, () => { if (this.scene) this.setScale(1); });
   }
 }

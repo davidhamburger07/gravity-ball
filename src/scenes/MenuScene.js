@@ -2,6 +2,7 @@
 // backdrop for depth. PLAY leads into level select.
 import Button from '../ui/Button.js';
 import { decodeLevel } from '../systems/ShareCode.js';
+import { Banners } from '../systems/Banners.js';
 
 export default class MenuScene extends Phaser.Scene {
   constructor() {
@@ -11,6 +12,8 @@ export default class MenuScene extends Phaser.Scene {
   create() {
     const { width, height } = this.scale;
     this._backdrop(width, height);
+    // Menu screens are where a banner is allowed to live — never over gameplay.
+    Banners.show();
 
     const title = this.add
       .text(width / 2, height * 0.30, 'GRAVITY BALL', {
@@ -34,19 +37,24 @@ export default class MenuScene extends Phaser.Scene {
       .setAlpha(0);
     this.tweens.add({ targets: tagline, alpha: 1, duration: 600, delay: 300 });
 
-    new Button(this, width / 2, height * 0.60, 'PLAY', () => this.scene.start('LevelSelectScene'), {
+    const playY = height * 0.60;
+    new Button(this, width / 2, playY, 'PLAY', () => this.scene.start('LevelSelectScene'), {
       delay: 350,
     });
 
-    // Secondary entries, spaced evenly so they never crowd the PLAY button.
+    // Secondary entries, hung off the PLAY button rather than off a fraction of the canvas
+    // height. As proportions the last link and the controls hint overlapped by ~10px, and they
+    // would have kept overlapping at any canvas size.
     const links = [
+      ['Custom Levels', () => this.scene.start('LevelBrowserScene')],
       ['Ball Skins', () => this.scene.start('SkinsScene')],
       ['Play a Shared Map', () => this._promptForCode()],
       ['Level Editor', () => { window.location.href = 'editor.html'; }],
     ];
+    const linkTop = playY + 62; // clears the 60px-tall PLAY button
     links.forEach(([label, onClick], i) => {
       this.add
-        .text(width / 2, height * 0.70 + i * 26, label, {
+        .text(width / 2, linkTop + i * 26, label, {
           fontFamily: 'system-ui, sans-serif', fontSize: '16px', color: '#7a80a8',
         })
         .setOrigin(0.5)
@@ -57,7 +65,7 @@ export default class MenuScene extends Phaser.Scene {
     });
 
     this.add
-      .text(width / 2, height * 0.82, 'Arrow Keys / WASD or Swipe to shift gravity', {
+      .text(width / 2, height - 32, 'Arrow Keys / WASD or Swipe to shift gravity', {
         fontFamily: 'monospace', fontSize: '14px', color: '#5a6089',
       })
       .setOrigin(0.5);

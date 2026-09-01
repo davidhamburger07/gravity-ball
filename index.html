@@ -20,6 +20,11 @@
       #game-root { width: 100vw; height: 100vh; height: 100dvh; }
       canvas { display: block; }
 
+      #cg-banner {
+        position: fixed; left: 50%; bottom: 8px; transform: translateX(-50%);
+        z-index: 40; display: none;
+      }
+
       #loading {
         position: fixed; inset: 0; z-index: 50;
         display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
@@ -41,6 +46,9 @@
   </head>
   <body>
     <div id="game-root"></div>
+    <!-- Menu-screen banner. Lives in the letterbox below the centred canvas so it can never cover
+         game UI, which the platform forbids. Shown/hidden by src/systems/Banners.js. -->
+    <div id="cg-banner"></div>
     <div id="loading"><div class="spinner"></div><div class="label">Loading</div></div>
     <script type="module" src="/src/main.js"></script>
   </body>

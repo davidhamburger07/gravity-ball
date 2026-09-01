@@ -30,6 +30,8 @@ const PROD_HTML = `<!doctype html>
       }
       #game-root { width: 100vw; height: 100vh; height: 100dvh; }
       canvas { display: block; }
+      #cg-banner { position: fixed; left: 50%; bottom: 8px; transform: translateX(-50%);
+        z-index: 40; display: none; }
       #loading { position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column;
         align-items: center; justify-content: center; gap: 16px; }
       #loading .spinner { width: 42px; height: 42px; border-radius: 50%;
@@ -45,6 +47,8 @@ const PROD_HTML = `<!doctype html>
   </head>
   <body>
     <div id="game-root"></div>
+    <!-- Menu-screen banner, in the letterbox below the canvas so it never covers game UI. -->
+    <div id="cg-banner"></div>
     <div id="loading"><div class="spinner"></div><div class="label">Loading</div></div>
     <script src="bundle.js"></script>
   </body>
