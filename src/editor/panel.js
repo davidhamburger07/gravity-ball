@@ -4,6 +4,9 @@
 import { model } from './model.js';
 import { encodeLevel, shareUrl } from '../systems/ShareCode.js';
 import { loadPlaylist, addToPlaylist, removeAt, moveEntry, replaceAt, clearPlaylist } from './playlist.js';
+import { bestSolve, hashLevel } from '../systems/SolveProof.js';
+import * as LevelApi from '../systems/LevelApi.js';
+import { displayIdentity, setLocalName } from '../systems/PlayerIdentity.js';
 
 const PLAYTEST_KEY = 'gravityball:playtest';
 
@@ -121,6 +124,62 @@ export function initPanel(root) {
   const jsonArea = el('textarea', { id: 'json-io', rows: '8', spellcheck: 'false' });
   const status = el('div', { class: 'status' });
   const flash = (msg) => { status.textContent = msg; setTimeout(() => (status.textContent = ''), 1800); };
+
+  // --- Publish -----------------------------------------------------------------------------
+  // A level can only be published once its author has beaten it in Playtest, and the par that
+  // goes out is their best run. SolveProof files each solve under a hash of the level's content,
+  // so editing the level after beating it locks this button again until it is beaten afresh.
+
+  const publishButton = el('button', { class: 'wide', onclick: doPublish }, document.createTextNode('Publish'));
+  const publishHint = el('div', { class: 'hint' }, document.createTextNode(''));
+
+  /** Reflect the current solve state in the button. Cheap enough to poll (see below). */
+  function refreshPublishState() {
+    const solve = bestSolve(model.toLevel());
+    const label = solve ? `☁ Publish  ·  par ${solve.shifts}` : 'Publish (locked)';
+    const hint = solve
+      ? `Beaten in ${solve.shifts} shift${solve.shifts === 1 ? '' : 's'} — that becomes the par.`
+      : 'Beat this level in Playtest first. Your best run sets the par.';
+
+    if (publishButton.firstChild.nodeValue !== label) publishButton.firstChild.nodeValue = label;
+    if (publishHint.firstChild.nodeValue !== hint) publishHint.firstChild.nodeValue = hint;
+    publishButton.disabled = !solve;
+    publishButton.classList.toggle('primary', Boolean(solve));
+  }
+
+  async function doPublish() {
+    const level = model.toLevel();
+    const solve = bestSolve(level);
+    if (!solve) { flash('Beat it in Playtest first'); return; }
+
+    const name = window.prompt('Name your level:', model.id || '');
+    if (name === null) return;
+
+    // Off-platform there is no account to read a name from, so ask once and remember it.
+    const me = await displayIdentity();
+    if (!me.verified) {
+      const author = window.prompt('Publish as (your display name):', me.name === 'Anonymous' ? '' : me.name);
+      if (author === null) return;
+      await setLocalName(author);
+    }
+
+    publishButton.disabled = true;
+    flash('Publishing…');
+
+    // The hash travels with the solve so the server can confirm the level being published is the
+    // one that was actually beaten, and not a draft edited afterwards.
+    const res = await LevelApi.publish({
+      level,
+      name,
+      solve: { shifts: solve.shifts, hash: hashLevel(level) },
+    });
+
+    refreshPublishState();
+
+    if (!res.ok) { flash(res.error); window.alert(`Could not publish:\n\n${res.error}`); return; }
+    flash('Published!');
+    window.alert(`Published as "${res.meta.name}" (par ${res.meta.par}).\n\nFind it under Custom Levels → Newest.`);
+  }
 
   // Open a level straight from disk. Accepts a single level object, or a whole levels.json /
   // chapter file — in which case the first level is loaded so the file is never a dead end.
@@ -307,6 +366,10 @@ export function initPanel(root) {
       el('button', { class: 'primary', onclick: playtest }, document.createTextNode('▶ Playtest')),
       el('button', { onclick: () => { if (confirm('Clear the level?')) { model.reset(); syncInputs(); } } }, document.createTextNode('Clear')),
     ]),
+    section('Publish', [
+      publishButton,
+      publishHint,
+    ]),
     section('JSON', [
       el('div', { class: 'grid' }, [
         el('button', { onclick: () => { jsonArea.value = JSON.stringify(model.toLevel(), null, 2); flash('Exported'); } }, document.createTextNode('Export')),
@@ -367,6 +430,12 @@ export function initPanel(root) {
     try { localStorage.setItem(PLAYTEST_KEY, JSON.stringify(model.toLevel())); } catch { /* ignore */ }
     window.location.href = './?playtest=1';
   }
+
+  // The publish gate depends on the level's exact contents, and the canvas mutates the model
+  // without going through syncInputs. Polling is the honest way to stay accurate: hashing a level
+  // this size is measured in microseconds, and the DOM is only touched when the label changes.
+  refreshPublishState();
+  setInterval(refreshPublishState, 400);
 
   function download() {
     const blob = new Blob([JSON.stringify(model.toLevel(), null, 2)], { type: 'application/json' });

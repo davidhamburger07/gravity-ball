@@ -31,6 +31,12 @@
       button:hover { background: #343a57; }
       button.active { background: #38e1ff; color: #0b1020; font-weight: 600; }
       button.wide { width: 100%; margin-top: 6px; }
+      button.primary { background: #38e1ff; color: #0b1020; font-weight: 600; }
+      button.primary:hover { background: #5ae8ff; }
+      /* The Publish button stays visibly locked until the level has been beaten in Playtest. */
+      button:disabled { background: #22263a; color: #5a6089; cursor: not-allowed; }
+      button:disabled:hover { background: #22263a; }
+      .hint { margin-top: 6px; font-size: 11px; line-height: 1.4; color: #6a708f; }
 
       /* Playlist grid — a compact echo of the game's level select. */
       .pl-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; margin-bottom: 6px; }

@@ -29,3 +29,8 @@ src/data/levels.json.bak
 
 # Stray scratch files
 3.11
+
+# Secrets. Upstash REST credentials live here for local dev; never committed.
+.env
+.env.*
+!.env.example

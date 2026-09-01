@@ -6,6 +6,11 @@ import { createServer } from 'node:http';
 import { readFile, writeFile, mkdir, copyFile } from 'node:fs/promises';
 import { extname, join, normalize, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { loadEnvLocal, hasRedisCredentials } from './scripts/load-env.mjs';
+
+// The level-finder endpoints need Upstash credentials. Vercel injects these in production; locally
+// they come from .env.local. Loaded before the server starts so the first request already has them.
+await loadEnvLocal();
 
 // Serve the project root by default, or a subfolder (e.g. the production build) via SERVE_DIR.
 const ROOT = process.env.SERVE_DIR
@@ -88,6 +93,20 @@ const server = createServer(async (req, res) => {
     let urlPath = decodeURIComponent(new URL(req.url, `http://${req.headers.host}`).pathname);
     if (urlPath === '/') urlPath = '/index.html';
 
+    // Level finder. Handled before the block below because these endpoints include GETs, and
+    // because they share their implementation with the deployed Vercel function.
+    if (urlPath.startsWith('/api/levels/')) {
+      const { route } = await import('./api/_lib/router.js');
+      const result = await route({
+        method: req.method,
+        route: urlPath.slice('/api/levels/'.length),
+        query: new URL(req.url, `http://${req.headers.host}`).searchParams,
+        req,
+      });
+      res.writeHead(result.status, result.headers);
+      return res.end(result.body);
+    }
+
     if (urlPath.startsWith('/api/')) {
       if (req.method !== 'POST') return send(res, 405, { error: 'POST only' });
       try {
@@ -120,4 +139,8 @@ const server = createServer(async (req, res) => {
 
 server.listen(PORT, () => {
   console.log(`\n  Gravity Ball dev server → http://localhost:${PORT}\n`);
+  if (!hasRedisCredentials()) {
+    console.log('  Note: no Upstash credentials, so /api/levels/* will fail.');
+    console.log('        Copy .env.example to .env.local and fill it in, then `npm run redis:check`.\n');
+  }
 });
