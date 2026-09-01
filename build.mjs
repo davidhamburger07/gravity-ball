@@ -25,10 +25,15 @@ const PROD_HTML = `<!doctype html>
         overflow: hidden;
         font-family: system-ui, sans-serif;
         touch-action: none; overscroll-behavior: none;
+        -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;
+        -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent;
         background: #0d1018;
         background: radial-gradient(130% 90% at 50% 30%, #171d31 0%, #0d1018 72%);
       }
-      #game-root { width: 100vw; height: 100vh; height: 100dvh; }
+      #game-root { width: 100vw; height: 100vh; height: 100dvh;
+        padding: env(safe-area-inset-top) env(safe-area-inset-right)
+                 env(safe-area-inset-bottom) env(safe-area-inset-left);
+        box-sizing: border-box; }
       canvas { display: block; }
       #cg-banner { position: fixed; left: 50%; bottom: 8px; transform: translateX(-50%);
         z-index: 40; display: none; }

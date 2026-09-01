@@ -8,6 +8,7 @@ import LevelBrowserScene from './scenes/LevelBrowserScene.js';
 import GameScene from './scenes/GameScene.js';
 import SkinsScene from './scenes/SkinsScene.js';
 import { installAI } from './ai/bootstrap.js';
+import { enforceSitelock } from './systems/Sitelock.js';
 import { VIEW, PHYSICS } from './config/GameConfig.js';
 
 const config = {
@@ -34,10 +35,14 @@ const config = {
   scene: [BootScene, PreloadScene, MenuScene, LevelSelectScene, LevelBrowserScene, GameScene, SkinsScene],
 };
 
-// Expose the game instance for scripted testing (screenshot.mjs jumps to scenes/levels
-// via `window.game`). Harmless in production.
-window.game = new Phaser.Game(config);
+// Refuse to boot on a host that is not CrazyGames, this project's own deployment, or localhost.
+// Deliberately fails open, so it can never be the reason a real player sees a blank screen.
+if (enforceSitelock()) {
+  // Expose the game instance for scripted testing (screenshot.mjs jumps to scenes/levels
+  // via `window.game`). Harmless in production.
+  window.game = new Phaser.Game(config);
 
-// Procedural generator + AI playtester console (window.GravityBallAI). Installing it is inert
-// — nothing runs until you call it or load the page with ?ai=1.
-installAI(window.game);
+  // Procedural generator + AI playtester console (window.GravityBallAI). Installing it is inert
+  // — nothing runs until you call it or load the page with ?ai=1.
+  installAI(window.game);
+}
