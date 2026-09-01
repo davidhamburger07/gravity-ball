@@ -9,11 +9,36 @@
 
 import { route } from '../_lib/router.js';
 
-export default async function handler(req, res) {
-  // req.query.route is the path after /api/levels — ['browse'] for /api/levels/browse.
-  const segments = req.query?.route;
-  const name = Array.isArray(segments) ? segments.join('/') : String(segments || '');
+const PREFIX = '/api/levels/';
 
+/**
+ * Work out which endpoint was asked for.
+ *
+ * Reads the URL path first and only falls back to the catch-all `route` param. That order matters:
+ * in this project's deployment the dynamic segment was NOT being populated, so every request
+ * dispatched with an empty name and came back "Unknown endpoint:" with nothing after the colon.
+ * The pathname is always present, which makes this independent of how the platform chooses to
+ * expose dynamic segments.
+ */
+export function endpointFromRequest(req) {
+  const pathname = new URL(req?.url ?? '', 'http://localhost').pathname;
+  let name = pathname.startsWith(PREFIX) ? pathname.slice(PREFIX.length) : '';
+
+  // If the path still carries the literal filename pattern, the platform did not substitute the
+  // segment — treat that as "no name" so the param fallback below gets its turn.
+  if (name.includes('[')) name = '';
+
+  if (!name) {
+    const segments = req?.query?.route;
+    name = Array.isArray(segments) ? segments.join('/') : String(segments ?? '');
+  }
+
+  // Tolerate a leading or trailing slash from either source.
+  return name.replace(/^\/+/, '').replace(/\/+$/, '');
+}
+
+export default async function handler(req, res) {
+  const name = endpointFromRequest(req);
   const query = new URL(req.url, 'http://localhost').searchParams;
 
   const result = await route({ method: req.method, route: name, query, req });
