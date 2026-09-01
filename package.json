@@ -12,7 +12,10 @@
     "ai": "node playtest-ai.mjs",
     "levels:build": "node scripts/build-levels.mjs",
     "campaign:check": "node scripts/check-campaign.mjs",
-    "verify": "node scripts/check-campaign.mjs && node verify-levels.mjs",
+    "physics:check": "node scripts/check-physics.mjs",
+    "levels:smoke": "node scripts/smoke-levels.mjs",
+    "preship": "node scripts/check-physics.mjs && node scripts/check-campaign.mjs && node build.mjs",
+    "verify": "node scripts/check-physics.mjs && node scripts/check-campaign.mjs && node verify-levels.mjs",
     "redis:check": "node scripts/check-redis.mjs",
     "levels:e2e": "node scripts/e2e-levels.mjs",
     "levels:seed": "node scripts/seed-demo.mjs",
@@ -37,6 +40,6 @@
     "puppeteer": "^25.3.0"
   },
   "dependencies": {
-    "phaser": "^3.80.1"
+    "phaser": "3.80.1"
   }
 }

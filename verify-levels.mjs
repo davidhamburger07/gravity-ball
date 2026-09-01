@@ -99,4 +99,16 @@ if (failed.length) console.log('Failing:', failed.join(', '));
 if (pageErrors.length) console.log('Page errors:', [...new Set(pageErrors)].join(' | '));
 
 await browser.close();
+
+// A run where every level was skipped used to exit 0, which reads as "verified" when in fact
+// nothing was tested at all. Say so, and fail unless the caller has explicitly accepted it.
+if (!pass && !fail) {
+  const allowed = process.argv.includes('--allow-skips');
+  console.log(`\nNOTHING WAS VERIFIED — all ${skip} level(s) in this chapter lack a "solution" array.`);
+  if (!allowed) {
+    console.log('Pass --allow-skips if that is expected (the campaign currently has no recorded solutions).');
+    process.exit(1);
+  }
+}
+
 process.exit(fail ? 1 : 0);

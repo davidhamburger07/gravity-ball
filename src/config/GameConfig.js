@@ -1,5 +1,10 @@
 // GameConfig.js — central tuning constants. Keep gameplay "feel" values here so
 // designers can iterate without touching engine code.
+//
+// FROZEN: the shipped campaign is hand-tuned against the physics values below, and no level has a
+// recorded `solution`, so nothing in this repo can tell you when a change has made one impossible.
+// scripts/check-physics.mjs locks them deliberately. If you mean to retune, change the lock in the
+// same commit and replay every level that depends on the value you moved.
 // The canvas is taller than the playfield on purpose. Levels are authored against an 800x600 box,
 // and the HUD used to be drawn on top of it — so every level that put a spike row at y=40 or y=560
 // (which is most of them) had gameplay sitting under a translucent band with text through it.
