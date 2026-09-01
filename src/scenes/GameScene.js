@@ -6,6 +6,7 @@ import Ball from '../objects/Ball.js';
 import GravityController, { GravityDirection, GRAVITY_VECTORS } from '../systems/GravityController.js';
 import InputManager from '../systems/InputManager.js';
 import Button from '../ui/Button.js';
+import { Modal } from '../ui/Modal.js';
 import { AudioManager } from '../systems/AudioManager.js';
 import { Effects } from '../systems/Effects.js';
 import { CrazyGamesSDK } from '../sdk/CrazyGamesSDK.js';
@@ -1517,10 +1518,14 @@ export default class GameScene extends Phaser.Scene {
 
     link(30, '♥ Like', '#2bd67b', () => send(1));
     link(105, '✕ Dislike', '#e0574f', () => send(-1));
-    link(168, '⚑', '#5a6089', async () => {
-      if (!window.confirm('Report this level as inappropriate or broken?')) return;
-      const res = await LevelApi.report(meta.id);
-      done(res.ok ? 'Reported. Thank you.' : res.error, res.ok ? '#9aa0c3' : '#e0574f');
+    link(168, '⚑', '#5a6089', () => {
+      Modal.confirm(this, `Report “${meta.name || 'this level'}” as inappropriate or broken?`, {
+        title: 'Report level', confirmLabel: 'Report', danger: true,
+        onConfirm: async () => {
+          const res = await LevelApi.report(meta.id);
+          done(res.ok ? 'Reported. Thank you.' : res.error, res.ok ? '#9aa0c3' : '#e0574f');
+        },
+      });
     });
   }
 

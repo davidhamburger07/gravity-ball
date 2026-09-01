@@ -7,6 +7,7 @@ import { loadPlaylist, addToPlaylist, removeAt, moveEntry, replaceAt, clearPlayl
 import { bestSolve, hashLevel } from '../systems/SolveProof.js';
 import * as LevelApi from '../systems/LevelApi.js';
 import { displayIdentity, setLocalName } from '../systems/PlayerIdentity.js';
+import { notice, confirm as confirmDialog } from './modal.js';
 
 const PLAYTEST_KEY = 'gravityball:playtest';
 
@@ -176,9 +177,15 @@ export function initPanel(root) {
 
     refreshPublishState();
 
-    if (!res.ok) { flash(res.error); window.alert(`Could not publish:\n\n${res.error}`); return; }
+    if (!res.ok) {
+      flash(res.error);
+      notice(res.error, { title: 'Could not publish', titleColor: '#e0574f' });
+      return;
+    }
     flash('Published!');
-    window.alert(`Published as "${res.meta.name}" (par ${res.meta.par}).\n\nFind it under Custom Levels → Newest.`);
+    notice(`Published as "${res.meta.name}" (par ${res.meta.par}).
+
+Find it under Custom Levels -> Newest.`, { title: 'Published' });
   }
 
   // Open a level straight from disk. Accepts a single level object, or a whole levels.json /
@@ -355,7 +362,7 @@ export function initPanel(root) {
       el('div', { class: 'grid' }, [
         playAll,
         playFrom,
-        el('button', { onclick: () => { if (confirm('Clear the whole playlist?')) { clearPlaylist(); selected = -1; renderPlaylist(); } } }, document.createTextNode('Clear all')),
+        el('button', { onclick: () => confirmDialog('Clear the whole playlist? This cannot be undone.', { title: 'Clear playlist', confirmLabel: 'Clear all', danger: true, onConfirm: () => { clearPlaylist(); selected = -1; renderPlaylist(); } }) }, document.createTextNode('Clear all')),
       ]),
     ]),
     section('Campaign', [
@@ -364,7 +371,7 @@ export function initPanel(root) {
     ]),
     section('', [
       el('button', { class: 'primary', onclick: playtest }, document.createTextNode('▶ Playtest')),
-      el('button', { onclick: () => { if (confirm('Clear the level?')) { model.reset(); syncInputs(); } } }, document.createTextNode('Clear')),
+      el('button', { onclick: () => confirmDialog('Clear the level? Everything on the canvas will be discarded.', { title: 'Clear level', confirmLabel: 'Clear', danger: true, onConfirm: () => { model.reset(); syncInputs(); } }) }, document.createTextNode('Clear')),
     ]),
     section('Publish', [
       publishButton,

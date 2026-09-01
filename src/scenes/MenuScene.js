@@ -3,6 +3,7 @@
 import Button from '../ui/Button.js';
 import { decodeLevel } from '../systems/ShareCode.js';
 import { Banners } from '../systems/Banners.js';
+import { Modal } from '../ui/Modal.js';
 
 export default class MenuScene extends Phaser.Scene {
   constructor() {
@@ -80,7 +81,9 @@ export default class MenuScene extends Phaser.Scene {
     if (input === null) return;
     const level = decodeLevel(input);
     if (!level) {
-      window.alert('That does not look like a valid share code.');
+      Modal.notice(this, 'That does not look like a valid share code.\n\nPaste the whole code, or the full link someone sent you.', {
+        title: 'Could not read that code', titleColor: '#e0574f',
+      });
       return;
     }
     this.registry.set('playtestLevel', level);
