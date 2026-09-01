@@ -6,7 +6,7 @@
 - **Engine:** Phaser 3 + Matter.js physics
 - **Genre:** 2.5D physics puzzle
 - **Session shape:** 30–90 second levels, "one more level" loop
-- **Scope (shipping):** 5 chapters declared, **3 built — 28 hand-authored levels, 84 stars**. Chapters 4 and 5 are announced in-game as "coming soon".
+- **Scope (shipping):** 5 chapters declared, **3 built — 25 hand-authored levels, 75 stars**. Chapters 4 and 5 are announced in-game as "coming soon".
 
 ---
 
@@ -44,7 +44,7 @@ listing — git cannot track an empty directory, so an unbuilt chapter would oth
 | Ch | Theme / Name | New mechanic(s) | Status |
 |----|--------------|-----------------|--------|
 | **1** | **Intro to Movement & Spikes** | 4-way gravity shift + static hazards | **Built — 10 levels** |
-| **2** | **Sticky Pads & Trampolines** | Sticky pads **+** bouncy surfaces | **Built — 10 levels** |
+| **2** | **Sticky Pads & Trampolines** | Sticky pads **+** bouncy surfaces | **Built — 7 levels** |
 | **3** | **Lock & Keys** | Keys & doors | **Built — 8 levels** |
 | **4** | **Breakable Blocks & Weight Zones** | Breakable blocks **+** weight (heavy) zones | Coming soon |
 | **5** | **Portals** | Portals that preserve momentum | Coming soon |
