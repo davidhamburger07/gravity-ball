@@ -12,10 +12,18 @@
 // A broken lock that lets a thief through is a small loss; one that blocks paying players is not.
 
 /** CrazyGames' published check: "crazygames" appears within the last three labels of the host. */
+/**
+ * CrazyGames' published check: "crazygames" appears within the last three labels of the host.
+ *
+ * Their version stops there, which also accepts crazygames.anything.com — every label after
+ * "crazygames" in a real CrazyGames domain is a TLD (com, fr, co.id, com.br, co.kr), so requiring
+ * those trailing labels to be TLD-length closes that without rejecting any domain they list.
+ */
 function isCrazyGames(hostname) {
   const parts = hostname.split('.');
   const idx = parts.indexOf('crazygames');
-  return idx !== -1 && idx >= parts.length - 3;
+  if (idx === -1 || idx < parts.length - 3) return false;
+  return parts.slice(idx + 1).every((label) => label.length > 0 && label.length <= 3);
 }
 
 /** Local development, and the Vercel deployment that also hosts the level API. */

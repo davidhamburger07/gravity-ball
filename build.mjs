@@ -60,6 +60,15 @@ const PROD_HTML = `<!doctype html>
 </html>
 `;
 
+// Swap the AI/procgen dev tooling for a stub in the shipped game. It is a third of the bundle,
+// and it carries the ?ai=1 entry point, which has no business in a build players can load.
+const stripDevTools = {
+  name: 'strip-dev-tools',
+  setup(build) {
+    build.onResolve({ filter: /ai[/]bootstrap[.]js$/ }, () => ({ path: `${root}src/ai/bootstrap.prod.js` }));
+  },
+};
+
 async function main() {
   await rm(dist, { recursive: true, force: true });
   await mkdir(dist, { recursive: true });
@@ -74,6 +83,7 @@ async function main() {
     outfile: 'dist/bundle.js',
     legalComments: 'none',
     metafile: true,
+    plugins: [stripDevTools],
   });
 
   // 1b. Bundle the level editor (separate entry point / page).
