@@ -191,7 +191,7 @@ export default class GameScene extends Phaser.Scene {
     // gameplay. Phaser scissors each camera to its viewport, so geometry cannot bleed into them.
     // This has to live in create(): CameraManager destroys every camera on shutdown and re-adds
     // `main` at full canvas size, so a restart would silently give the overlap back.
-    this.cameras.main.setViewport(0, Layout.hudTop, VIEW.WIDTH, VIEW.PLAY_H);
+    this.cameras.main.setViewport(Layout.playX, Layout.hudTop, VIEW.WIDTH, VIEW.PLAY_H);
 
     this._active = level.activeColor ?? 'red';
     if (this._fx) this._buildParallax(bounds);
@@ -632,7 +632,7 @@ export default class GameScene extends Phaser.Scene {
     const L = Layout;
     const secondRow = !!level.resetGravityOnDeath;
     const rowY = L.hudTop / 2 - (secondRow ? L.s(9) : 0);
-    const W = VIEW.WIDTH;
+    const W = Layout.width;
 
     this._addHud(this.add
       .rectangle(W / 2, L.hudTop / 2, W, L.hudTop, 0x0d1018, 0.92)
@@ -795,28 +795,45 @@ export default class GameScene extends Phaser.Scene {
   }
 
   /**
-   * On-screen gravity controls, built only when the layout leaves room below the playfield.
+   * On-screen gravity controls.
    *
    * Swiping already works and still does, but a swipe is invisible and undiscoverable — nothing on
-   * screen said the game had controls at all. These are the same four directions the arrow keys
-   * emit, on the same 'gravity:request' event, so the mechanic stays the single source of truth
-   * and nothing here knows about physics.
+   * screen said the game had controls at all. These emit the same four directions the arrow keys
+   * do, on the same 'gravity:request' event, so the mechanic stays the single source of truth and
+   * nothing here knows about physics.
+   *
+   * Portrait gets one pad in the space under the playfield. Landscape gets TWO, one in each side
+   * margin, so either thumb can make any move without reaching across the screen — and because
+   * both pads are full crosses, neither hand is the "wrong" one.
    */
   _buildTouchPad() {
-    const area = Layout.controls;
-    if (!area) return;
+    this._pads = [];
+    if (Layout.controls) {
+      // Sit the cluster low rather than centred: on a phone held upright this is thumb territory,
+      // and the gap it leaves under the playfield keeps fingers clear of the level itself.
+      const a = Layout.controls;
+      const size = Math.min(Math.round(a.height * 0.30), 150);
+      const half = size * 1.5 + Math.round(size * 0.12);
+      const cy = Math.min(a.y + a.height * 0.60, a.y + a.height - half - Math.round(size * 0.25));
+      this._pads.push(this._buildPad(Layout.width / 2, cy, size));
+    }
+    for (const area of [Layout.padLeft, Layout.padRight]) {
+      if (!area) continue;
+      // Three buttons across plus a little breathing room decides the size here; the margin is
+      // narrower than the space under a portrait playfield, so width is the binding constraint.
+      const size = Math.min(Math.round(area.width / 3.4), Math.round(area.height / 3.6), 132);
+      // Low in the margin: a thumb rests near the bottom corner of a phone held in two hands.
+      const half = size * 1.5 + Math.round(size * 0.12);
+      const cy = Math.min(area.y + area.height * 0.62, area.y + area.height - half - Math.round(size * 0.2));
+      this._pads.push(this._buildPad(area.x + area.width / 2, cy, size));
+    }
+    this._touchPad = this._pads[0] ?? null;
+  }
 
-    const cx = VIEW.WIDTH / 2;
-    // Sit the cluster low rather than centred: on a phone this is thumb territory, and the gap
-    // it leaves under the playfield keeps fingers clear of the level itself. Clamped so it never
-    // rides into the hint strip on a short screen.
-    const size = Math.min(Math.round(area.height * 0.30), 150);
+  /** One directional cross with a restart in the middle, centred on (cx, cy). */
+  _buildPad(cx, cy, size) {
     const gap = Math.round(size * 0.12);
-    const half = size * 1.5 + gap;
-    const cy = Math.min(area.y + area.height * 0.60, area.y + area.height - half - Math.round(size * 0.25));
-    // Keep the cluster a sensible size even when the device leaves a lot of room.
     const reach = size + gap;
-
     const pad = this.add.container(0, 0).setScrollFactor(0).setDepth(120);
 
     const key = (dx, dy, glyph, dir) => {
@@ -850,8 +867,8 @@ export default class GameScene extends Phaser.Scene {
     key(1, 0, '▶', GravityDirection.RIGHT);
     key(0, 1, '▼', GravityDirection.DOWN);
 
-    // Restart sits in the middle of the cross: reachable with the same thumb, and the one control
-    // a player reaches for most after a death.
+    // Restart in the middle of the cross: the control reached for most after a death, already
+    // under the thumb that just moved.
     const rs = Math.round(size * 0.78);
     const reset = this.add
       .rectangle(cx, cy, rs, rs, 0x1a1e30, 0.96)
@@ -865,7 +882,7 @@ export default class GameScene extends Phaser.Scene {
     pad.add([reset, resetLabel]);
 
     this._addHud(pad);
-    this._touchPad = pad;
+    return pad;
   }
 
 
@@ -975,7 +992,7 @@ export default class GameScene extends Phaser.Scene {
    */
   _showAdCurtain() {
     if (this._adCurtain) return;
-    const cx = VIEW.WIDTH / 2;
+    const cx = Layout.width / 2;
     const cy = Layout.height / 2;
     const curtain = this.add.container(0, 0).setDepth(950).setScrollFactor(0);
     curtain.add(this.add.rectangle(cx, cy, Layout.width, Layout.height, 0x05070e, 0.92).setScrollFactor(0));
@@ -1027,7 +1044,7 @@ export default class GameScene extends Phaser.Scene {
     this._shiftAdOffered = true;
 
     const btn = this._addHud(this.add
-      .text(VIEW.WIDTH / 2, Layout.height - Layout.hudBottom - Layout.s(26), '▶  Watch an ad for +3 shifts', {
+      .text(Layout.width / 2, Layout.height - Layout.hudBottom - Layout.s(26), '▶  Watch an ad for +3 shifts', {
         fontFamily: 'system-ui, sans-serif', fontSize: '14px', color: '#ffd23f',
         backgroundColor: '#1a1e30', padding: { x: 12, y: 7 },
       })
@@ -1513,7 +1530,7 @@ export default class GameScene extends Phaser.Scene {
 
   _showCompletePanel(stars) {
     const panel = this._addHud(this.add
-      .container(VIEW.WIDTH / 2, Layout.playCenterY)
+      .container(Layout.width / 2, Layout.playCenterY)
       .setScrollFactor(0)
       .setDepth(200));
 
