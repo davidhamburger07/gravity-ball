@@ -20,6 +20,9 @@ export default class PreloadScene extends Phaser.Scene {
     this.registry.set('levels', levels);
 
     // Load saved progress (cloud on-platform, localStorage locally) before the menu paints.
+    // Saved progress lives in the SDK data module, so this is the point that genuinely needs
+    // the platform up. Everything before it ran while the SDK was still initialising.
+    await this.registry.get('sdkReady');
     const save = await new SaveManager(levels).load();
     this.registry.set('save', save);
 

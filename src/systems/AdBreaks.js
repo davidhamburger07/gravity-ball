@@ -26,7 +26,10 @@ export const AdBreaks = {
   shouldShowMidgame() {
     completions += 1;
     levelsSinceAd += 1;
-    if (!CrazyGamesSDK.available || CrazyGamesSDK.adblock) return false;
+    // onPlatform, not merely `available`: the SDK's local environment answers an ad request with
+    // a simulated FIVE SECOND delay, so in development every few levels froze the game for five
+    // seconds to show nothing. An unrequested interstitial only belongs on the real platform.
+    if (!CrazyGamesSDK.onPlatform || CrazyGamesSDK.adblock) return false;
     if (completions <= GRACE_LEVELS) return false;
     if (levelsSinceAd < MIN_LEVELS) return false;
     return Date.now() - lastAdAt >= MIN_GAP_MS;

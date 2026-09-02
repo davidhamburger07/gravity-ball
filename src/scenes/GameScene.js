@@ -92,6 +92,7 @@ export default class GameScene extends Phaser.Scene {
     this._adPaused = false;
     this._bonusShifts = 0;      // shifts granted by a rewarded ad, this attempt only
     this._shiftAdOffered = false;
+    this._adCurtain = null;   // the overlay shown while an ad request is in flight
     // _addHud pushes into this on every build; without a reset it accumulated destroyed objects
     // across restarts and handed a growing list of dead references to cameras.main.ignore().
     this._hudObjects = [];
@@ -849,6 +850,7 @@ export default class GameScene extends Phaser.Scene {
     AudioManager.silent = true;
     this.input.enabled = false;
     if (this.input.keyboard) this.input.keyboard.enabled = false;
+    this._showAdCurtain();
   }
 
   _adResume() {
@@ -856,6 +858,47 @@ export default class GameScene extends Phaser.Scene {
     AudioManager.silent = this._wasSilent ?? false;
     this.input.enabled = true;
     if (this.input.keyboard) this.input.keyboard.enabled = true;
+    this._hideAdCurtain();
+  }
+
+  /**
+   * Cover the game while an ad request is in flight.
+   *
+   * Without this the screen simply froze: input off, physics stopped, nothing drawn to say why.
+   * The request is not instant even in the best case — the platform SDK takes seconds to answer,
+   * and an unfilled or blocked request still costs that time before resolving. A frozen game
+   * reads as a crash, so say what is happening.
+   */
+  _showAdCurtain() {
+    if (this._adCurtain) return;
+    const cx = VIEW.WIDTH / 2;
+    const cy = VIEW.HEIGHT / 2;
+    const curtain = this.add.container(0, 0).setDepth(950).setScrollFactor(0);
+    curtain.add(this.add.rectangle(cx, cy, VIEW.WIDTH, VIEW.HEIGHT, 0x05070e, 0.92).setScrollFactor(0));
+    curtain.add(this.add
+      .text(cx, cy - 14, 'Advertisement', {
+        fontFamily: 'system-ui, sans-serif', fontSize: '20px', color: '#c9cde8', fontStyle: 'bold',
+      })
+      .setOrigin(0.5).setScrollFactor(0));
+    const sub = this.add
+      .text(cx, cy + 16, 'The game will continue in a moment', {
+        fontFamily: 'system-ui, sans-serif', fontSize: '14px', color: '#7a80a8',
+      })
+      .setOrigin(0.5).setScrollFactor(0);
+    curtain.add(sub);
+    this.tweens.add({
+      targets: sub, alpha: { from: 0.45, to: 1 },
+      duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+    });
+    this._addHud(curtain);
+    this._adCurtain = curtain;
+  }
+
+  _hideAdCurtain() {
+    if (!this._adCurtain) return;
+    this.tweens.killTweensOf(this._adCurtain.list);
+    this._adCurtain.destroy();
+    this._adCurtain = null;
   }
 
   // Out of shifts: buzz + red HUD pulse so the denial reads clearly.

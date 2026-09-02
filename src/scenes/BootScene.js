@@ -9,11 +9,14 @@ export default class BootScene extends Phaser.Scene {
     super('BootScene');
   }
 
-  async create() {
-    await CrazyGamesSDK.init();
-    // Opened as early as the SDK allows and closed by PreloadScene once the save is in and the
-    // HTML overlay is gone, so the platform's loading window matches what the player actually sees.
-    CrazyGamesSDK.loadingStart();
+  create() {
+    // Kick the SDK off but deliberately do NOT await it here. The level data PreloadScene
+    // fetches has nothing to do with the platform, and awaiting first meant levels.json was
+    // not even REQUESTED until the SDK had finished — the two now overlap. PreloadScene waits
+    // on this promise before it touches saved progress, which is the only part that needs it.
+    const sdkReady = CrazyGamesSDK.init().then(() => CrazyGamesSDK.loadingStart());
+    this.registry.set('sdkReady', sdkReady);
+
     generatePlaceholderTextures(this);
     this.scene.start('PreloadScene');
   }
