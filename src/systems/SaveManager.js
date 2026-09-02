@@ -10,11 +10,24 @@ import { CrazyGamesSDK } from '../sdk/CrazyGamesSDK.js';
 const STORAGE_KEY = 'gravityball:progress:v2';
 const LEGACY_KEY = 'gravityball:progress:v1';
 
-// Chapter 1 is a strict chain; every later chapter unlocks on stars. SKIP_SLACK is how far a
-// player may run ahead of their own star count — in effect, how many levels they can leave
-// behind before the campaign asks them to go back and pick some up.
+// Chapter 1 is a strict chain; every later chapter unlocks on stars.
+//
+// A gate is a fraction of the stars AVAILABLE from everything before it, not a flat count. That
+// distinction is the whole design: a flat count based on level index was cleared outright by
+// three-starring chapter 1, which opened the entire game at once. As a fraction it scales with
+// the pool, so the gate keeps meaning as the campaign grows.
+//
+// GATE_RATE is therefore also the average star rating a player must sustain to stay ahead of
+// the gates: at 0.67 that is 2 of 3 per level, so competent play flows straight through and
+// only sloppy play has to go back and improve. Raising it toward 0.87 turns the campaign
+// into a mastery gate — a straight two-star player is then blocked at the end of chapter 1.
 const FIRST_CHAPTER = 1;
-const SKIP_SLACK = 3;
+const GATE_RATE = 0.67;
+const STARS_PER_LEVEL = 3;
+// A fixed cushion on top of the rate, worth a little more than one level. Without it a player
+// earning exactly GATE_RATE has zero surplus, so skipping a single level puts them permanently
+// behind the next gate — which is the one thing this whole scheme exists to prevent.
+const GATE_SLACK = 4;
 
 export default class SaveManager {
   /** @param {object} levels  Parsed levels.json (used to compute level order + unlocks). */
@@ -139,7 +152,8 @@ export default class SaveManager {
     const idx = this._order.indexOf(id);
     if (idx < 0) return 0;
     if (this._chapterOf.get(id) === FIRST_CHAPTER) return 0; // sequential, not star-gated
-    return Math.max(0, idx - SKIP_SLACK);
+    // Everything before this level is the pool; the gate asks for GATE_RATE of it.
+    return Math.max(0, Math.round(idx * STARS_PER_LEVEL * GATE_RATE) - GATE_SLACK);
   }
 
   /**
