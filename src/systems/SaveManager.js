@@ -10,12 +10,26 @@ import { CrazyGamesSDK } from '../sdk/CrazyGamesSDK.js';
 const STORAGE_KEY = 'gravityball:progress:v2';
 const LEGACY_KEY = 'gravityball:progress:v1';
 
+// Chapter 1 is a strict chain; every later chapter unlocks on stars. SKIP_SLACK is how far a
+// player may run ahead of their own star count — in effect, how many levels they can leave
+// behind before the campaign asks them to go back and pick some up.
+const FIRST_CHAPTER = 1;
+const SKIP_SLACK = 3;
+
 export default class SaveManager {
   /** @param {object} levels  Parsed levels.json (used to compute level order + unlocks). */
   constructor(levels) {
     this.levels = levels;
     this.data = { levels: {} }; // { "1-1": { completed, stars, shifts } }
     this._order = this._flattenOrder(levels);
+    this._chapterOf = this._mapChapters(levels);
+  }
+
+  /** id -> chapter id, so the unlock rule can treat chapter 1 differently from the rest. */
+  _mapChapters(levels) {
+    const map = new Map();
+    levels.chapters.forEach((c) => (c.levels ?? []).forEach((l) => map.set(l.id, c.id)));
+    return map;
   }
 
   _flattenOrder(levels) {
@@ -111,18 +125,44 @@ export default class SaveManager {
   stars(id) { return this.data.levels[id]?.stars ?? 0; }
 
   /**
-   * A level opens once the previous level in global order is complete. First level is always open.
-   * Test mode opens everything, so progression can be checked without replaying the campaign.
+   * How many stars are needed to open a level, or 0 when it is gated some other way.
+   *
+   * Chapter 1 stays a strict chain: its levels are short enough to clear in a row, and the chain
+   * is what teaches the verb before anything else is offered.
+   *
+   * Everything after it opens on total stars instead, so being stuck on one level never walls off
+   * the rest of the game. The requirement rises by exactly one star per level while a cleared
+   * level is worth one to three, so a player who only ever scrapes a single star still gains on
+   * it — and SLACK is the number of levels they may simply skip and come back to.
+   */
+  starsRequired(id) {
+    const idx = this._order.indexOf(id);
+    if (idx < 0) return 0;
+    if (this._chapterOf.get(id) === FIRST_CHAPTER) return 0; // sequential, not star-gated
+    return Math.max(0, idx - SKIP_SLACK);
+  }
+
+  /**
+   * Chapter 1 opens level by level. From chapter 2 on, a level opens once the player has earned
+   * enough stars campaign-wide, so a level they cannot beat is a detour rather than a dead end.
+   * Test mode opens everything.
    */
   isLevelUnlocked(id) {
     if (this.testMode) return true;
     const idx = this._order.indexOf(id);
     // An id outside the campaign is not "unlocked" — it does not exist. Conflating the two used to
-    // report every stale id from the old campaign as playable, which is exactly the failure this
-    // function should surface.
+    // report every stale id from the old campaign as playable.
     if (idx < 0) return false;
     if (idx === 0) return true; // the first level is always open
-    return this.isCompleted(this._order[idx - 1]);
+
+    if (this._chapterOf.get(id) === FIRST_CHAPTER) return this.isCompleted(this._order[idx - 1]);
+    return this.totalStars() >= this.starsRequired(id);
+  }
+
+  /** Stars still needed to open a level; 0 when it is already open. */
+  starsToUnlock(id) {
+    if (this.isLevelUnlocked(id)) return 0;
+    return Math.max(0, this.starsRequired(id) - this.totalStars());
   }
 
   /** Unlock-everything switch for testing. Persisted so it survives a reload. */

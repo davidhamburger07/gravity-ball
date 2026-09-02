@@ -136,7 +136,7 @@ Per the game-feel guardrails — every interactive state gets feedback:
 - **Level select** with per-level star ratings (e.g., stars for fewest shifts / stars collected / time).
 - **Cloud save** via the CrazyGames data module (localStorage fallback off-platform).
 - **Daily challenge** — one remix level per day for return visits.
-- **Chapter unlocks** gate difficulty and give a sense of milestone.
+- **Unlocking** — chapter 1 is a strict chain, because those levels are short enough to clear in a row and the chain is what teaches the verb. From chapter 2 on, levels open on **total stars** instead, so a level you cannot beat is a detour rather than a wall. The requirement rises by one star per level while a clear is worth one to three, so even a one-star player gains on it; the slack is three levels, which is how many you may leave behind before the campaign asks you to go back and pick some up. A locked tile shows the number of stars still needed, and stars can come from replaying anything for a better rating.
 - **Rewarded ads** for hints / skip-level / extra undo — opt-in, never punishing.
 
 ---

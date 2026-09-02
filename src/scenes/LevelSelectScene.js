@@ -5,6 +5,7 @@ import Button from '../ui/Button.js';
 import { AudioManager } from '../systems/AudioManager.js';
 import { Banners } from '../systems/Banners.js';
 import { Layout } from '../config/Layout.js';
+import { Modal } from '../ui/Modal.js';
 
 // Landscape keeps the shipped grid. Portrait drops to 4 columns so each tile can be far larger:
 // a 90-unit tile renders about 44 CSS px on a phone, right at the edge of a comfortable tap
@@ -325,10 +326,34 @@ export default class LevelSelectScene extends Phaser.Scene {
         this.scene.start('GameScene', { levelId: lvl.id, chapterId: this.currentChapterId })
       );
     } else {
-      tile.add(this.add.text(0, 0, '🔒', { fontSize: `${Math.round(this.m.tile * 0.31)}px` }).setOrigin(0.5));
+      // A star-gated level says what it wants. A padlock alone is only honest for chapter 1, where
+      // the answer really is "finish the one before"; everywhere else the player can act on a
+      // number, and the whole point of the star gate is that being stuck is never a dead end.
+      const needed = this.save.starsToUnlock(lvl.id);
+      if (needed > 0) {
+        tile.add(this.add
+          .text(0, -this.m.tile * 0.06, '🔒', { fontSize: `${Math.round(this.m.tile * 0.20)}px` })
+          .setOrigin(0.5).setAlpha(0.6));
+        tile.add(this.add
+          .text(0, this.m.tile * 0.24, `★ ${needed}`, {
+            fontFamily: 'monospace', fontSize: `${Math.round(this.m.tile * 0.15)}px`, color: '#ffd23f',
+          })
+          .setOrigin(0.5).setAlpha(0.85));
+      } else {
+        tile.add(this.add.text(0, 0, '🔒', { fontSize: `${Math.round(this.m.tile * 0.31)}px` }).setOrigin(0.5));
+      }
+
       // Say no out loud, the same way SkinsScene does, rather than ignoring the tap.
       bg.setInteractive();
-      bg.on('pointerdown', () => { AudioManager.deny(); this.cameras.main.shake(90, 0.003); });
+      bg.on('pointerdown', () => {
+        AudioManager.deny();
+        this.cameras.main.shake(90, 0.003);
+        if (needed > 0) {
+          Modal.notice(this, `Earn ${needed} more star${needed === 1 ? '' : 's'} to open this level.\n\n`
+            + 'Stars come from any level — replay one you have already beaten for a better rating, '
+            + 'or go back and clear one you skipped.', { title: 'Locked', titleColor: '#ffd23f' });
+        }
+      });
     }
 
     tile.setScale(0);
