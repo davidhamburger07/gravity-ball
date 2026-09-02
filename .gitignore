@@ -34,3 +34,6 @@ src/data/levels.json.bak
 .env
 .env.*
 !.env.example
+
+# Scratch output from Git Bash mapping /tmp inside the repo.
+tmp/
