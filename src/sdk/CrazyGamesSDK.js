@@ -11,6 +11,10 @@
 
 const raw = () => (typeof window !== 'undefined' ? window.CrazyGames?.SDK : undefined);
 
+// Every ad and banner call goes through AdProvider, which the build swaps for a no-op version
+// in a Basic Launch build. Do not call window.CrazyGames.SDK.ad or .banner from anywhere else.
+import * as Ads from './AdProvider.js';
+
 export const CrazyGamesSDK = {
   available: false,        // true when SDK calls are legal ('local' or 'crazygames')
   environment: 'disabled', // 'local' | 'crazygames' | 'disabled'
@@ -36,7 +40,7 @@ export const CrazyGamesSDK = {
         console.info(`[CrazyGames] environment="${this.environment}" — SDK calls disabled.`);
         return;
       }
-      this.adblock = await sdk.ad.hasAdblock().catch(() => false);
+      this.adblock = await Ads.hasAdblock();
       // The platform can mute the game from its own UI. Requirement: this outranks any in-game
       // toggle, so it is wired straight into AudioManager rather than offered as a suggestion.
       this._watchAudioSetting(sdk);
@@ -67,58 +71,18 @@ export const CrazyGamesSDK = {
   },
 
   // --- Ads ----------------------------------------------------------------
-  _adInFlight: false,
+  // Delegated wholesale to AdProvider, which the build swaps for a no-op in a Basic Launch
+  // build. Nothing about an ad — not the promise wrapper, not the callback shape, not the type
+  // strings — lives in this file, because all of it has to disappear from a no-ad bundle.
 
-  /**
-   * Request an ad and resolve with what actually happened.
-   *
-   * The platform API is callbacks-only: `requestAd(type, { adStarted, adFinished, adError })`.
-   * Wrapping it in a promise that ALWAYS resolves is the whole point of this method — the caller
-   * pauses the game and unpauses off the resolution, so a request that throws synchronously or
-   * never calls back would otherwise leave the game frozen with no way out. The previous version
-   * swallowed a synchronous throw and never fired its finish callback, which was a real soft-lock.
-   *
-   * @returns {Promise<{shown: boolean, error: ?{code: string, message?: string}}>}
-   */
-  _requestAd(type, { onStart, onStop } = {}) {
-    return new Promise((resolve) => {
-      if (!this.available || this._adInFlight) {
-        resolve({ shown: false, error: { code: 'unavailable' } });
-        return;
-      }
-      this._adInFlight = true;
-      let started = false;
-      let settled = false;
-
-      const done = (shown, error = null) => {
-        if (settled) return;
-        settled = true;
-        this._adInFlight = false;
-        clearTimeout(timer);
-        if (started) { try { onStop?.(); } catch { /* a caller hook must not strand the game */ } }
-        resolve({ shown, error });
-      };
-
-      // Watchdog: some blockers swallow the callbacks entirely. Never strand the player.
-      const timer = setTimeout(() => done(false, { code: 'timeout', message: 'no ad callback' }), 60000);
-
-      try {
-        raw().ad.requestAd(type, {
-          adStarted: () => { started = true; try { onStart?.(); } catch { /* ignore */ } },
-          adFinished: () => done(true),
-          adError: (error) => done(false, error ?? { code: 'other' }),
-        });
-      } catch (err) {
-        done(false, { code: 'other', message: String(err?.message ?? err) });
-      }
-    });
-  },
-
-  /** Interstitial. Only ever at a natural break — never mid-level, never after a death. */
-  midgameAd(hooks) { return this._requestAd('midgame', hooks); },
+  /** Interstitial. Resolves {shown, error} and never rejects. */
+  midgameAd(hooks) { return Ads.midgameAd(hooks); },
 
   /** Rewarded. Grant the reward ONLY when the resolved `shown` is true. */
-  rewardedAd(hooks) { return this._requestAd('rewarded', hooks); },
+  rewardedAd(hooks) { return Ads.rewardedAd(hooks); },
+
+  /** False in a build with no ads at all, so callers can skip offering one. */
+  get adsAvailable() { return Ads.ADS_AVAILABLE; },
 
   // --- User account (level finder) -----------------------------------------
   // Off-platform these return null and PlayerIdentity falls back to a local id.

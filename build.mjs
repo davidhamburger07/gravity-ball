@@ -12,6 +12,12 @@ import { fileURLToPath } from 'node:url';
 const root = fileURLToPath(new URL('.', import.meta.url));
 const dist = `${root}dist`;
 
+// Basic Launch submissions may not contain ads, and the platform rejects a build where the ad
+// APIs are merely PRESENT — not just where an ad is shown. So the default build resolves
+// AdProvider.js to a no-op, leaving no requestAd/hasAdblock/banner call in the bundle at all.
+// Opt back in with GB_LAUNCH=full once the game is approved for Full Launch.
+const LAUNCH = process.env.GB_LAUNCH === 'full' ? 'full' : 'basic';
+
 const PROD_HTML = `<!doctype html>
 <html lang="en">
   <head>
@@ -35,8 +41,6 @@ const PROD_HTML = `<!doctype html>
                  env(safe-area-inset-bottom) env(safe-area-inset-left);
         box-sizing: border-box; }
       canvas { display: block; }
-      #cg-banner { position: fixed; left: 50%; bottom: 8px; transform: translateX(-50%);
-        z-index: 40; display: none; }
       #loading { position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column;
         align-items: center; justify-content: center; gap: 16px; }
       #loading .spinner { width: 42px; height: 42px; border-radius: 50%;
@@ -53,7 +57,7 @@ const PROD_HTML = `<!doctype html>
   <body>
     <div id="game-root"></div>
     <!-- Menu-screen banner, in the letterbox below the canvas so it never covers game UI. -->
-    <div id="cg-banner"></div>
+    ${LAUNCH === 'full' ? '<div id="cg-banner"></div>' : ''}
     <div id="loading"><div class="spinner"></div><div class="label">Loading</div></div>
     <script src="bundle.js"></script>
   </body>
@@ -62,6 +66,17 @@ const PROD_HTML = `<!doctype html>
 
 // Swap the AI/procgen dev tooling for a stub in the shipped game. It is a third of the bundle,
 // and it carries the ?ai=1 entry point, which has no business in a build players can load.
+
+const stripAds = {
+  name: 'strip-ads',
+  setup(build) {
+    if (LAUNCH === 'full') return;
+    // Matches the relative specifiers the source actually uses (./AdProvider.js and
+    // ../sdk/AdProvider.js), not a path that happens to contain a folder name.
+    build.onResolve({ filter: /(^|[/])AdProvider[.]js$/ }, () => ({ path: `${root}src/sdk/AdProvider.basic.js` }));
+  },
+};
+
 const stripDevTools = {
   name: 'strip-dev-tools',
   setup(build) {
@@ -83,14 +98,14 @@ async function main() {
     outfile: 'dist/bundle.js',
     legalComments: 'none',
     metafile: true,
-    plugins: [stripDevTools],
+    plugins: [stripDevTools, stripAds],
   });
 
   // 1b. Bundle the level editor (separate entry point / page).
   await esbuild.build({
     entryPoints: ['src/editor/main.js'],
     bundle: true, minify: true, format: 'iife', target: 'es2019',
-    outfile: 'dist/editor.js', legalComments: 'none',
+    outfile: 'dist/editor.js', legalComments: 'none', plugins: [stripAds],
   });
 
   // 2. Vendor Phaser.

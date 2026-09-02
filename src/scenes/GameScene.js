@@ -1042,7 +1042,9 @@ export default class GameScene extends Phaser.Scene {
   _offerShiftAd() {
     const L = Layout;
     if (this._shiftAdOffered || this._solved || this._dying) return;
-    if (!CrazyGamesSDK.available || CrazyGamesSDK.adblock) return;
+    // adsAvailable is false in a Basic Launch build, where offering a reward the game cannot
+    // deliver would be worse than not offering it.
+    if (!CrazyGamesSDK.adsAvailable || !CrazyGamesSDK.available || CrazyGamesSDK.adblock) return;
     this._shiftAdOffered = true;
 
     const btn = this._addHud(this.add
