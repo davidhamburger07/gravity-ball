@@ -20,7 +20,8 @@
     "levels:e2e": "node scripts/e2e-levels.mjs",
     "levels:seed": "node scripts/seed-demo.mjs",
     "levels:gate": "node scripts/test-publish-gate.mjs",
-    "package:crazygames": "node scripts/check-physics.mjs && node scripts/check-campaign.mjs && node build.mjs && node scripts/package-crazygames.mjs"
+    "package:crazygames": "node scripts/check-physics.mjs && node scripts/check-campaign.mjs && node build.mjs && node scripts/package-crazygames.mjs",
+    "covers": "node scripts/make-covers.mjs"
   },
   "keywords": [
     "html5-game",
