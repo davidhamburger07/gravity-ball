@@ -991,6 +991,7 @@ export default class GameScene extends Phaser.Scene {
    * reads as a crash, so say what is happening.
    */
   _showAdCurtain() {
+    const L = Layout;
     if (this._adCurtain) return;
     const cx = Layout.width / 2;
     const cy = Layout.height / 2;
@@ -998,12 +999,12 @@ export default class GameScene extends Phaser.Scene {
     curtain.add(this.add.rectangle(cx, cy, Layout.width, Layout.height, 0x05070e, 0.92).setScrollFactor(0));
     curtain.add(this.add
       .text(cx, cy - 14, 'Advertisement', {
-        fontFamily: 'system-ui, sans-serif', fontSize: '20px', color: '#c9cde8', fontStyle: 'bold',
+        fontFamily: 'system-ui, sans-serif', fontSize: L.font(20), color: '#c9cde8', fontStyle: 'bold',
       })
       .setOrigin(0.5).setScrollFactor(0));
     const sub = this.add
       .text(cx, cy + 16, 'The game will continue in a moment', {
-        fontFamily: 'system-ui, sans-serif', fontSize: '14px', color: '#7a80a8',
+        fontFamily: 'system-ui, sans-serif', fontSize: L.font(14), color: '#7a80a8',
       })
       .setOrigin(0.5).setScrollFactor(0);
     curtain.add(sub);
@@ -1039,13 +1040,14 @@ export default class GameScene extends Phaser.Scene {
    * full budget for free, so the ad is never the only route.
    */
   _offerShiftAd() {
+    const L = Layout;
     if (this._shiftAdOffered || this._solved || this._dying) return;
     if (!CrazyGamesSDK.available || CrazyGamesSDK.adblock) return;
     this._shiftAdOffered = true;
 
     const btn = this._addHud(this.add
       .text(Layout.width / 2, Layout.height - Layout.hudBottom - Layout.s(26), '▶  Watch an ad for +3 shifts', {
-        fontFamily: 'system-ui, sans-serif', fontSize: '14px', color: '#ffd23f',
+        fontFamily: 'system-ui, sans-serif', fontSize: L.font(14), color: '#ffd23f',
         backgroundColor: '#1a1e30', padding: { x: 12, y: 7 },
       })
       .setOrigin(0.5).setScrollFactor(0).setDepth(150)
@@ -1529,20 +1531,21 @@ export default class GameScene extends Phaser.Scene {
   }
 
   _showCompletePanel(stars) {
+    const L = Layout;
     const panel = this._addHud(this.add
       .container(Layout.width / 2, Layout.playCenterY)
       .setScrollFactor(0)
       .setDepth(200));
 
-    const bg = this.add.rectangle(0, 0, 380, 300, 0x1a1e30, 0.98).setStrokeStyle(3, 0x38e1ff, 0.5);
+    const bg = this.add.rectangle(0, 0, L.s(380), L.s(300), 0x1a1e30, 0.98).setStrokeStyle(3, 0x38e1ff, 0.5);
     const title = this.add
-      .text(0, -110, 'LEVEL COMPLETE', {
-        fontFamily: 'system-ui, sans-serif', fontSize: '26px', color: '#2bd67b', fontStyle: 'bold',
+      .text(0, -L.s(110), 'LEVEL COMPLETE', {
+        fontFamily: 'system-ui, sans-serif', fontSize: L.font(26), color: '#2bd67b', fontStyle: 'bold',
       })
       .setOrigin(0.5);
     const info = this.add
-      .text(0, 22, `Shifts: ${this.shiftCount}    Par: ${this.level.par ?? '-'}`, {
-        fontFamily: 'monospace', fontSize: '15px', color: '#9aa0c3',
+      .text(0, L.s(22), `Shifts: ${this.shiftCount}    Par: ${this.level.par ?? '-'}`, {
+        fontFamily: 'monospace', fontSize: L.font(15), color: '#9aa0c3',
       })
       .setOrigin(0.5);
     panel.add([bg, title, info]);
@@ -1550,7 +1553,7 @@ export default class GameScene extends Phaser.Scene {
     // Star row with a staggered pop.
     for (let i = 0; i < 3; i++) {
       const star = this.add
-        .text(-70 + i * 70, -40, '★', { fontSize: '52px', color: i < stars ? '#ffd23f' : '#3a3f5c' })
+        .text(-L.s(70) + i * L.s(70), -L.s(40), '★', { fontSize: L.font(52), color: i < stars ? '#ffd23f' : '#3a3f5c' })
         .setOrigin(0.5)
         .setScale(0);
       this.tweens.add({ targets: star, scale: 1, ease: 'Back.easeOut', duration: 350, delay: 250 + i * 130 });
@@ -1599,20 +1602,20 @@ export default class GameScene extends Phaser.Scene {
       } else {
         panel.add(
           this.add
-            .text(0, 58, 'That is every level built so far.\nChapter 4 is coming soon.', {
-              fontFamily: 'system-ui, sans-serif', fontSize: '13px', color: '#8990b8',
-              align: 'center', lineSpacing: 3,
+            .text(0, L.s(58), 'That is every level built so far.\nChapter 4 is coming soon.', {
+              fontFamily: 'system-ui, sans-serif', fontSize: L.font(13), color: '#8990b8',
+              align: 'center', lineSpacing: 3, wordWrap: { width: L.s(330) },
             })
             .setOrigin(0.5)
         );
       }
     }
 
-    const spacing = 116;
+    const spacing = L.s(116);
     const startX = -((actions.length - 1) * spacing) / 2;
     actions.forEach(([label, cb, color, textColor], i) => {
-      const b = new Button(this, startX + i * spacing, 100, label, cb, {
-        width: 106, height: 46, fontSize: '18px', color, textColor,
+      const b = new Button(this, startX + i * spacing, L.s(100), label, cb, {
+        width: L.s(106), height: L.s(46), fontSize: L.font(18), color, textColor,
       });
       panel.add(b);
     });
@@ -1620,13 +1623,17 @@ export default class GameScene extends Phaser.Scene {
     // Enter advances to the next level. `once` so it can't fire twice mid-transition, and it is
     // registered with the panel (not in create) so it only ever listens while the panel is up.
     if (goNext) {
-      panel.add(
-        this.add
-          .text(0, 136, 'press ⏎ for next level', {
-            fontFamily: 'monospace', fontSize: '11px', color: '#5a6089',
-          })
-          .setOrigin(0.5)
-      );
+      // The shortcut stays bound either way — a touch laptop has both — but the hint only earns
+      // its space where a keyboard is the likely input.
+      if (!Layout.touch) {
+        panel.add(
+          this.add
+            .text(0, L.s(136), 'press ⏎ for next level', {
+              fontFamily: 'monospace', fontSize: L.font(11), color: '#5a6089',
+            })
+            .setOrigin(0.5)
+        );
+      }
       this.input.keyboard?.once('keydown-ENTER', goNext);
     }
 
@@ -1641,15 +1648,16 @@ export default class GameScene extends Phaser.Scene {
    * between the score line and the action buttons, where a 46px-tall Button would not.
    */
   _addRatingRow(panel) {
+    const L = Layout;
     const meta = this.registry.get('customLevelMeta');
     if (!meta?.id) return;
 
-    const row = this.add.container(0, 58);
+    const row = this.add.container(0, L.s(58));
     panel.add(row);
 
     const label = this.add
-      .text(-160, 0, 'Rate this level', {
-        fontFamily: 'system-ui, sans-serif', fontSize: '13px', color: '#7a80a8',
+      .text(-L.s(160), 0, 'Rate this level', {
+        fontFamily: 'system-ui, sans-serif', fontSize: L.font(13), color: '#7a80a8',
       })
       .setOrigin(0, 0.5);
     row.add(label);
@@ -1657,13 +1665,13 @@ export default class GameScene extends Phaser.Scene {
     const done = (message, color) => {
       row.removeAll(true);
       row.add(this.add
-        .text(0, 0, message, { fontFamily: 'system-ui, sans-serif', fontSize: '13px', color })
+        .text(0, 0, message, { fontFamily: 'system-ui, sans-serif', fontSize: L.font(13), color })
         .setOrigin(0.5));
     };
 
     const link = (x, text, color, onClick) => {
       const t = this.add
-        .text(x, 0, text, { fontFamily: 'system-ui, sans-serif', fontSize: '15px', color })
+        .text(x, 0, text, { fontFamily: 'system-ui, sans-serif', fontSize: L.font(15), color })
         .setOrigin(0.5)
         .setInteractive({ useHandCursor: true });
       t.on('pointerover', () => t.setColor('#ffffff'));
@@ -1680,9 +1688,9 @@ export default class GameScene extends Phaser.Scene {
       else done(res.error, '#e0574f');
     };
 
-    link(30, '♥ Like', '#2bd67b', () => send(1));
-    link(105, '✕ Dislike', '#e0574f', () => send(-1));
-    link(168, '⚑', '#5a6089', () => {
+    link(L.s(30), '♥ Like', '#2bd67b', () => send(1));
+    link(L.s(105), '✕ Dislike', '#e0574f', () => send(-1));
+    link(L.s(168), '⚑', '#5a6089', () => {
       Modal.confirm(this, `Report “${meta.name || 'this level'}” as inappropriate or broken?`, {
         title: 'Report level', confirmLabel: 'Report', danger: true,
         onConfirm: async () => {
