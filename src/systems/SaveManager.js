@@ -24,16 +24,54 @@ export default class SaveManager {
     return ids;
   }
 
-  async load() {
+  /**
+   * Read progress from the local mirror. SYNCHRONOUS and deliberately so.
+   *
+   * This used to await the platform SDK, which meant the whole game waited on it: measured at
+   * SEVEN SECONDS on a non-CrazyGames host, where the SDK spends that long failing a handshake
+   * before reporting environment "disabled". Every asset was in memory after 755ms and the
+   * player still watched a spinner until 7.8s.
+   *
+   * Every write goes to localStorage as well as the cloud (see _persist), so the local copy is
+   * always as fresh as the last write ON THIS DEVICE. That is enough to start playing instantly;
+   * syncFromCloud() reconciles afterwards for the cross-device case.
+   */
+  load() {
     try {
-      let raw = await CrazyGamesSDK.getItem(STORAGE_KEY);
-      if (!raw) raw = await this._migrateLegacy();
+      let raw = null;
+      try { raw = localStorage.getItem(STORAGE_KEY); } catch { /* private mode */ }
       if (raw) this.data = JSON.parse(raw);
       if (!this.data.levels) this.data.levels = {};
     } catch {
       this.data = { levels: {} };
     }
     return this;
+  }
+
+  /**
+   * Reconcile with the cloud copy once the SDK is actually up. Runs in the background, after the
+   * menu is already on screen.
+   *
+   * Adopts the cloud save only when it has strictly MORE cleared levels than what is held here.
+   * A stale cloud copy must never roll back progress this device just made; the only case worth
+   * importing is a player arriving on a new device with real progress behind them.
+   */
+  async syncFromCloud() {
+    try {
+      let raw = await CrazyGamesSDK.getItem(STORAGE_KEY);
+      if (!raw) raw = await this._migrateLegacy();
+      if (!raw) return false;
+      const cloud = JSON.parse(raw);
+      if (!cloud || typeof cloud !== 'object') return false;
+      const cleared = (d) => Object.values(d?.levels ?? {}).filter((l) => l?.completed).length;
+      if (cleared(cloud) <= cleared(this.data)) return false;
+      this.data = cloud;
+      if (!this.data.levels) this.data.levels = {};
+      CrazyGamesSDK.mirror(STORAGE_KEY, JSON.stringify(this.data));
+      return true;
+    } catch {
+      return false; // a failed sync must never cost the player the save they already have
+    }
   }
 
   /**

@@ -15,30 +15,31 @@ export default class PreloadScene extends Phaser.Scene {
     this.load.json('levels', 'src/data/levels.json');
   }
 
-  async create() {
+  create() {
     const levels = this.cache.json.get('levels');
     this.registry.set('levels', levels);
 
-    // Load saved progress (cloud on-platform, localStorage locally) before the menu paints.
-    // Saved progress lives in the SDK data module, so this is the point that genuinely needs
-    // the platform up. Everything before it ran while the SDK was still initialising.
-    await this.registry.get('sdkReady');
-    const save = await new SaveManager(levels).load();
+    // Local-first, and nothing here awaits the platform. Blocking the first paint on the SDK cost
+    // seven seconds on a non-CrazyGames host, where init() spends that long failing a handshake
+    // before reporting "disabled" — the whole game was loaded and idle after 755ms.
+    const save = new SaveManager(levels).load();
     this.registry.set('save', save);
 
-    // Everything's ready — dismiss the HTML loading overlay.
+    // Reconcile with the cloud copy whenever the SDK turns up, long after the menu is playable.
+    // Only matters for a player arriving on a second device; see SaveManager.syncFromCloud.
+    const sdkReady = this.registry.get('sdkReady');
+    Promise.resolve(sdkReady)
+      .then(() => save.syncFromCloud())
+      .catch(() => false)
+      .then(() => CrazyGamesSDK.loadingStop());
+
+    // Everything is ready — dismiss the HTML loading overlay.
     if (typeof document !== 'undefined') document.getElementById('loading')?.remove();
 
-    // Closing the platform's loading window is routed through here because there are five ways out
-    // of this scene. Missing any one of them would leave the loading state open for the whole
-    // session, so every branch below goes through _handOff.
-    const handOff = (scene, data) => {
-      CrazyGamesSDK.loadingStop();
-      this.scene.start(scene, data);
-    };
+    const handOff = (scene, data) => this.scene.start(scene, data);
 
     // Automated content run (./?ai=1) — generate levels and let the AI playtest them.
-    if (autoStartFromUrl(this.game)) { CrazyGamesSDK.loadingStop(); return; }
+    if (autoStartFromUrl(this.game)) return;
 
     const params = new URLSearchParams(location.search);
 
