@@ -4,6 +4,7 @@ import Button from '../ui/Button.js';
 import { decodeLevel } from '../systems/ShareCode.js';
 import { Banners } from '../systems/Banners.js';
 import { Modal } from '../ui/Modal.js';
+import { Layout } from '../config/Layout.js';
 
 export default class MenuScene extends Phaser.Scene {
   constructor() {
@@ -12,14 +13,20 @@ export default class MenuScene extends Phaser.Scene {
 
   create() {
     const { width, height } = this.scale;
+    const L = Layout;
     this._backdrop(width, height);
     // Menu screens are where a banner is allowed to live — never over gameplay.
     Banners.show();
 
+    // Everything is anchored to a single stack rather than to fractions of the canvas height. In
+    // portrait the canvas is more than twice as tall, so fractions spread the menu into a thin
+    // column with the links stranded near the middle of an empty screen.
+    const centre = L.isPortrait ? height * 0.42 : height * 0.30;
+
     const title = this.add
-      .text(width / 2, height * 0.30, 'GRAVITY BALL', {
+      .text(width / 2, centre, 'GRAVITY BALL', {
         fontFamily: 'system-ui, sans-serif',
-        fontSize: '56px',
+        fontSize: L.font(56),
         color: '#38e1ff',
         fontStyle: 'bold',
       })
@@ -31,43 +38,49 @@ export default class MenuScene extends Phaser.Scene {
     });
 
     const tagline = this.add
-      .text(width / 2, height * 0.42, 'Flip. Roll. Solve.', {
-        fontFamily: 'system-ui, sans-serif', fontSize: '20px', color: '#9aa0c3',
+      .text(width / 2, centre + L.s(74), 'Flip. Roll. Solve.', {
+        fontFamily: 'system-ui, sans-serif', fontSize: L.font(20), color: '#9aa0c3',
       })
       .setOrigin(0.5)
       .setAlpha(0);
     this.tweens.add({ targets: tagline, alpha: 1, duration: 600, delay: 300 });
 
-    const playY = height * 0.60;
+    const playY = centre + L.s(190);
     new Button(this, width / 2, playY, 'PLAY', () => this.scene.start('LevelSelectScene'), {
       delay: 350,
+      width: L.s(220), height: L.s(60), fontSize: L.font(24),
     });
 
-    // Secondary entries, hung off the PLAY button rather than off a fraction of the canvas
-    // height. As proportions the last link and the controls hint overlapped by ~10px, and they
-    // would have kept overlapping at any canvas size.
+    // Secondary entries, hung off the PLAY button rather than off a fraction of the canvas height.
+    // As proportions the last link and the controls hint overlapped by ~10px, at any canvas size.
     const links = [
       ['Custom Levels', () => this.scene.start('LevelBrowserScene')],
       ['Ball Skins', () => this.scene.start('SkinsScene')],
       ['Play a Shared Map', () => this._promptForCode()],
       ['Level Editor', () => { window.location.href = 'editor.html'; }],
     ];
-    const linkTop = playY + 62; // clears the 60px-tall PLAY button
+    const step = L.s(26);
+    const linkTop = playY + L.s(62);
     links.forEach(([label, onClick], i) => {
-      this.add
-        .text(width / 2, linkTop + i * 26, label, {
-          fontFamily: 'system-ui, sans-serif', fontSize: '16px', color: '#7a80a8',
+      const t = this.add
+        .text(width / 2, linkTop + i * step, label, {
+          fontFamily: 'system-ui, sans-serif', fontSize: L.font(16), color: '#7a80a8',
         })
         .setOrigin(0.5)
         .setInteractive({ useHandCursor: true })
         .on('pointerover', function () { this.setColor('#38e1ff'); })
         .on('pointerout', function () { this.setColor('#7a80a8'); })
         .on('pointerdown', onClick);
+      // A 16px label is a small tap target on a phone; grow the hit area, not the text.
+      if (L.isPortrait) t.input.hitArea.setTo(-40, -10, t.width + 80, t.height + 20);
     });
 
     this.add
-      .text(width / 2, height - 32, 'Arrow Keys / WASD or Swipe to shift gravity', {
-        fontFamily: 'monospace', fontSize: '14px', color: '#5a6089',
+      .text(width / 2, height - L.s(32), L.isPortrait
+        ? 'Swipe, or use the arrows on screen, to shift gravity'
+        : 'Arrow Keys / WASD or Swipe to shift gravity', {
+        fontFamily: 'monospace', fontSize: L.font(14), color: '#5a6089',
+        align: 'center', wordWrap: { width: width - L.s(40) },
       })
       .setOrigin(0.5);
   }

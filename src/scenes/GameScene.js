@@ -13,6 +13,7 @@ import { CrazyGamesSDK } from '../sdk/CrazyGamesSDK.js';
 import { AdBreaks } from '../systems/AdBreaks.js';
 import { Banners } from '../systems/Banners.js';
 import { VIEW, PHYSICS, FEEL } from '../config/GameConfig.js';
+import { Layout } from '../config/Layout.js';
 import { skinById, skinTextureKey, isSkinUnlocked } from '../systems/Skins.js';
 import { recordSolve } from '../systems/SolveProof.js';
 import * as LevelApi from '../systems/LevelApi.js';
@@ -190,7 +191,7 @@ export default class GameScene extends Phaser.Scene {
     // gameplay. Phaser scissors each camera to its viewport, so geometry cannot bleed into them.
     // This has to live in create(): CameraManager destroys every camera on shutdown and re-adds
     // `main` at full canvas size, so a restart would silently give the overlap back.
-    this.cameras.main.setViewport(0, VIEW.HUD_TOP, VIEW.WIDTH, VIEW.PLAY_H);
+    this.cameras.main.setViewport(0, Layout.hudTop, VIEW.WIDTH, VIEW.PLAY_H);
 
     this._active = level.activeColor ?? 'red';
     if (this._fx) this._buildParallax(bounds);
@@ -224,10 +225,7 @@ export default class GameScene extends Phaser.Scene {
     this._buildFog(level, bounds);
     this._buildHud(level);
     this._splitCameras();
-    this.input.keyboard.on('keydown-R', () => this.scene.restart(
-      this._playlist ? { playlist: true, playlistIndex: this._plIndex }
-        : this._playtest ? { playtest: true } : undefined
-    ));
+    this.input.keyboard.on('keydown-R', () => this._restartLevel());
     this.input.keyboard.on('keydown-ESC', () => this._toLevelSelect());
 
     if (this._agentMode) {
@@ -625,73 +623,94 @@ export default class GameScene extends Phaser.Scene {
   }
 
   _buildHud(level) {
-    // The bands are OUTSIDE the playfield now (create() gives the world camera its own viewport),
-    // so nothing here can cover gameplay. Their heights are deliberately constant: sizing them to
-    // whether this particular level has a hint or a death-rule row would shrink the play box by
-    // different amounts level to level, and consecutive levels in a chapter would visibly change
-    // scale — chapter 1 alone flips both flags several times.
+    // The bands sit OUTSIDE the playfield (create() gives the world camera its own viewport), so
+    // nothing here can cover gameplay. Their heights are constant per orientation: sizing them to
+    // whether this level has a hint or a death-rule row would change the play box level to level.
+    //
+    // Portrait scales every readout and target up (Layout.ui). A taller canvas alone does NOT make
+    // text bigger on screen — the world-to-screen ratio is unchanged — so the sizes have to grow.
+    const L = Layout;
     const secondRow = !!level.resetGravityOnDeath;
+    const rowY = L.hudTop / 2 - (secondRow ? L.s(9) : 0);
+    const W = VIEW.WIDTH;
+
     this._addHud(this.add
-      .rectangle(VIEW.WIDTH / 2, VIEW.HUD_TOP / 2, VIEW.WIDTH, VIEW.HUD_TOP, 0x0d1018, 0.92)
+      .rectangle(W / 2, L.hudTop / 2, W, L.hudTop, 0x0d1018, 0.92)
       .setScrollFactor(0).setDepth(HUD_BAND_DEPTH));
 
     this.hud = this._addHud(this.add
-      .text(12, HUD_ROW_Y, '', { fontFamily: 'monospace', fontSize: '16px', color: '#9aa0c3' })
+      .text(L.s(12), rowY, '', { fontFamily: 'monospace', fontSize: L.font(16), color: '#9aa0c3' })
       .setOrigin(0, 0.5)
       .setScrollFactor(0)
       .setDepth(100));
     this._updateHud();
 
-    // Right-hand controls, laid out from the right edge so they never collide.
-    this._addHud(new Button(this, VIEW.WIDTH - 44, HUD_ROW_Y, '‹', () => this._toLevelSelect(), {
-      width: 48, height: 44, fontSize: '22px', color: 0x2a2f45, textColor: '#ffffff',
-    }).setScrollFactor(0).setDepth(100));
+    // Right-hand cluster, laid out from the right edge so the pieces never collide.
+    const btnW = L.s(48);
+    const btnH = L.s(44);
+    const gap = L.s(6);
+    let x = W - btnW / 2 - L.s(12);
 
-    // Mute toggle (persists via AudioManager/localStorage). Padding enlarges the tap area.
+    this._addHud(new Button(this, x, rowY, '‹', () => this._toLevelSelect(), {
+      width: btnW, height: btnH, fontSize: L.font(22), color: 0x2a2f45, textColor: '#ffffff',
+    }).setScrollFactor(0).setDepth(100));
+    x -= btnW + gap;
+
+    // Restart. Previously only the R key, which a phone does not have.
+    this._addHud(new Button(this, x, rowY, '⟲', () => this._restartLevel(), {
+      width: btnW, height: btnH, fontSize: L.font(22), color: 0x2a2f45, textColor: '#ffffff',
+    }).setScrollFactor(0).setDepth(100));
+    x -= btnW + gap;
+
+    // Mute toggle (persists via AudioManager/localStorage).
     const mute = this._addHud(this.add
-      .text(VIEW.WIDTH - 98, HUD_ROW_Y, AudioManager.muted ? '\u{1F507}' : '\u{1F50A}', { fontSize: '24px', padding: { x: 8, y: 8 } })
+      .text(x, rowY, AudioManager.muted ? '🔇' : '🔊', {
+        fontSize: L.font(24), padding: { x: L.s(8), y: L.s(8) },
+      })
       .setOrigin(0.5).setScrollFactor(0).setDepth(100)
       .setInteractive({ useHandCursor: true }));
-    mute.on('pointerdown', () => mute.setText(AudioManager.toggleMute() ? '\u{1F507}' : '\u{1F50A}'));
+    mute.on('pointerdown', () => mute.setText(AudioManager.toggleMute() ? '🔇' : '🔊'));
+    x -= btnW + gap;
 
-    // Zoom-to-fit, only for levels larger than the viewport (see _toggleZoom).
-    this._buildZoomButton(level);
+    this._buildZoomButton(level, x, rowY);
+    if (this._zoomBtn) x -= btnW + gap;
 
-    // Ch.7: show which color is currently solid.
+    // Ch.7: which colour is currently solid.
     if ((level.cblocks ?? []).length) {
       this._activeDot = this._addHud(this.add
-        .rectangle(VIEW.WIDTH - 206, HUD_ROW_Y, 20, 20, SWITCH_COLORS[this._active])
+        .rectangle(x, rowY, L.s(20), L.s(20), SWITCH_COLORS[this._active])
         .setStrokeStyle(2, 0xffffff, 0.4)
         .setScrollFactor(0).setDepth(100));
+      x -= btnW + gap;
     }
 
-    // Held-keys inventory. Anchored to the right cluster and grown leftwards rather than centred:
-    // centred on the canvas it collided with the level readout as soon as the id was long (a
-    // published custom level's id plus a shift budget plus three keys overlapped by ~40px).
-    this._keyHud = this._addHud(this.add.container(VIEW.WIDTH - 240, HUD_ROW_Y).setScrollFactor(0).setDepth(100));
+    // Held keys, grown leftwards from the cluster rather than centred on the canvas, where a long
+    // custom-level id used to run straight through them.
+    this._keyHud = this._addHud(this.add.container(x, rowY).setScrollFactor(0).setDepth(100));
 
-    // Death-rule indicator gets its own row so it never sits on the playfield.
     if (secondRow) {
       this._addHud(this.add
-        .text(12, HUD_BAR_H + HUD_ROW2_H / 2, '⟲ gravity resets on death', {
-          fontFamily: 'monospace', fontSize: '12px', color: '#7a80a8',
+        .text(L.s(12), L.hudTop - L.s(14), '⟲ gravity resets on death', {
+          fontFamily: 'monospace', fontSize: L.font(12), color: '#7a80a8',
         })
         .setOrigin(0, 0.5).setScrollFactor(0).setDepth(100));
     }
 
-    // The hint strip is always drawn, hint or not, for the same reason the top band is a constant:
-    // the play box must not change size between levels.
-    const hintY = VIEW.HEIGHT - VIEW.HUD_BOTTOM / 2;
+    // Hint strip, always drawn so the play box never changes size between levels.
+    const hintY = L.height - L.hudBottom / 2;
     this._addHud(this.add
-      .rectangle(VIEW.WIDTH / 2, hintY, VIEW.WIDTH, VIEW.HUD_BOTTOM, 0x0d1018, 0.92)
+      .rectangle(W / 2, hintY, W, L.hudBottom, 0x0d1018, 0.92)
       .setScrollFactor(0).setDepth(HUD_BAND_DEPTH));
     if (level.hint) {
       this._addHud(this.add
-        .text(VIEW.WIDTH / 2, hintY, level.hint, {
-          fontFamily: 'monospace', fontSize: '13px', color: '#8990b8',
+        .text(W / 2, hintY, level.hint, {
+          fontFamily: 'monospace', fontSize: L.font(13), color: '#8990b8',
+          align: 'center', wordWrap: { width: W - L.s(24) },
         })
         .setOrigin(0.5).setScrollFactor(0).setDepth(100));
     }
+
+    this._buildTouchPad();
   }
 
   /**
@@ -701,7 +720,7 @@ export default class GameScene extends Phaser.Scene {
    * _addHud / _addWorld so the split keeps holding.
    */
   _splitCameras() {
-    this.uiCam = this.cameras.add(0, 0, VIEW.WIDTH, VIEW.HEIGHT);
+    this.uiCam = this.cameras.add(0, 0, Layout.width, Layout.height);
     this.uiCam.setName('ui');
     const hud = new Set(this._hudObjects ?? []);
     this.uiCam.ignore(this.children.list.filter((o) => !hud.has(o)));
@@ -765,9 +784,94 @@ export default class GameScene extends Phaser.Scene {
     return this.textures.exists(key) ? key : 'ball';
   }
 
+  /** Restart the current attempt, preserving whichever mode the scene was launched in. */
+  _restartLevel() {
+    AudioManager.ui();
+    this.scene.restart(
+      this._playlist ? { playlist: true, playlistIndex: this._plIndex }
+        : this._playtest ? { playtest: true }
+          : this._custom ? { custom: true } : undefined
+    );
+  }
+
+  /**
+   * On-screen gravity controls, built only when the layout leaves room below the playfield.
+   *
+   * Swiping already works and still does, but a swipe is invisible and undiscoverable — nothing on
+   * screen said the game had controls at all. These are the same four directions the arrow keys
+   * emit, on the same 'gravity:request' event, so the mechanic stays the single source of truth
+   * and nothing here knows about physics.
+   */
+  _buildTouchPad() {
+    const area = Layout.controls;
+    if (!area) return;
+
+    const cx = VIEW.WIDTH / 2;
+    // Sit the cluster low rather than centred: on a phone this is thumb territory, and the gap
+    // it leaves under the playfield keeps fingers clear of the level itself. Clamped so it never
+    // rides into the hint strip on a short screen.
+    const size = Math.min(Math.round(area.height * 0.30), 150);
+    const gap = Math.round(size * 0.12);
+    const half = size * 1.5 + gap;
+    const cy = Math.min(area.y + area.height * 0.60, area.y + area.height - half - Math.round(size * 0.25));
+    // Keep the cluster a sensible size even when the device leaves a lot of room.
+    const reach = size + gap;
+
+    const pad = this.add.container(0, 0).setScrollFactor(0).setDepth(120);
+
+    const key = (dx, dy, glyph, dir) => {
+      const x = cx + dx * reach;
+      const y = cy + dy * reach;
+      const bg = this.add
+        .rectangle(x, y, size, size, 0x2a2f45, 0.96)
+        .setStrokeStyle(3, 0x3a3f5c, 0.9)
+        .setScrollFactor(0)
+        .setInteractive({ useHandCursor: true });
+      const label = this.add
+        .text(x, y, glyph, { fontFamily: 'system-ui, sans-serif', fontSize: `${Math.round(size * 0.46)}px`, color: '#dfe3f5' })
+        .setOrigin(0.5).setScrollFactor(0);
+
+      const press = () => {
+        if (this._adPaused) return;
+        bg.setFillStyle(0x38e1ff, 1);
+        label.setColor('#0b1020');
+        this.events.emit('gravity:request', dir);
+      };
+      const release = () => { bg.setFillStyle(0x2a2f45, 0.96); label.setColor('#dfe3f5'); };
+      bg.on('pointerdown', press);
+      bg.on('pointerup', release);
+      bg.on('pointerout', release);
+
+      pad.add([bg, label]);
+    };
+
+    key(0, -1, '▲', GravityDirection.UP);
+    key(-1, 0, '◀', GravityDirection.LEFT);
+    key(1, 0, '▶', GravityDirection.RIGHT);
+    key(0, 1, '▼', GravityDirection.DOWN);
+
+    // Restart sits in the middle of the cross: reachable with the same thumb, and the one control
+    // a player reaches for most after a death.
+    const rs = Math.round(size * 0.78);
+    const reset = this.add
+      .rectangle(cx, cy, rs, rs, 0x1a1e30, 0.96)
+      .setStrokeStyle(3, 0xe0574f, 0.7)
+      .setScrollFactor(0)
+      .setInteractive({ useHandCursor: true });
+    const resetLabel = this.add
+      .text(cx, cy, '⟲', { fontFamily: 'system-ui, sans-serif', fontSize: `${Math.round(rs * 0.5)}px`, color: '#ff8a8a' })
+      .setOrigin(0.5).setScrollFactor(0);
+    reset.on('pointerdown', () => { if (!this._adPaused) this._restartLevel(); });
+    pad.add([reset, resetLabel]);
+
+    this._addHud(pad);
+    this._touchPad = pad;
+  }
+
+
   // Zoom-to-fit for levels bigger than one screen. Only built when it would do something, so
   // ordinary 800x600 levels keep an uncluttered HUD.
-  _buildZoomButton(level) {
+  _buildZoomButton(level, x, y) {
     const bounds = level.bounds ?? { w: VIEW.WIDTH, h: VIEW.PLAY_H };
     // Measured against the play box, not the canvas — the HUD bands are not the world's to use.
     this._fitZoom = Math.min(VIEW.WIDTH / bounds.w, VIEW.PLAY_H / bounds.h);
@@ -775,7 +879,7 @@ export default class GameScene extends Phaser.Scene {
 
     this._zoomedOut = false;
     this._zoomBtn = this._addHud(this.add
-      .text(VIEW.WIDTH - 152, HUD_ROW_Y, '⤢', { fontSize: '22px', padding: { x: 10, y: 8 }, color: '#c9cde8' })
+      .text(x, y, '⤢', { fontSize: Layout.font(22), padding: { x: Layout.s(10), y: Layout.s(8) }, color: '#c9cde8' })
       .setOrigin(0.5).setScrollFactor(0).setDepth(100)
       .setInteractive({ useHandCursor: true }));
     this._zoomBtn.on('pointerdown', () => this._toggleZoom());
@@ -872,9 +976,9 @@ export default class GameScene extends Phaser.Scene {
   _showAdCurtain() {
     if (this._adCurtain) return;
     const cx = VIEW.WIDTH / 2;
-    const cy = VIEW.HEIGHT / 2;
+    const cy = Layout.height / 2;
     const curtain = this.add.container(0, 0).setDepth(950).setScrollFactor(0);
-    curtain.add(this.add.rectangle(cx, cy, VIEW.WIDTH, VIEW.HEIGHT, 0x05070e, 0.92).setScrollFactor(0));
+    curtain.add(this.add.rectangle(cx, cy, Layout.width, Layout.height, 0x05070e, 0.92).setScrollFactor(0));
     curtain.add(this.add
       .text(cx, cy - 14, 'Advertisement', {
         fontFamily: 'system-ui, sans-serif', fontSize: '20px', color: '#c9cde8', fontStyle: 'bold',
@@ -923,7 +1027,7 @@ export default class GameScene extends Phaser.Scene {
     this._shiftAdOffered = true;
 
     const btn = this._addHud(this.add
-      .text(VIEW.WIDTH / 2, VIEW.HEIGHT - VIEW.HUD_BOTTOM - 26, '▶  Watch an ad for +3 shifts', {
+      .text(VIEW.WIDTH / 2, Layout.height - Layout.hudBottom - Layout.s(26), '▶  Watch an ad for +3 shifts', {
         fontFamily: 'system-ui, sans-serif', fontSize: '14px', color: '#ffd23f',
         backgroundColor: '#1a1e30', padding: { x: 12, y: 7 },
       })
@@ -1409,7 +1513,7 @@ export default class GameScene extends Phaser.Scene {
 
   _showCompletePanel(stars) {
     const panel = this._addHud(this.add
-      .container(VIEW.WIDTH / 2, VIEW.HEIGHT / 2)
+      .container(VIEW.WIDTH / 2, Layout.playCenterY)
       .setScrollFactor(0)
       .setDepth(200));
 

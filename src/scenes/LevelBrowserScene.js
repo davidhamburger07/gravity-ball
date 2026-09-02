@@ -10,12 +10,14 @@
 import Button from '../ui/Button.js';
 import { AudioManager } from '../systems/AudioManager.js';
 import * as LevelApi from '../systems/LevelApi.js';
+import { Layout } from '../config/Layout.js';
 
-const CARD_W = 660;
-const CARD_H = 64;
-const CARD_GAP = 10;
-const LIST_TOP = 150;
-const LIST_BOTTOM = 566;
+// Portrait gets taller cards (a 64-unit card is ~31 CSS px on a phone) and a list that runs the
+// full height of the screen instead of stopping at a landscape-sized 566.
+const METRICS = {
+  landscape: { cardW: 660, cardH: 64, gap: 10, top: 150, bottom: 566, tabW: 130, tabH: 38, tabY: 96 },
+  portrait: { cardW: 740, cardH: 132, gap: 16, top: 330, bottom: 0, tabW: 176, tabH: 74, tabY: 210 },
+};
 
 const TABS = [
   { key: 'new', label: 'Newest' },
@@ -40,30 +42,32 @@ export default class LevelBrowserScene extends Phaser.Scene {
   }
 
   create() {
+    this.k = Layout.isPortrait ? METRICS.portrait : METRICS.landscape;
+    this._listBottom = this.k.bottom || this.scale.height - Layout.s(40);
     const { width } = this.scale;
 
-    this.add.text(width / 2, 40, 'CUSTOM LEVELS', {
-      fontFamily: 'system-ui, sans-serif', fontSize: '30px', color: '#ffffff', fontStyle: 'bold',
+    this.add.text(width / 2, Layout.isPortrait ? Layout.s(96) : Layout.s(40), 'CUSTOM LEVELS', {
+      fontFamily: 'system-ui, sans-serif', fontSize: Layout.font(30), color: '#ffffff', fontStyle: 'bold',
     }).setOrigin(0.5);
 
-    new Button(this, 56, 40, '‹', () => this.scene.start('MenuScene'), {
-      width: 48, height: 44, fontSize: '22px', color: 0x2a2f45, textColor: '#ffffff',
+    new Button(this, Layout.s(78), Layout.s(40), '‹ MENU', () => this.scene.start('MenuScene'), {
+      width: Layout.s(108), height: Layout.s(44), fontSize: Layout.font(22), color: 0x2a2f45, textColor: '#ffffff',
     });
 
-    this.add.text(width - 20, 40, 'Make your own\nin the Level Editor', {
-      fontFamily: 'system-ui, sans-serif', fontSize: '12px', color: '#5a6089', align: 'right',
+    this.add.text(width - Layout.s(20), Layout.isPortrait ? Layout.s(44) : Layout.s(40), 'Make your own\nin the Level Editor', {
+      fontFamily: 'system-ui, sans-serif', fontSize: Layout.font(12), color: '#5a6089', align: 'right',
     }).setOrigin(1, 0.5);
 
-    this._tabsRow = this.add.container(0, 96);
-    this._list = this.add.container(0, LIST_TOP);
-    this._status = this.add.text(width / 2, 300, '', {
-      fontFamily: 'system-ui, sans-serif', fontSize: '17px', color: '#7a80a8',
+    this._tabsRow = this.add.container(0, this.k.tabY);
+    this._list = this.add.container(0, this.k.top);
+    this._status = this.add.text(width / 2, this.scale.height / 2, '', {
+      fontFamily: 'system-ui, sans-serif', fontSize: Layout.font(17), color: '#7a80a8',
       align: 'center', wordWrap: { width: 520 },
     }).setOrigin(0.5);
 
     // Clip the list to the viewport so cards scroll under the tabs rather than over them.
     const maskShape = this.make.graphics({ add: false });
-    maskShape.fillRect(0, LIST_TOP, width, LIST_BOTTOM - LIST_TOP);
+    maskShape.fillRect(0, this.k.top, width, this._listBottom - this.k.top);
     this._list.setMask(maskShape.createGeometryMask());
 
     this._buildTabs();
@@ -76,18 +80,18 @@ export default class LevelBrowserScene extends Phaser.Scene {
   _buildTabs() {
     this._tabsRow.removeAll(true);
     const { width } = this.scale;
-    const tabW = 130;
-    const gap = 8;
+    const tabW = this.k.tabW;
+    const gap = Layout.s(8);
     const totalW = TABS.length * (tabW + gap) - gap;
     let x = (width - totalW) / 2 + tabW / 2;
 
     for (const { key, label } of TABS) {
       const selected = key === this.tab;
-      const bg = this.add.rectangle(x, 0, tabW, 38, selected ? 0x38e1ff : 0x2a2f45)
+      const bg = this.add.rectangle(x, 0, tabW, this.k.tabH, selected ? 0x38e1ff : 0x2a2f45)
         .setStrokeStyle(2, selected ? 0xffffff : 0x3a3f5c, 0.6)
         .setInteractive({ useHandCursor: true });
       const text = this.add.text(x, 0, label, {
-        fontFamily: 'system-ui, sans-serif', fontSize: '15px',
+        fontFamily: 'system-ui, sans-serif', fontSize: Layout.font(15),
         color: selected ? '#0b1020' : '#ffffff', fontStyle: selected ? 'bold' : 'normal',
       }).setOrigin(0.5);
 
@@ -187,22 +191,22 @@ export default class LevelBrowserScene extends Phaser.Scene {
   _renderList() {
     this._list.removeAll(true);
     const { width } = this.scale;
-    const left = (width - CARD_W) / 2;
+    const left = (width - this.k.cardW) / 2;
 
     this._items.forEach((meta, i) => {
-      const y = i * (CARD_H + CARD_GAP);
+      const y = i * (this.k.cardH + this.k.gap);
       this._list.add(this._card(meta, left, y));
     });
 
     // A "load more" affordance rather than infinite scroll: paging on demand keeps the number of
     // browse requests (and therefore the Redis command count) proportional to real interest.
     if (this._nextCursor !== null) {
-      const y = this._items.length * (CARD_H + CARD_GAP);
-      const more = this.add.rectangle(left + CARD_W / 2, y + CARD_H / 2, CARD_W, CARD_H, 0x1a1e30)
+      const y = this._items.length * (this.k.cardH + this.k.gap);
+      const more = this.add.rectangle(left + this.k.cardW / 2, y + this.k.cardH / 2, this.k.cardW, this.k.cardH, 0x1a1e30)
         .setStrokeStyle(2, 0x3a3f5c, 0.8)
         .setInteractive({ useHandCursor: true });
-      const label = this.add.text(left + CARD_W / 2, y + CARD_H / 2, 'Load more', {
-        fontFamily: 'system-ui, sans-serif', fontSize: '16px', color: '#7a80a8',
+      const label = this.add.text(left + this.k.cardW / 2, y + this.k.cardH / 2, 'Load more', {
+        fontFamily: 'system-ui, sans-serif', fontSize: Layout.font(16), color: '#7a80a8',
       }).setOrigin(0.5);
       more.on('pointerdown', () => {
         AudioManager.ui();
@@ -218,21 +222,21 @@ export default class LevelBrowserScene extends Phaser.Scene {
   _card(meta, x, y) {
     const card = this.add.container(0, 0);
 
-    const bg = this.add.rectangle(x + CARD_W / 2, y + CARD_H / 2, CARD_W, CARD_H, 0x2a2f45)
+    const bg = this.add.rectangle(x + this.k.cardW / 2, y + this.k.cardH / 2, this.k.cardW, this.k.cardH, 0x2a2f45)
       .setStrokeStyle(2, 0x3a3f5c, 0.8)
       .setInteractive({ useHandCursor: true });
 
     const name = this.add.text(x + 16, y + 14, meta.name || 'Untitled', {
-      fontFamily: 'system-ui, sans-serif', fontSize: '18px', color: '#ffffff', fontStyle: 'bold',
+      fontFamily: 'system-ui, sans-serif', fontSize: Layout.font(18), color: '#ffffff', fontStyle: 'bold',
     });
     const author = this.add.text(x + 16, y + 38, `by ${meta.author || 'Anonymous'}`, {
-      fontFamily: 'system-ui, sans-serif', fontSize: '13px', color: '#7a80a8',
+      fontFamily: 'system-ui, sans-serif', fontSize: Layout.font(13), color: '#7a80a8',
     });
 
     const stats = this.add.text(
-      x + CARD_W - 16, y + CARD_H / 2,
+      x + this.k.cardW - 16, y + this.k.cardH / 2,
       `par ${meta.par ?? '-'}    ▶ ${meta.plays ?? 0}    ♥ ${meta.likes ?? 0}`,
-      { fontFamily: 'monospace', fontSize: '14px', color: '#9aa0c3' }
+      { fontFamily: 'monospace', fontSize: Layout.font(14), color: '#9aa0c3' }
     ).setOrigin(1, 0.5);
 
     bg.on('pointerover', () => bg.setFillStyle(0x343b58));
@@ -266,11 +270,11 @@ export default class LevelBrowserScene extends Phaser.Scene {
 
   _applyScroll() {
     const rows = this._items.length + (this._nextCursor !== null ? 1 : 0);
-    const contentH = rows * (CARD_H + CARD_GAP);
-    const viewH = LIST_BOTTOM - LIST_TOP;
+    const contentH = rows * (this.k.cardH + this.k.gap);
+    const viewH = this._listBottom - this.k.top;
     const minScroll = Math.min(0, viewH - contentH);
     this._scroll = Phaser.Math.Clamp(this._scroll, minScroll, 0);
-    this._list.y = LIST_TOP + this._scroll;
+    this._list.y = this.k.top + this._scroll;
   }
 
   // --- Play ------------------------------------------------------------------------------------

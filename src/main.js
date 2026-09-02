@@ -10,6 +10,12 @@ import SkinsScene from './scenes/SkinsScene.js';
 import { installAI } from './ai/bootstrap.js';
 import { enforceSitelock } from './systems/Sitelock.js';
 import { VIEW, PHYSICS } from './config/GameConfig.js';
+import { Layout } from './config/Layout.js';
+
+// Size the canvas to the device before Phaser reads the config. On a phone held upright this
+// makes the canvas match the screen aspect, so FIT has nothing to letterbox and the ~510px of
+// dead space below the game becomes room for the touch controls.
+Layout.measure(window.innerWidth, window.innerHeight);
 
 const config = {
   type: Phaser.AUTO, // WebGL with Canvas fallback
@@ -18,8 +24,8 @@ const config = {
   scale: {
     mode: Phaser.Scale.FIT, // responsive: scales to fit any screen (portrait or landscape), keeps aspect ratio
     autoCenter: Phaser.Scale.CENTER_BOTH,
-    width: VIEW.WIDTH,
-    height: VIEW.HEIGHT,
+    width: Layout.width,
+    height: Layout.height,
   },
   physics: {
     default: 'matter',
@@ -45,4 +51,21 @@ if (enforceSitelock()) {
   // Procedural generator + AI playtester console (window.GravityBallAI). Installing it is inert
   // — nothing runs until you call it or load the page with ?ai=1.
   installAI(window.game);
+
+  // Rotating the device changes which layout applies. Resizing the canvas is enough for a small
+  // change, but crossing between portrait and landscape moves every element, so the live scenes
+  // are rebuilt. Restarting mid-level costs the current attempt, which is a fair trade against
+  // leaving the player with a layout built for the other orientation.
+  const relayout = () => {
+    const wasPortrait = Layout.isPortrait;
+    Layout.measure(window.innerWidth, window.innerHeight);
+    window.game.scale.setGameSize(Layout.width, Layout.height);
+    if (wasPortrait === Layout.isPortrait) return;
+    window.game.scene.getScenes(true).forEach((s) => s.scene.restart());
+  };
+  let relayoutTimer = null;
+  window.addEventListener('resize', () => {
+    clearTimeout(relayoutTimer);
+    relayoutTimer = setTimeout(relayout, 150); // settle: iOS fires several during a rotation
+  });
 }

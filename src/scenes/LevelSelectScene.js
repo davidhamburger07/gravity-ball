@@ -4,16 +4,15 @@
 import Button from '../ui/Button.js';
 import { AudioManager } from '../systems/AudioManager.js';
 import { Banners } from '../systems/Banners.js';
+import { Layout } from '../config/Layout.js';
 
-const COLS = 5;
-const TILE = 90;
-const GAP = 18;
-const GRID_TOP = 250; // centre y of the first grid row
-
-const TAB_W = 144;
-const TAB_H = 52;
-const TAB_GAP = 12;
-const TAB_ROW_Y = 98;
+// Landscape keeps the shipped grid. Portrait drops to 4 columns so each tile can be far larger:
+// a 90-unit tile renders about 44 CSS px on a phone, right at the edge of a comfortable tap
+// target, and once the canvas matches the device there is width to spare.
+const METRICS = {
+  landscape: { cols: 5, tile: 90, gap: 18, gridTop: 250, tabW: 144, tabH: 52, tabGap: 12, tabRowY: 98 },
+  portrait: { cols: 3, tile: 236, gap: 26, gridTop: 470, tabW: 142, tabH: 96, tabGap: 12, tabRowY: 170 },
+};
 
 /**
  * Presentation copy for each chapter. levels.json is the source of truth — this is the fallback
@@ -46,33 +45,36 @@ export default class LevelSelectScene extends Phaser.Scene {
   }
 
   create() {
+    const L = Layout;
     this.save = this.registry.get('save');
     this.levelsData = this.registry.get('levels');
+    // Grid and tab geometry differ by orientation; pick once, before anything lays out.
+    this.m = Layout.isPortrait ? METRICS.portrait : METRICS.landscape;
     const { width, height } = this.scale;
     Banners.show();
 
     this.add
-      .text(width / 2, 40, 'SELECT LEVEL', {
-        fontFamily: 'system-ui, sans-serif', fontSize: '30px', color: '#ffffff', fontStyle: 'bold',
+      .text(width / 2, L.s(40), 'SELECT LEVEL', {
+        fontFamily: 'system-ui, sans-serif', fontSize: L.font(30), color: '#ffffff', fontStyle: 'bold',
       })
       .setOrigin(0.5);
 
     // Labelled rather than a bare chevron: the glyph-only version was easy to miss even when it
     // was rendering, and for a while it was not rendering at all (see _buildGrid).
-    new Button(this, 78, 40, '‹ MENU', () => this.scene.start('MenuScene'), {
-      width: 108, height: 44, fontSize: '18px', color: 0x2a2f45, textColor: '#ffffff',
+    new Button(this, L.s(78), L.s(40), '‹ MENU', () => this.scene.start('MenuScene'), {
+      width: L.s(108), height: L.s(44), fontSize: L.font(18), color: 0x2a2f45, textColor: '#ffffff',
     });
     this.input.keyboard?.on('keydown-ESC', () => this.scene.start('MenuScene'));
 
     this.add
-      .text(width - 16, 40, `★ ${this.save.totalStars()}/${this.save.maxStars()}`, {
-        fontFamily: 'monospace', fontSize: '18px', color: '#ffd23f',
+      .text(width - L.s(16), L.s(40), `★ ${this.save.totalStars()}/${this.save.maxStars()}`, {
+        fontFamily: 'monospace', fontSize: L.font(18), color: '#ffd23f',
       })
       .setOrigin(1, 0.5);
 
     this.add
-      .text(16, height - 26, 'Esc — back to menu', {
-        fontFamily: 'monospace', fontSize: '11px', color: '#3a3f5c',
+      .text(L.s(16), height - L.s(26), 'Esc — back to menu', {
+        fontFamily: 'monospace', fontSize: L.font(11), color: '#3a3f5c',
       })
       .setOrigin(0, 0.5);
 
@@ -80,8 +82,8 @@ export default class LevelSelectScene extends Phaser.Scene {
     // Parked in the bottom corner: at the top it was drawn straight through the tab row.
     const testLabel = () => (this.save.testMode ? 'TEST MODE: ON' : 'test mode: off');
     const testBtn = this.add
-      .text(width - 16, height - 26, testLabel(), {
-        fontFamily: 'monospace', fontSize: '11px',
+      .text(width - L.s(16), height - L.s(26), testLabel(), {
+        fontFamily: 'monospace', fontSize: L.font(11),
         color: this.save.testMode ? '#ffd23f' : '#5a6089',
       })
       .setOrigin(1, 0.5)
@@ -93,7 +95,7 @@ export default class LevelSelectScene extends Phaser.Scene {
       this._buildGrid();
     });
 
-    this._tabs = this.add.container(0, TAB_ROW_Y);
+    this._tabs = this.add.container(0, this.m.tabRowY);
     this._grid = this.add.container(0, 0);
     this._buildTabs();
     this._buildGrid();
@@ -108,12 +110,13 @@ export default class LevelSelectScene extends Phaser.Scene {
   }
 
   _buildTabs() {
+    const L = Layout;
     this.tweens.killTweensOf(this._tabs.list);
     this._tabs.removeAll(true);
     const { width } = this.scale;
     const chapters = this.levelsData.chapters;
-    const totalW = chapters.length * (TAB_W + TAB_GAP) - TAB_GAP;
-    let x = (width - totalW) / 2 + TAB_W / 2;
+    const totalW = chapters.length * (this.m.tabW + this.m.tabGap) - this.m.tabGap;
+    let x = (width - totalW) / 2 + this.m.tabW / 2;
 
     chapters.forEach((c) => {
       const selected = c.id === this.currentChapterId;
@@ -140,21 +143,21 @@ export default class LevelSelectScene extends Phaser.Scene {
 
       const tab = this.add.container(x, 0);
       const bg = this.add
-        .rectangle(0, 0, TAB_W, TAB_H, fill)
+        .rectangle(0, 0, this.m.tabW, this.m.tabH, fill)
         .setStrokeStyle(2, stroke, strokeAlpha)
         .setInteractive({ useHandCursor: true });
       tab.add([
         bg,
-        this.add.text(0, -12, kicker, {
-          fontFamily: 'monospace', fontSize: '10px', color: kickerColor,
+        this.add.text(0, -L.s(12), kicker, {
+          fontFamily: 'monospace', fontSize: L.font(10), color: kickerColor,
         }).setOrigin(0.5).setAlpha(selected ? 0.7 : 1),
-        this.add.text(0, 9, shortName(c), {
-          fontFamily: 'system-ui, sans-serif', fontSize: '15px', fontStyle: 'bold', color: nameColor,
-          align: 'center', wordWrap: { width: TAB_W - 16 },
+        this.add.text(0, L.s(9), shortName(c), {
+          fontFamily: 'system-ui, sans-serif', fontSize: L.font(15), fontStyle: 'bold', color: nameColor,
+          align: 'center', wordWrap: { width: this.m.tabW - L.s(16) },
         }).setOrigin(0.5),
       ]);
       if (built && !playable && !selected) {
-        tab.add(this.add.text(TAB_W / 2 - 14, -14, '🔒', { fontSize: '11px' }).setOrigin(0.5).setAlpha(0.75));
+        tab.add(this.add.text(this.m.tabW / 2 - L.s(14), -L.s(14), '🔒', { fontSize: L.font(11) }).setOrigin(0.5).setAlpha(0.75));
       }
 
       // Every tab is browsable, including the unbuilt ones — the coming-soon card is the point.
@@ -165,11 +168,12 @@ export default class LevelSelectScene extends Phaser.Scene {
       }
 
       this._tabs.add(tab);
-      x += TAB_W + TAB_GAP;
+      x += this.m.tabW + this.m.tabGap;
     });
   }
 
   _buildGrid() {
+    const L = Layout;
     // Kill only the tweens belonging to the objects about to be destroyed. This used to be
     // tweens.killAll(), which also destroyed the header button's spring pop-in — create() builds
     // the grid in the same frame the button is constructed, so it froze at scale 0 and the only
@@ -183,8 +187,8 @@ export default class LevelSelectScene extends Phaser.Scene {
 
     this._grid.add(
       this.add
-        .text(width / 2, 152, `Chapter ${chapter.id} · ${chapter.name}`, {
-          fontFamily: 'system-ui, sans-serif', fontSize: '20px', color: '#38e1ff',
+        .text(width / 2, this.m.tabRowY + this.m.tabH / 2 + L.s(28), `Chapter ${chapter.id} · ${chapter.name}`, {
+          fontFamily: 'system-ui, sans-serif', fontSize: L.font(20), color: '#38e1ff',
         })
         .setOrigin(0.5)
     );
@@ -194,46 +198,55 @@ export default class LevelSelectScene extends Phaser.Scene {
 
     this._grid.add(
       this.add
-        .text(width / 2, 178, mechanicOf(chapter), {
-          fontFamily: 'monospace', fontSize: '13px', color: '#5a6089',
+        .text(width / 2, this.m.tabRowY + this.m.tabH / 2 + L.s(56), mechanicOf(chapter), {
+          fontFamily: 'monospace', fontSize: L.font(13), color: '#5a6089',
         })
         .setOrigin(0.5)
     );
 
-    const rows = Math.ceil(levels.length / COLS);
+    const rows = Math.ceil(levels.length / this.m.cols);
+    // Portrait has far more height than the grid needs, so centre the block in what is left
+    // between the chapter header and the footer instead of hanging it from a fixed y.
+    const blockH = rows * this.m.tile + (rows - 1) * this.m.gap;
+    const areaTop = this.m.tabRowY + this.m.tabH / 2 + L.s(80);
+    const areaBottom = this.scale.height - L.s(120);
+    const gridTop = Layout.isPortrait
+      ? areaTop + Math.max(0, (areaBottom - areaTop - blockH - L.s(70))) / 2 + this.m.tile / 2
+      : this.m.gridTop;
     levels.forEach((lvl, i) => {
-      const row = Math.floor(i / COLS);
-      const col = i % COLS;
+      const row = Math.floor(i / this.m.cols);
+      const col = i % this.m.cols;
       // Centre each row on its own, so a final short row sits under the middle of the one above
       // instead of hugging the left edge.
-      const inRow = Math.min(COLS, levels.length - row * COLS);
-      const rowW = inRow * TILE + (inRow - 1) * GAP;
-      const tx = (width - rowW) / 2 + TILE / 2 + col * (TILE + GAP);
-      this._grid.add(this._levelTile(lvl, tx, GRID_TOP + row * (TILE + GAP), i));
+      const inRow = Math.min(this.m.cols, levels.length - row * this.m.cols);
+      const rowW = inRow * this.m.tile + (inRow - 1) * this.m.gap;
+      const tx = (width - rowW) / 2 + this.m.tile / 2 + col * (this.m.tile + this.m.gap);
+      this._grid.add(this._levelTile(lvl, tx, gridTop + row * (this.m.tile + this.m.gap), i));
     });
 
-    this._chapterProgress(chapter, levels, GRID_TOP + (rows - 1) * (TILE + GAP) + TILE / 2);
+    this._chapterProgress(chapter, levels, gridTop + (rows - 1) * (this.m.tile + this.m.gap) + this.m.tile / 2);
   }
 
   /** A per-chapter progress bar under the grid — it gives the star-gated skins a visible target. */
   _chapterProgress(chapter, levels, gridBottom) {
+    const L = Layout;
     const { width } = this.scale;
     const cleared = levels.filter((l) => this.save.isCompleted(l.id)).length;
     const stars = levels.reduce((n, l) => n + this.save.stars(l.id), 0);
-    const barY = gridBottom + 48;
+    const barY = gridBottom + L.s(48);
 
-    this._grid.add(this.add.rectangle(width / 2, barY, 360, 8, 0x1a1e30).setStrokeStyle(1, 0x3a3f5c, 0.6));
+    this._grid.add(this.add.rectangle(width / 2, barY, L.s(360), L.s(8), 0x1a1e30).setStrokeStyle(1, 0x3a3f5c, 0.6));
     if (cleared > 0) {
       this._grid.add(
         this.add
-          .rectangle(width / 2 - 180, barY, 360 * (cleared / levels.length), 8, 0x38e1ff)
+          .rectangle(width / 2 - L.s(180), barY, L.s(360) * (cleared / levels.length), L.s(8), 0x38e1ff)
           .setOrigin(0, 0.5)
       );
     }
     this._grid.add(
       this.add
-        .text(width / 2, barY + 22, `${cleared}/${levels.length} cleared   ·   ★ ${stars}/${levels.length * 3}`, {
-          fontFamily: 'monospace', fontSize: '12px', color: '#8990b8',
+        .text(width / 2, barY + L.s(22), `${cleared}/${levels.length} cleared   ·   ★ ${stars}/${levels.length * 3}`, {
+          fontFamily: 'monospace', fontSize: L.font(12), color: '#8990b8',
         })
         .setOrigin(0.5)
     );
@@ -241,26 +254,28 @@ export default class LevelSelectScene extends Phaser.Scene {
 
   /** Shown for a chapter that is declared but has no levels yet. */
   _comingSoonCard(chapter) {
+    const L = Layout;
     const { width } = this.scale;
     const cx = width / 2;
+    const top = this.m.tabRowY + this.m.tabH / 2 + L.s(90);
 
-    const card = this.add.rectangle(cx, 304, 522, 200, 0x171b2b).setStrokeStyle(2, 0x3a3f5c, 0.45);
-    const lock = this.add.text(cx, 242, '🔒', { fontSize: '30px' }).setOrigin(0.5).setAlpha(0.5);
+    const card = this.add.rectangle(cx, top + L.s(100), L.s(522), L.s(200), 0x171b2b).setStrokeStyle(2, 0x3a3f5c, 0.45);
+    const lock = this.add.text(cx, 242, '🔒', { fontSize: L.font(30) }).setOrigin(0.5).setAlpha(0.5);
     const head = this.add
-      .text(cx, 288, mechanicOf(chapter), {
-        fontFamily: 'system-ui, sans-serif', fontSize: '20px', fontStyle: 'bold', color: '#38e1ff',
-        align: 'center', wordWrap: { width: 460 },
+      .text(cx, top + L.s(84), mechanicOf(chapter), {
+        fontFamily: 'system-ui, sans-serif', fontSize: L.font(20), fontStyle: 'bold', color: '#38e1ff',
+        align: 'center', wordWrap: { width: L.s(460) },
       })
       .setOrigin(0.5).setAlpha(0.85);
     const blurb = this.add
-      .text(cx, 328, blurbOf(chapter), {
-        fontFamily: 'system-ui, sans-serif', fontSize: '14px', color: '#8990b8',
-        align: 'center', wordWrap: { width: 440 }, lineSpacing: 4,
+      .text(cx, top + L.s(124), blurbOf(chapter), {
+        fontFamily: 'system-ui, sans-serif', fontSize: L.font(14), color: '#8990b8',
+        align: 'center', wordWrap: { width: L.s(440) }, lineSpacing: 4,
       })
       .setOrigin(0.5);
-    const badgeBg = this.add.rectangle(cx, 376, 156, 28, 0x2a2f45).setStrokeStyle(1, 0x3a3f5c, 0.8);
+    const badgeBg = this.add.rectangle(cx, top + L.s(172), L.s(156), L.s(28), 0x2a2f45).setStrokeStyle(1, 0x3a3f5c, 0.8);
     const badge = this.add
-      .text(cx, 376, 'COMING SOON', { fontFamily: 'monospace', fontSize: '11px', color: '#ffd23f' })
+      .text(cx, top + L.s(172), 'COMING SOON', { fontFamily: 'monospace', fontSize: L.font(11), color: '#ffd23f' })
       .setOrigin(0.5);
 
     this.tweens.add({
@@ -272,21 +287,22 @@ export default class LevelSelectScene extends Phaser.Scene {
   }
 
   _levelTile(lvl, x, y, index) {
+    const L = Layout;
     const tile = this.add.container(x, y);
     const unlocked = this.save.isLevelUnlocked(lvl.id);
     const stars = this.save.stars(lvl.id);
     const num = lvl.id.split('-')[1];
 
     const bg = this.add
-      .rectangle(0, 0, TILE, TILE, unlocked ? 0x2a2f45 : 0x1a1e30)
+      .rectangle(0, 0, this.m.tile, this.m.tile, unlocked ? 0x2a2f45 : 0x1a1e30)
       .setStrokeStyle(2, unlocked ? 0x38e1ff : 0x3a3f5c, 0.6);
     tile.add(bg);
 
     if (unlocked) {
       tile.add(
         this.add
-          .text(0, -12, num, {
-            fontFamily: 'system-ui, sans-serif', fontSize: '30px', color: '#ffffff', fontStyle: 'bold',
+          .text(0, -this.m.tile * 0.13, num, {
+            fontFamily: 'system-ui, sans-serif', fontSize: L.font(30), color: '#ffffff', fontStyle: 'bold',
           })
           .setOrigin(0.5)
       );
@@ -294,7 +310,7 @@ export default class LevelSelectScene extends Phaser.Scene {
       for (let s = 0; s < 3; s++) starStr += s < stars ? '★' : '☆';
       tile.add(
         this.add
-          .text(0, 26, starStr, { fontSize: '16px', color: stars > 0 ? '#ffd23f' : '#3a3f5c' })
+          .text(0, this.m.tile * 0.29, starStr, { fontSize: `${Math.round(this.m.tile * 0.18)}px`, color: stars > 0 ? '#ffd23f' : '#3a3f5c' })
           .setOrigin(0.5)
       );
 
@@ -309,7 +325,7 @@ export default class LevelSelectScene extends Phaser.Scene {
         this.scene.start('GameScene', { levelId: lvl.id, chapterId: this.currentChapterId })
       );
     } else {
-      tile.add(this.add.text(0, 0, '🔒', { fontSize: '28px' }).setOrigin(0.5));
+      tile.add(this.add.text(0, 0, '🔒', { fontSize: `${Math.round(this.m.tile * 0.31)}px` }).setOrigin(0.5));
       // Say no out loud, the same way SkinsScene does, rather than ignoring the tap.
       bg.setInteractive();
       bg.on('pointerdown', () => { AudioManager.deny(); this.cameras.main.shake(90, 0.003); });
