@@ -11,6 +11,9 @@ class AudioManagerImpl {
     // Transient silence for automated runs. Separate from `muted` so an AI playtest never
     // overwrites the player's own mute preference in localStorage.
     this.silent = false;
+    // The platform can mute the whole game from its own chrome. Per the SDK requirements it
+    // takes PRIORITY over the in-game toggle: an in-game "audio on" must not override it.
+    this.platformMuted = false;
   }
 
   _ctxOrNull() {
@@ -30,7 +33,7 @@ class AudioManagerImpl {
 
   // One enveloped oscillator "blip". freqTo (optional) sweeps the pitch for whooshes/thuds.
   _tone({ freq = 440, type = 'sine', dur = 0.12, gain = 0.16, freqTo = null, delay = 0 }) {
-    if (this.muted || this.silent) return;
+    if (this.muted || this.silent || this.platformMuted) return;
     const ctx = this._ctxOrNull();
     if (!ctx) return;
     const t0 = ctx.currentTime + delay;
@@ -67,10 +70,15 @@ class AudioManagerImpl {
   ui() { this._tone({ type: 'square', freq: 460, dur: 0.05, gain: 0.05 }); }
 
   toggleMute() {
+    // Refuse to unmute while the platform has muted us; report the effective state instead.
+    if (this.platformMuted) return true;
     this.muted = !this.muted;
     try { localStorage.setItem(MUTE_KEY, this.muted ? '1' : '0'); } catch { /* ignore */ }
     return this.muted;
   }
+
+  /** What the player actually hears — the platform mute folded in. */
+  get audible() { return !(this.muted || this.silent || this.platformMuted); }
 }
 
 export const AudioManager = new AudioManagerImpl();

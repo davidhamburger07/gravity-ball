@@ -664,12 +664,12 @@ export default class GameScene extends Phaser.Scene {
 
     // Mute toggle (persists via AudioManager/localStorage).
     const mute = this._addHud(this.add
-      .text(x, rowY, AudioManager.muted ? '🔇' : '🔊', {
+      .text(x, rowY, AudioManager.audible ? '🔊' : '🔇', {
         fontSize: L.font(24), padding: { x: L.s(8), y: L.s(8) },
       })
       .setOrigin(0.5).setScrollFactor(0).setDepth(100)
       .setInteractive({ useHandCursor: true }));
-    mute.on('pointerdown', () => mute.setText(AudioManager.toggleMute() ? '🔇' : '🔊'));
+    mute.on('pointerdown', () => { AudioManager.toggleMute(); mute.setText(AudioManager.audible ? '🔊' : '🔇'); });
     x -= btnW + gap;
 
     this._buildZoomButton(level, x, rowY);

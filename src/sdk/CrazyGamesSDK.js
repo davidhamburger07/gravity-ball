@@ -16,6 +16,8 @@ export const CrazyGamesSDK = {
   environment: 'disabled', // 'local' | 'crazygames' | 'disabled'
   onPlatform: false,       // true only for 'crazygames' — gates banners and invite links
   adblock: false,
+  /** True when the platform itself has muted the game (its chrome, not our button). */
+  audioMuted: false,
 
   async init() {
     const sdk = raw();
@@ -35,6 +37,9 @@ export const CrazyGamesSDK = {
         return;
       }
       this.adblock = await sdk.ad.hasAdblock().catch(() => false);
+      // The platform can mute the game from its own UI. Requirement: this outranks any in-game
+      // toggle, so it is wired straight into AudioManager rather than offered as a suggestion.
+      this._watchAudioSetting(sdk);
       console.info(`[CrazyGames] ready (env=${this.environment}, adblock=${this.adblock}).`);
     } catch (err) {
       this.available = false;
@@ -182,6 +187,20 @@ export const CrazyGamesSDK = {
    */
   mirror(key, value) {
     try { localStorage.setItem(key, String(value)); } catch { /* private mode, or quota */ }
+  },
+
+  /** Mirror the platform mute setting into AudioManager, now and whenever it changes. */
+  _watchAudioSetting(sdk) {
+    const apply = (settings) => {
+      this.audioMuted = Boolean(settings?.muteAudio);
+      this.onAudioMuteChange?.(this.audioMuted);
+    };
+    try {
+      apply(sdk.game.settings);
+      sdk.game.addSettingsChangeListener?.(apply);
+    } catch (err) {
+      console.warn('[CrazyGames] audio settings unavailable', err);
+    }
   },
 
   _safe(fn) {

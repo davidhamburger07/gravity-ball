@@ -3,6 +3,7 @@
 // use generic shapes when final assets are missing).
 import { CrazyGamesSDK } from '../sdk/CrazyGamesSDK.js';
 import { generatePlaceholderTextures } from '../systems/Textures.js';
+import { AudioManager } from '../systems/AudioManager.js';
 
 export default class BootScene extends Phaser.Scene {
   constructor() {
@@ -14,6 +15,10 @@ export default class BootScene extends Phaser.Scene {
     // fetches has nothing to do with the platform, and awaiting first meant levels.json was
     // not even REQUESTED until the SDK had finished — the two now overlap. PreloadScene waits
     // on this promise before it touches saved progress, which is the only part that needs it.
+    // The platform mute is pushed into AudioManager rather than polled, and is set before the
+    // first sound can play because init() resolves long before anything is audible.
+    CrazyGamesSDK.onAudioMuteChange = (muted) => { AudioManager.platformMuted = muted; };
+
     const sdkReady = CrazyGamesSDK.init().then(() => CrazyGamesSDK.loadingStart());
     this.registry.set('sdkReady', sdkReady);
 
